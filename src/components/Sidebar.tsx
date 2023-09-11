@@ -1,6 +1,5 @@
 import { Component, JSX, Ref, onCleanup, onMount } from "solid-js";
 import { SidebarHierarchy } from "../models/hierarchy";
-import { afterSidebarLoaded } from "./book";
 
 interface Props {}
 

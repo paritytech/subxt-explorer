@@ -1,5 +1,4 @@
 import { Switch, type Component, Match } from "solid-js";
-import { Wrapper } from "./Wrapper";
 import { MdBookWrapper } from "./components/MdBookWrapper";
 import { SidebarHierarchy } from "./models/hierarchy";
 import { Content } from "./models/content";

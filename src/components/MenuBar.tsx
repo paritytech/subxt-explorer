@@ -1,5 +1,4 @@
 import { Component, onMount } from "solid-js";
-import { afterMenuBarLoaded } from "./book";
 import { setSidebar, toggleSidebar } from "../state/visual_state";
 interface Props {}
 export const MenuBar: Component<Props> = (props: Props) => {

@@ -5,7 +5,7 @@ import topLevelAwait from "vite-plugin-top-level-await";
 // import devtools from 'solid-devtools/vite';
 
 export default defineConfig({
-  root: "./src_html/",
+  // root: "./src_html/",
   plugins: [
     /* 
     Uncomment the following line to enable solid-devtools.
