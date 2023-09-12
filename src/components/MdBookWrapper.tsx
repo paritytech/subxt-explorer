@@ -16,7 +16,7 @@ import { NavWideWrapper } from "./NavWideWrapper";
 import { MenuBar } from "./MenuBar";
 import { sidebar } from "../state/visual_state";
 import { StartPageMainSection } from "./StartPageMainSection";
-import { appData } from "../state/data_state";
+import { appData } from "../state/app_state";
 
 interface Props {
   children?: JSX.Element;

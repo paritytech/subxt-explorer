@@ -1,0 +1,1 @@
+export const DEFAULT_WS_URL = "wss://rpc.polkadot.io";

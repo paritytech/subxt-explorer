@@ -1,23 +1,17 @@
 import { Component, Ref, createSignal } from "solid-js";
-import { greet } from "subxt_example_codegen";
-
-type MetadataSource =
-  | {
-      tag: "url";
-      url: string;
-    }
-  | {
-      tag: "file";
-      file: File;
-    };
+import { Client, greet } from "subxt_example_codegen";
+import { DEFAULT_WS_URL } from "../constants";
+import { MetadataSource, buildAppData, setAppData } from "../state/app_state";
 
 interface Props {}
 export const StartPageMainSection: Component<Props> = (props: Props) => {
   let fileInputRef: HTMLInputElement | undefined;
 
+  /// Signals
+
   let [tab, setTab] = createSignal<"file" | "url">("file");
 
-  let [url, setUrl] = createSignal<string>("http://127.0.0.1:9933");
+  let [url, setUrl] = createSignal<string>(DEFAULT_WS_URL);
 
   let [file, setFile] = createSignal<File | undefined>(undefined);
 
@@ -29,7 +23,7 @@ export const StartPageMainSection: Component<Props> = (props: Props) => {
 
   let [draggingOnField, setDraggingOnField] = createSignal<boolean>(false);
 
-  const urlOrFile = (): MetadataSource | undefined => {
+  const metadataSource = (): MetadataSource | undefined => {
     if (error() !== undefined) {
       return undefined;
     }
@@ -41,30 +35,29 @@ export const StartPageMainSection: Component<Props> = (props: Props) => {
     return undefined;
   };
 
-  const generateButtonClickable = (): boolean => {
-    return loadingState() === "none" && !!urlOrFile();
+  const generateDocsButtonClickable = (): boolean => {
+    return loadingState() === "none" && !!metadataSource();
   };
+
+  /// State Managements
 
   /**
    * # Panics
    *
-   * Panics if urlOrFile === undefined
+   * Panics if metadataSource === undefined
    */
-  async function loadMetadataAndGenerateDocs() {
+  async function onGenerateDocsButtonClick() {
     setLoadingState("loading");
-    let source = urlOrFile()!;
-    switch (source.tag) {
-      case "url":
-        // todo! load from ws or http
-        break;
-      case "file":
-        let bytes = await readFileAsBytes(source.file);
-        console.log(bytes);
-        break;
+    try {
+      let data = await buildAppData(metadataSource()!);
+      setAppData(data);
+    } catch (ex: any) {
+      setError(ex.toString());
     }
     setLoadingState("none");
   }
 
+  /// JSX
   return (
     <>
       <h1>Subxt Node Explorer</h1>
@@ -73,8 +66,24 @@ export const StartPageMainSection: Component<Props> = (props: Props) => {
       started:
       <div></div>
       <div class="mt-5">
-        {Tab("Url", tab() == "url", () => setTab("url"), "fa-link")}
-        {Tab("File", tab() == "file", () => setTab("file"), "fa-file")}
+        {Tab(
+          "Url",
+          tab() == "url",
+          () => {
+            setTab("url");
+            setError(undefined);
+          },
+          "fa-link"
+        )}
+        {Tab(
+          "File",
+          tab() == "file",
+          () => {
+            setTab("file");
+            setError(undefined);
+          },
+          "fa-file"
+        )}
       </div>
       <div class="py-5 my-5">
         {" "}
@@ -169,11 +178,16 @@ export const StartPageMainSection: Component<Props> = (props: Props) => {
       )}
       <div>
         <button
-          class={`btn ${generateButtonClickable() ? "" : "disabled"}`}
-          disabled={!generateButtonClickable()}
-          onClick={loadMetadataAndGenerateDocs}
+          class={`btn ${generateDocsButtonClickable() ? "" : "disabled"}`}
+          disabled={!generateDocsButtonClickable()}
+          onClick={onGenerateDocsButtonClick}
         >
-          <span class="fa fa-play mr-2"></span> Generate Docs{" "}
+          {loadingState() === "loading" ? (
+            <span class="fa fa-spinner mr-3 animate-spin"></span>
+          ) : (
+            <span class="fa fa-play mr-4"></span>
+          )}
+          Generate Docs{" "}
         </button>
       </div>
     </>
@@ -196,27 +210,4 @@ function Tab(
       <span class={`fa ${faClass} mr-2`}></span> {title}
     </button>
   );
-}
-
-async function readFileAsBytes(file: File) {
-  return new Promise((res, rej) => {
-    const fileReader = new FileReader();
-
-    fileReader.onload = (event) => {
-      const arrayBuffer = event?.target?.result;
-      if (arrayBuffer instanceof ArrayBuffer) {
-        res(new Uint8Array(arrayBuffer));
-      } else {
-        rej("event?.target?.result is not ArrayBuffer");
-      }
-    };
-
-    fileReader.onerror = (event) => {
-      // Reject the promise if there's an error
-      rej(`some error occurred: ${event?.target?.error}`);
-    };
-
-    // Read the file as an ArrayBuffer
-    fileReader.readAsArrayBuffer(file);
-  });
 }
