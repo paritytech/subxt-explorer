@@ -1,10 +1,10 @@
 import { Switch, type Component, Match } from "solid-js";
 import { MdBookWrapper } from "./components/MdBookWrapper";
-import { SidebarHierarchy } from "./models/hierarchy";
-import { Content } from "./models/content";
 import { MainSection } from "./components/MainSection";
-import { StartPageMainSection } from "./components/StartPageMainSection";
+import { StartMain } from "./components/StartMain";
 import { greet } from "subxt_example_codegen";
+import { Route, Router, Routes } from "@solidjs/router";
+import { DynamicMain } from "./components/DynamicMain";
 
 const App: Component = () => {
   return (
@@ -28,7 +28,13 @@ const App: Component = () => {
       >
         Click me
       </button>
-      <StartPageMainSection />
+
+      <Router>
+        <Routes>
+          <Route path="/" component={StartMain}></Route>
+          <Route path="/:path" component={DynamicMain}></Route>
+        </Routes>
+      </Router>
     </MdBookWrapper>
   );
 };

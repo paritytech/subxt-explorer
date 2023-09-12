@@ -15,7 +15,7 @@ import { NavWrapper } from "./NavWrapper";
 import { NavWideWrapper } from "./NavWideWrapper";
 import { MenuBar } from "./MenuBar";
 import { sidebar } from "../state/visual_state";
-import { StartPageMainSection } from "./StartPageMainSection";
+import { StartMain } from "./StartMain";
 import { appData } from "../state/app_state";
 
 interface Props {

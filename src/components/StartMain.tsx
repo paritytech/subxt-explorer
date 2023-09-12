@@ -4,7 +4,7 @@ import { DEFAULT_WS_URL } from "../constants";
 import { MetadataSource, buildAppData, setAppData } from "../state/app_state";
 
 interface Props {}
-export const StartPageMainSection: Component<Props> = (props: Props) => {
+export const StartMain: Component<Props> = (props: Props) => {
   let fileInputRef: HTMLInputElement | undefined;
 
   /// Signals

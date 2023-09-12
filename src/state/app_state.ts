@@ -14,10 +14,11 @@ export type MetadataSource =
 export interface AppState {
   source: MetadataSource;
   client: Client;
-  sidebar: {
-    hierarchy: PagesHierarchy;
-    activeItem: HierarchyItem;
+  pages: {
+    hierarchy: HierarchyItem[];
+    active: HierarchyItem;
   };
+  content: MetadataContent;
 }
 
 export async function buildAppData(source: MetadataSource): Promise<AppState> {
@@ -33,17 +34,19 @@ export async function buildAppData(source: MetadataSource): Promise<AppState> {
   }
 
   let content = metadataContent(client);
+  let hierarchy = buildHierarchyItems(content);
 
   console.log(content);
 
-  const data = {
-    client,
+  return {
     source,
+    client,
+    pages: {
+      hierarchy,
+      active: hierarchy[0],
+    },
+    content,
   };
-
-  console.log("done building app data:", data);
-
-  throw "todo";
 }
 
 async function readFileAsBytes(file: File): Promise<Uint8Array> {
@@ -77,6 +80,12 @@ function metadataContent(client: Client): MetadataContent {
   return client.metadataContent() as MetadataContent;
 }
 
+function buildHierarchyItems(
+  metadataContent: MetadataContent
+): HierarchyItem[] {
+  throw "todo";
+}
+
 export interface MetadataContent {
   pallets: PalletContent[];
   runtime_apis: string[];
@@ -90,10 +99,6 @@ export interface PalletContent {
   constants: string[];
 }
 
-export interface PagesHierarchy {
-  items: HierarchyItem[];
-}
-
 export interface HierarchyItem {
   // title: string;
   // prefix: string | undefined;
@@ -105,7 +110,6 @@ export interface HierarchyItem {
 
 type HierarchyItemKind =
   | { tag: "start" }
-  | { tag: "contents" }
   | { tag: "runtime_apis" }
   | { tag: "runtime_api"; name: string }
   | { tag: "custom_values" }
@@ -147,3 +151,54 @@ type HierarchyItemKind =
       pallet: string;
       name: string;
     };
+
+const START_ITEM: HierarchyItemKind = { tag: "start" };
+
+function pathToHierarchyItemKind(path: string): HierarchyItemKind | undefined {
+  let segs = path.split("/").filter((e) => e.length > 0);
+  if (segs.length == 0) {
+    return START_ITEM;
+  }
+  switch (segs[0]!) {
+    case "pallets":
+      return START_ITEM;
+
+    default:
+      return START_ITEM;
+  }
+}
+
+function hierarchyItemKindToPath(item: HierarchyItemKind): string {
+  switch (item.tag) {
+    case "start":
+      return "/";
+    case "runtime_apis":
+      return "/runtime_apis";
+    case "runtime_api":
+      return `/runtime_apis/${item.name}`;
+    case "custom_values":
+      return "/custom_values";
+    case "custom_value":
+      return `/custom_values/${item.name}`;
+    case "pallets":
+      return "/pallets";
+    case "pallet":
+      return `/pallet/${item.name}`;
+    case "calls":
+      return `/pallet/${item.pallet}/calls`;
+    case "call":
+      return `/pallet/${item.pallet}/calls/${item.name}`;
+    case "storage_entries":
+      return `/pallet/${item.pallet}/storage_entries`;
+    case "storage_entry":
+      return `/pallet/${item.pallet}/storage_entries/${item.name}`;
+    case "constants":
+      return `/pallet/${item.pallet}/constants`;
+    case "constant":
+      return `/pallet/${item.pallet}/constants/${item.name}`;
+  }
+}
+
+// function pathT0
+
+//     export function mapPath
