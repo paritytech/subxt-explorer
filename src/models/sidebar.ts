@@ -23,9 +23,6 @@ export type ItemKind =
   | { tag: "runtime_apis" }
   | { tag: "custom_values" }
   | {
-      tag: "pallets";
-    }
-  | {
       tag: "pallet";
       pallet: string;
     }
@@ -67,7 +64,7 @@ export function pathToItemKind(path: string): ItemKind | undefined {
             return { tag: "pallet", pallet: segs[1] };
         }
       } else {
-        return { tag: "pallets" };
+        return HOME_ITEM;
       }
     default:
       return HOME_ITEM;
@@ -82,8 +79,6 @@ export function itemKindToPath(item: ItemKind): string {
       return "/runtime_apis";
     case "custom_values":
       return "/custom_values";
-    case "pallets":
-      return "/pallets";
     case "pallet":
       return `/pallets/${item.pallet}`;
     case "calls":
@@ -103,8 +98,6 @@ export function itemKindToTitle(item: ItemKind): string {
       return "Runtime APIs";
     case "custom_values":
       return "Custom Value";
-    case "pallets":
-      return "Pallets";
     case "pallet":
       return item.pallet;
     case "calls":

@@ -1,5 +1,5 @@
 import { Component, Ref, createSignal } from "solid-js";
-import { Client, greet } from "subxt_example_codegen";
+import { Client, make_pretty } from "subxt_example_codegen";
 import { DEFAULT_WS_URL } from "../constants";
 import {
   MetadataSource,
@@ -7,6 +7,7 @@ import {
   setAppState,
 } from "../state/app_state";
 import { MdBookWrapper } from "../components/MdBookWrapper";
+import { highlight } from "../utils";
 
 interface Props {}
 export const HomePage: Component<Props> = (props: Props) => {

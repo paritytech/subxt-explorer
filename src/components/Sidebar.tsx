@@ -68,9 +68,9 @@ function sideBarItem(item: SidebarItem, prefix: string): JSX.Element {
 function metadataSourceString(source: MetadataSource): string {
   switch (source.tag) {
     case "url":
-      return `${source.url}`;
+      return `Source: ${source.url}`;
     case "file":
-      return `${source.file.name}`;
+      return `Source: ${source.file.name}`;
   }
 }
 

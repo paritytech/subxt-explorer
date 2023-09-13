@@ -2,12 +2,10 @@ import { Switch, type Component, Match } from "solid-js";
 import { MdBookWrapper } from "./components/MdBookWrapper";
 import { MainSection } from "./components/MainSection";
 import { HomePage } from "./pages/Home";
-import { greet } from "subxt_example_codegen";
 import { Route, Router, Routes } from "@solidjs/router";
 import { RuntimeApisPage } from "./pages/RuntimeApis";
 import { CustomValuesPage } from "./pages/CustomValues";
-import { PalletsPage } from "./pages/Pallets";
-import { SinglePalletPage as ConstantsPage } from "./pages/SinglePallet";
+import { PalletPage as ConstantsPage } from "./pages/Pallet";
 import { CallsPage } from "./pages/Calls";
 import { StoragePage } from "./pages/Storage";
 
@@ -18,7 +16,6 @@ const App: Component = () => {
         <Route path="/" component={HomePage}></Route>
         <Route path="/runtime_apis" component={RuntimeApisPage}></Route>
         <Route path="/custom_values" component={CustomValuesPage}></Route>
-        <Route path="/pallets" component={PalletsPage}></Route>
         <Route path="/pallets/:pallet" component={ConstantsPage}></Route>
         <Route path="/pallets/:pallet/calls" component={CallsPage}></Route>
         <Route
