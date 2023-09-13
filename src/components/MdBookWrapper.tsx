@@ -7,16 +7,14 @@ import {
   onCleanup,
   onMount,
 } from "solid-js";
-import { Content } from "../models/content";
-import { SidebarHierarchy } from "../models/hierarchy";
 import { Sidebar } from "./Sidebar";
 import { MainSection } from "./MainSection";
 import { NavWrapper } from "./NavWrapper";
 import { NavWideWrapper } from "./NavWideWrapper";
 import { MenuBar } from "./MenuBar";
 import { sidebar } from "../state/visual_state";
-import { StartMain } from "./StartMain";
-import { appData } from "../state/app_state";
+import { HomePage } from "../pages/Home";
+import { appState } from "../state/app_state";
 
 interface Props {
   children?: JSX.Element;

@@ -1,10 +1,15 @@
 import { Component, Ref, createSignal } from "solid-js";
 import { Client, greet } from "subxt_example_codegen";
 import { DEFAULT_WS_URL } from "../constants";
-import { MetadataSource, buildAppData, setAppData } from "../state/app_state";
+import {
+  MetadataSource,
+  fetchMetadataAndInitState,
+  setAppState,
+} from "../state/app_state";
+import { MdBookWrapper } from "../components/MdBookWrapper";
 
 interface Props {}
-export const StartMain: Component<Props> = (props: Props) => {
+export const HomePage: Component<Props> = (props: Props) => {
   let fileInputRef: HTMLInputElement | undefined;
 
   /// Signals
@@ -49,8 +54,7 @@ export const StartMain: Component<Props> = (props: Props) => {
   async function onGenerateDocsButtonClick() {
     setLoadingState("loading");
     try {
-      let data = await buildAppData(metadataSource()!);
-      setAppData(data);
+      await fetchMetadataAndInitState(metadataSource()!);
     } catch (ex: any) {
       setError(ex.toString());
     }
@@ -59,7 +63,7 @@ export const StartMain: Component<Props> = (props: Props) => {
 
   /// JSX
   return (
-    <>
+    <MdBookWrapper>
       <h1>Subxt Node Explorer</h1>
       Ever wondered how to interact with a custom substrate node using Subxt?
       Upload a scale encoded metadata file or input a substrate node url to get
@@ -190,7 +194,7 @@ export const StartMain: Component<Props> = (props: Props) => {
           Generate Docs{" "}
         </button>
       </div>
-    </>
+    </MdBookWrapper>
   );
 };
 
