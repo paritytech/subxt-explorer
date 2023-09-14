@@ -12,21 +12,27 @@ function highlight(code: string): string {
 }
 
 /**
- * Cheap hack to show only important code. Should probably replaced with something more solid later. Slices a code snippet into 3 segments:
+ * Extremely hacky and unstable solution to show only important code. Should probably replaced with something more solid later. Slices a code snippet into 3 segments:
  *
  * Boring:
+ * ```
  * use std::mem::take;
- * pub fn main() {
+ * pub fn main() -> anyhow::Result<()> {
+ * ```
  *
  * Interesting:
- * let mut e : Option<u8> = Some(42);
- * let f = e.take();
+ * ```
+ *     let mut e : Option<u8> = Some(42);
+ *     let f = e.take();
+ * ```
  *
  * Boring:
+ * ```
+ *     Ok(())
  * }
+ * ```
  *
- *
- * Assumptions: code should be rust formatted.
+ * Assumptions: rust code should be formatted (e.g. contain line breaks) and end with `Ok(())`.
  */
 function sliceCodeIntoBoringInterestingBoring(
   code: string
@@ -45,7 +51,7 @@ function sliceCodeIntoBoringInterestingBoring(
   // find last curly closing bracket:
   let fn_main_close_idx = -1;
   for (let i = lines.length - 1; i >= 0; i--) {
-    if (lines[i].includes("}")) {
+    if (lines[i].includes("Ok(())")) {
       fn_main_close_idx = i;
       break;
     }
