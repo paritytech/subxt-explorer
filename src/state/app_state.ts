@@ -154,6 +154,22 @@ export class AppState {
 
     return items;
   }
+
+  /**
+   * Returns the scale value string of a storage entry
+   * @param palletName
+   * @param storageEntryName
+   */
+  async fetchKeylessStorageValue(
+    palletName: string,
+    storageEntryName: string
+  ): Promise<string | undefined> {
+    let valueString = await this.client.fetchKeylessStorageValue(
+      palletName,
+      storageEntryName
+    );
+    return valueString as string | undefined;
+  }
 }
 
 // export interface AppState {

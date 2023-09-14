@@ -41,7 +41,6 @@ function constantContent(constant: ConstantContent): JSX.Element {
   return (
     <>
       <h2>{constant.name}</h2>
-      {/* <div> {JSON.stringify(call.docs)}</div> */}
       <DocsComponent mdDocs={constant.docs}></DocsComponent>
       <div>
         Value type: <br />
