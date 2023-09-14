@@ -93,20 +93,66 @@ export class AppState {
       return undefined;
     }
 
-    const palletCalls: CallContent[] = [];
+    const items: CallContent[] = [];
 
     for (const callName of pallet.calls) {
       let content = this.client.callContent(palletName, callName) as
         | CallContent
         | undefined;
       if (content !== undefined) {
-        palletCalls.push(content);
+        items.push(content);
       } else {
         console.log("Error: undefined call content for call", callName);
       }
     }
 
-    return palletCalls;
+    return items;
+  }
+
+  palletStorageEntries(palletName: string): StorageEntryContent[] | undefined {
+    const pallet = this.palletContent(palletName);
+    if (pallet === undefined) {
+      return undefined;
+    }
+
+    const items: StorageEntryContent[] = [];
+
+    for (const entryName of pallet.storage_entries) {
+      let content = this.client.storageEntryContent(palletName, entryName) as
+        | StorageEntryContent
+        | undefined;
+      console.log(content);
+      if (content !== undefined) {
+        items.push(content);
+      } else {
+        console.log("Error: undefined content for storage entry", entryName);
+      }
+    }
+
+    return items;
+  }
+
+  palletConstants(palletName: string): ConstantContent[] | undefined {
+    const pallet = this.palletContent(palletName);
+    if (pallet === undefined) {
+      return undefined;
+    }
+
+    const items: ConstantContent[] = [];
+
+    for (const entryName of pallet.constants) {
+      let content = this.client.constantContent(palletName, entryName) as
+        | ConstantContent
+        | undefined;
+      console.log(content);
+      if (content !== undefined) {
+        items.push(content);
+      } else {
+        console.log("Error: undefined content for storage entry", entryName);
+      }
+    }
+
+    return items;
   }
 }
 
@@ -140,22 +186,25 @@ export interface PalletContent {
   constants: string[];
 }
 
-export interface CallContent {
+export type CallContent = {} & PalletItemConent;
+
+export type StorageEntryContent = {
+  value_type: string;
+  key_types: string[];
+} & PalletItemConent;
+
+export type ConstantContent = {
+  value_type: string;
+  value?: string;
+} & PalletItemConent;
+
+/**
+ * A common denominator between call, storage entry and constant.
+ */
+export interface PalletItemConent {
   pallet_name: string;
-  call_name: string;
+  name: string;
   docs: string[];
   code_example_static: string;
   code_example_dynamic: string;
 }
-
-export interface StorageEntryContent {
-  pallet_name: string;
-  entry_name: string;
-  docs: string[];
-  code_example_static: string;
-  code_example_dynamic: string;
-}
-
-// function pathT0
-
-//     export function mapPath

@@ -1,5 +1,5 @@
 import { Component, Ref, createSignal } from "solid-js";
-import { Client, make_pretty } from "subxt_example_codegen";
+import { Client } from "subxt_example_codegen";
 import { DEFAULT_WS_URL } from "../constants";
 import {
   MetadataSource,
@@ -7,7 +7,7 @@ import {
   setAppState,
 } from "../state/app_state";
 import { MdBookWrapper } from "../components/MdBookWrapper";
-import { highlight } from "../utils";
+import { DebugComponent } from "../components/DebugComponent";
 
 interface Props {}
 export const HomePage: Component<Props> = (props: Props) => {
@@ -15,7 +15,7 @@ export const HomePage: Component<Props> = (props: Props) => {
 
   /// Signals
 
-  let [tab, setTab] = createSignal<"file" | "url">("file");
+  let [tab, setTab] = createSignal<"file" | "url">("url");
 
   let [url, setUrl] = createSignal<string>(DEFAULT_WS_URL);
 
@@ -65,6 +65,7 @@ export const HomePage: Component<Props> = (props: Props) => {
   /// JSX
   return (
     <MdBookWrapper>
+      <DebugComponent></DebugComponent>
       <h1>Subxt Node Explorer</h1>
       Ever wondered how to interact with a custom substrate node using Subxt?
       Upload a scale encoded metadata file or input a substrate node url to get
