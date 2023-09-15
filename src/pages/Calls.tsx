@@ -3,8 +3,9 @@ import { MdBookWrapper } from "../components/MdBookWrapper";
 import { AppState, CallContent, appState } from "../state/app_state";
 import { JSX } from "solid-js";
 import { marked } from "marked";
-import { CodeComponent } from "../components/CodeComponent";
-import { DocsComponent } from "../components/DocsComponent";
+import { Code } from "../components/Code";
+import { Docs } from "../components/Docs";
+import { CodeTabLayout } from "../components/CodeTabLayout";
 export const CallsPage = () => {
   let params = useParams<{ pallet: string }>();
   return (
@@ -17,7 +18,6 @@ function callsPageContent(
   pallet_name: string
 ): JSX.Element {
   let calls = state?.palletCalls(pallet_name);
-  console.log("calls", state, pallet_name, calls);
   if (calls === undefined) {
     return <Navigate href={"/"} />;
   }
@@ -35,11 +35,14 @@ function callContent(call: CallContent): JSX.Element {
     <>
       <h2>{call.name}</h2>
       {/* <div> {JSON.stringify(call.docs)}</div> */}
-      <DocsComponent mdDocs={call.docs}></DocsComponent>
-      <h4>Static Code example:</h4>
-      <CodeComponent code={call.code_example_static}></CodeComponent>
-      <h4>Dynamic Code example:</h4>
-      <CodeComponent code={call.code_example_dynamic}></CodeComponent>
+      <Docs mdDocs={call.docs}></Docs>
+
+      <div class="mt-5">
+        <CodeTabLayout
+          staticCode={call.code_example_static}
+          dynamicCode={call.code_example_dynamic}
+        ></CodeTabLayout>
+      </div>
     </>
   );
 }

@@ -21,6 +21,7 @@ export interface SidebarItem {
 export type ItemKind =
   | { tag: "home" }
   | { tag: "runtime_apis" }
+  | { tag: "runtime_api"; runtime_api: string }
   | { tag: "custom_values" }
   | {
       tag: "pallet";
@@ -48,7 +49,11 @@ export function pathToItemKind(path: string): ItemKind | undefined {
   }
   switch (segs[0]!) {
     case "runtime_apis":
-      return { tag: "runtime_apis" };
+      if (segs[1]) {
+        return { tag: "runtime_api", runtime_api: segs[1] };
+      } else {
+        return { tag: "runtime_apis" };
+      }
     case "custom_values":
       return { tag: "custom_values" };
     case "pallets":
@@ -77,6 +82,8 @@ export function itemKindToPath(item: ItemKind): string {
       return "/";
     case "runtime_apis":
       return "/runtime_apis";
+    case "runtime_api":
+      return `/runtime_apis/${item.runtime_api}`;
     case "custom_values":
       return "/custom_values";
     case "pallet":
@@ -96,6 +103,8 @@ export function itemKindToTitle(item: ItemKind): string {
       return "Home";
     case "runtime_apis":
       return "Runtime APIs";
+    case "runtime_api":
+      return item.runtime_api;
     case "custom_values":
       return "Custom Value";
     case "pallet":

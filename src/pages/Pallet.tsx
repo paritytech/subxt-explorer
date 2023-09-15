@@ -35,10 +35,7 @@ function palletPageContent(
           <ul>
             {content!.calls.map((call_name) => (
               <li>
-                <A
-                  href={`/pallets/${pallet_name}/calls#${call_name}`}
-                  class="no-"
-                >
+                <A href={`/pallets/${pallet_name}/calls#${call_name}`}>
                   {call_name}
                 </A>
               </li>

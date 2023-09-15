@@ -54,7 +54,13 @@ export class AppState {
     let items: SidebarItem[] = [];
     // runtime apis
     if (this.content.runtime_apis.length != 0) {
-      items.push(newItem({ tag: "runtime_apis" }));
+      let item = newItem({ tag: "runtime_apis" });
+      for (const runtimeAPI of this.content.runtime_apis) {
+        item.children.push(
+          newItem({ tag: "runtime_api", runtime_api: runtimeAPI.name })
+        );
+      }
+      items.push(item);
     }
     // custom values
     if (this.content.custom_values.length != 0) {
@@ -87,6 +93,14 @@ export class AppState {
     return this.client.palletContent(palletName) as PalletContent | undefined;
   }
 
+  runtimeApiTraitContent(
+    palletName: string
+  ): RuntimeAPITraitContent | undefined {
+    return this.client.runtimeApiTraitContent(palletName) as
+      | RuntimeAPITraitContent
+      | undefined;
+  }
+
   palletCalls(palletName: string): CallContent[] | undefined {
     const pallet = this.palletContent(palletName);
     if (pallet === undefined) {
@@ -102,7 +116,7 @@ export class AppState {
       if (content !== undefined) {
         items.push(content);
       } else {
-        console.log("Error: undefined call content for call", callName);
+        console.error("Error: undefined call content for call", callName);
       }
     }
 
@@ -125,7 +139,7 @@ export class AppState {
       if (content !== undefined) {
         items.push(content);
       } else {
-        console.log("Error: undefined content for storage entry", entryName);
+        console.error("Error: undefined content for storage entry", entryName);
       }
     }
 
@@ -144,15 +158,47 @@ export class AppState {
       let content = this.client.constantContent(palletName, entryName) as
         | ConstantContent
         | undefined;
-      console.log(content);
       if (content !== undefined) {
         items.push(content);
       } else {
-        console.log("Error: undefined content for storage entry", entryName);
+        console.error("Error: undefined content for storage entry", entryName);
       }
     }
 
     return items;
+  }
+
+  runtimeApiDocs(runtimeApiTraitName: string): string[] | undefined {
+    return this.client.runtimeApiTraitDocs(runtimeApiTraitName) as
+      | string[]
+      | undefined;
+  }
+
+  runtimeApiMethods(
+    runtimeApiTraitName: string
+  ): RuntimeApiMethodContent[] | undefined {
+    let runtimeApi = this.runtimeApiTraitContent(runtimeApiTraitName);
+    if (runtimeApi === undefined) {
+      return undefined;
+    }
+    let methodContents: RuntimeApiMethodContent[] = [];
+
+    for (const methodName of runtimeApi.methods) {
+      let content = this.client.runtimeApiMethodContent(
+        runtimeApiTraitName,
+        methodName
+      ) as RuntimeApiMethodContent | undefined;
+      if (content !== undefined) {
+        methodContents.push(content);
+      } else {
+        console.error(
+          "Error: undefined content for runtime api method",
+          runtimeApiTraitName,
+          methodName
+        );
+      }
+    }
+    return methodContents;
   }
 
   /**
@@ -191,7 +237,7 @@ export async function fetchMetadataAndInitState(
 
 export interface MetadataContent {
   pallets: PalletContent[];
-  runtime_apis: string[];
+  runtime_apis: RuntimeAPITraitContent[];
   custom_values: string[];
 }
 
@@ -202,15 +248,20 @@ export interface PalletContent {
   constants: string[];
 }
 
+export interface RuntimeAPITraitContent {
+  name: string;
+  methods: string[];
+}
+
 export type CallContent = {} & PalletItemConent;
 
 export type StorageEntryContent = {
-  value_type: string;
-  key_types: string[];
+  value_type: string; // type path
+  key_types: string[]; // type paths
 } & PalletItemConent;
 
 export type ConstantContent = {
-  value_type: string;
+  value_type: string; // type path
   value?: string;
 } & PalletItemConent;
 
@@ -223,4 +274,19 @@ export interface PalletItemConent {
   docs: string[];
   code_example_static: string;
   code_example_dynamic: string;
+}
+
+export interface RuntimeApiMethodContent {
+  runtime_api_trait_name: string;
+  method_name: string;
+  docs: string[];
+  code_example_static: string;
+  code_example_dynamic: string;
+  input_types: NameAndType[];
+  value_type: string;
+}
+
+export interface NameAndType {
+  name: string; // type name
+  type_path: string; // type path
 }

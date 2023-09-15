@@ -8,7 +8,6 @@ import {
   onMount,
 } from "solid-js";
 import { Sidebar } from "./Sidebar";
-import { MainSection } from "./MainSection";
 import { NavWrapper } from "./NavWrapper";
 import { NavWideWrapper } from "./NavWideWrapper";
 import { MenuBar } from "./MenuBar";

@@ -3,8 +3,9 @@ import { MdBookWrapper } from "../components/MdBookWrapper";
 import { AppState, StorageEntryContent, appState } from "../state/app_state";
 import { JSX, Show, createSignal } from "solid-js";
 import { marked } from "marked";
-import { CodeComponent } from "../components/CodeComponent";
-import { DocsComponent } from "../components/DocsComponent";
+import { Code } from "../components/Code";
+import { Docs } from "../components/Docs";
+import { CodeTabLayout } from "../components/CodeTabLayout";
 export const StoragePage = () => {
   let params = useParams<{ pallet: string }>();
   return (
@@ -65,7 +66,7 @@ function storageEntryContent(
   return (
     <>
       <h2>{entry.name}</h2>
-      <DocsComponent mdDocs={entry.docs}></DocsComponent>
+      <Docs mdDocs={entry.docs}></Docs>
       <div>
         Key Types:
         {entry.key_types.length == 0 ? (
@@ -84,7 +85,6 @@ function storageEntryContent(
           <code class="text-orange-500">{entry.value_type}</code>
         </div>
         <Show when={entry.key_types.length === 0}>
-          <div>Value:</div>
           <div>
             <Show when={storageValue()?.tag === "loading"}>
               <i class="fa fa-spinner animate-spin"></i> Loading...
@@ -109,11 +109,12 @@ function storageEntryContent(
           </button>
         </Show>
       </div>
-
-      <h4>Static Code example:</h4>
-      <CodeComponent code={entry.code_example_static}></CodeComponent>
-      <h4>Dynamic Code example:</h4>
-      <CodeComponent code={entry.code_example_dynamic}></CodeComponent>
+      <div class="mt-5">
+        <CodeTabLayout
+          staticCode={entry.code_example_static}
+          dynamicCode={entry.code_example_dynamic}
+        ></CodeTabLayout>
+      </div>
     </>
   );
 }

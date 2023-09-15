@@ -1,5 +1,4 @@
 import { Component, Ref, createSignal } from "solid-js";
-import { Client } from "subxt_example_codegen";
 import { DEFAULT_WS_URL } from "../constants";
 import {
   MetadataSource,
@@ -8,6 +7,8 @@ import {
 } from "../state/app_state";
 import { MdBookWrapper } from "../components/MdBookWrapper";
 import { DebugComponent } from "../components/DebugComponent";
+import { FileUploadArea } from "../components/FileUploadArea";
+import { TabLayout, TabWithContent } from "../components/TabLayout";
 
 interface Props {}
 export const HomePage: Component<Props> = (props: Props) => {
@@ -27,7 +28,8 @@ export const HomePage: Component<Props> = (props: Props) => {
 
   let [error, setError] = createSignal<string | undefined>(undefined);
 
-  let [draggingOnField, setDraggingOnField] = createSignal<boolean>(false);
+  let [isDraggingOnUpload, setIsDraggingOnUpload] =
+    createSignal<boolean>(false);
 
   const metadataSource = (): MetadataSource | undefined => {
     if (error() !== undefined) {
@@ -62,6 +64,68 @@ export const HomePage: Component<Props> = (props: Props) => {
     setLoadingState("none");
   }
 
+  const urlTabContent = (
+    <input
+      class="w-full bg-zinc-dark p-2 rounded-md border-2 outline-none focus:border-teal-400 border-solid  border-gray-500 "
+      type="text"
+      value={url()}
+      onInput={(e) => {
+        setUrl(e.target.value);
+        setError(undefined);
+      }}
+      onChange={(e) => {
+        setUrl(e.target.value);
+        setError(undefined);
+      }}
+    />
+  );
+
+  const fileTabContent = (
+    <FileUploadArea
+      isDragging={isDraggingOnUpload()}
+      setDragging={setIsDraggingOnUpload}
+      fileName={file()?.name}
+      description={`Drag Metadata File here, or click "Upload"`}
+      onDropOrUpload={(files) => {
+        if (files === undefined) {
+          setError("Something went wrong with the file upload.");
+        } else if (files.length !== 1) {
+          setError("Please only select a single file.");
+        } else {
+          setFile(files[0]);
+          setError(undefined);
+        }
+      }}
+    ></FileUploadArea>
+  );
+
+  const tabsWithContent: TabWithContent[] = [
+    {
+      tab: {
+        title: "Url",
+        active: () => tab() == "url",
+        onClick: () => {
+          setTab("url");
+          setError(undefined);
+        },
+        icon: "fa-link",
+      },
+      content: urlTabContent,
+    },
+    {
+      tab: {
+        title: "File",
+        active: () => tab() == "file",
+        onClick: () => {
+          setTab("file");
+          setError(undefined);
+        },
+        icon: "fa-file",
+      },
+      content: fileTabContent,
+    },
+  ];
+
   /// JSX
   return (
     <MdBookWrapper>
@@ -71,114 +135,11 @@ export const HomePage: Component<Props> = (props: Props) => {
       Upload a scale encoded metadata file or input a substrate node url to get
       started:
       <div></div>
-      <div class="mt-5">
-        {Tab(
-          "Url",
-          tab() == "url",
-          () => {
-            setTab("url");
-            setError(undefined);
-          },
-          "fa-link"
-        )}
-        {Tab(
-          "File",
-          tab() == "file",
-          () => {
-            setTab("file");
-            setError(undefined);
-          },
-          "fa-file"
-        )}
-      </div>
-      <div class="py-5 my-5">
-        {" "}
-        {tab() == "url" && (
-          <input
-            class="w-full bg-zinc-dark p-2 rounded-md border-2 outline-none focus:border-teal-400 border-solid  border-gray-500 "
-            type="text"
-            value={url()}
-            onInput={(e) => {
-              setUrl(e.target.value);
-              setError(undefined);
-            }}
-            onChange={(e) => {
-              setUrl(e.target.value);
-              setError(undefined);
-            }}
-          />
-        )}
-        {tab() == "file" && (
-          <div
-            class={`w-full h-60 border-dashed border-2 rounded-md border-gray-500 flex justify-center bg-zinc-dark ${
-              draggingOnField() ? "neon-inner-shadow" : ""
-            }`}
-            onDragEnter={(e) => {
-              setDraggingOnField(true);
-              e.preventDefault();
-              e.stopPropagation();
-            }}
-            onDragLeave={(e) => {
-              setDraggingOnField(false);
-              e.preventDefault();
-              e.stopPropagation();
-            }}
-            onDragExit={(e) => {
-              setDraggingOnField(false);
-              e.preventDefault();
-              e.stopPropagation();
-            }}
-            onDragOver={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-            }}
-            onDrop={(e) => {
-              setDraggingOnField(false);
-              e.preventDefault();
-              e.stopPropagation();
-              const files = e.dataTransfer?.files;
-              if (files === undefined) {
-                setError("Something went wrong when dragging the file in.");
-              } else if (files.length !== 1) {
-                setError("Please only drag in a single file.");
-              } else {
-                setFile(files[0]);
-                setError(undefined);
-              }
-            }}
-          >
-            <div class="self-center text-center pointer-events-none">
-              <div class="text-teal-300 italic">{file() && file()?.name}</div>
-              <div> Drag Metadata File here, or click "Upload"</div>
-              <button
-                class="btn mt-3 bg-zinc-600 pointer-events-auto hover:bg-zinc-500"
-                onClick={() => {
-                  fileInputRef!.click();
-                }}
-              >
-                Upload
-              </button>
-              <input
-                type="file"
-                ref={fileInputRef}
-                class="hidden"
-                onChange={(e) => {
-                  console.log(e);
-                  const files = e?.target?.files;
-                  if (files === null) {
-                    setError("Something went wrong with the file upload.");
-                  } else if (files.length !== 1) {
-                    setError("Please only select a single file.");
-                  } else {
-                    setFile(files[0]);
-                    setError(undefined);
-                  }
-                }}
-              ></input>
-            </div>
-          </div>
-        )}
-      </div>
+      <TabLayout
+        tabs={tabsWithContent}
+        tabsContainerClass="mt-5"
+        contentContainerClass="py-5 my-5"
+      ></TabLayout>
       {error() && (
         <div class="text-center w-full text-red-400 mb-4">{error()}</div>
       )}
@@ -199,21 +160,3 @@ export const HomePage: Component<Props> = (props: Props) => {
     </MdBookWrapper>
   );
 };
-
-function Tab(
-  title: string,
-  active: boolean,
-  onClick: () => void,
-  faClass: `fa-${string}`
-) {
-  return (
-    <button
-      class={`font-bold border-none rounded-md px-4 py-2 mr-4  ${
-        active ? "bg-teal-500" : "bg-zinc-dark hover:bg-zinc-600"
-      }`}
-      onClick={onClick}
-    >
-      <span class={`fa ${faClass} mr-2`}></span> {title}
-    </button>
-  );
-}

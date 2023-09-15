@@ -8,8 +8,9 @@ import {
 } from "../state/app_state";
 import { JSX } from "solid-js";
 import { marked } from "marked";
-import { CodeComponent } from "../components/CodeComponent";
-import { DocsComponent } from "../components/DocsComponent";
+import { Code } from "../components/Code";
+import { Docs } from "../components/Docs";
+import { CodeTabLayout } from "../components/CodeTabLayout";
 export const ConstantsPage = () => {
   let params = useParams<{ pallet: string }>();
   return (
@@ -41,7 +42,7 @@ function constantContent(constant: ConstantContent): JSX.Element {
   return (
     <>
       <h2>{constant.name}</h2>
-      <DocsComponent mdDocs={constant.docs}></DocsComponent>
+      <Docs mdDocs={constant.docs}></Docs>
       <div>
         Value type: <br />
         <code class="text-orange-500">{constant.value_type}</code>
@@ -51,10 +52,12 @@ function constantContent(constant: ConstantContent): JSX.Element {
         <code class="text-orange-500">{constant.value}</code>
       </div>
 
-      <h4>Static Code example:</h4>
-      <CodeComponent code={constant.code_example_static}></CodeComponent>
-      <h4>Dynamic Code example:</h4>
-      <CodeComponent code={constant.code_example_dynamic}></CodeComponent>
+      <div class="mt-5">
+        <CodeTabLayout
+          staticCode={constant.code_example_static}
+          dynamicCode={constant.code_example_dynamic}
+        ></CodeTabLayout>
+      </div>
     </>
   );
 }
