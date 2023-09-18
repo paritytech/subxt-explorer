@@ -1,7 +1,12 @@
-import { A, Navigate, useParams } from "@solidjs/router";
+import { A, Link, Navigate, useParams } from "@solidjs/router";
 import { MdBookWrapper } from "../components/MdBookWrapper";
 import { AppState, PalletContent, appState } from "../state/app_state";
 import { For, JSX } from "solid-js";
+import {
+  findInSidebarItems,
+  setActiveItem,
+  sidebarItems,
+} from "../state/sidebar";
 export const PalletPage = () => {
   let params = useParams<{ pallet: string }>();
   return (
@@ -29,15 +34,17 @@ function palletPageContent(
       {/* TODO: Right now no calls are available {JSON.stringify(docs)} */}
       {content!.calls.length > 0 && (
         <>
-          <A href={`/pallets/${pallet_name}/calls`}>
-            <h2 class="mt-12">Calls</h2>
-          </A>
+          <TryToLink href={`/pallets/${pallet_name}/calls`}>
+            <h2 class="mt-12" style={{ "text-decoration": "none" }}>
+              Calls
+            </h2>
+          </TryToLink>
           <ul>
             {content!.calls.map((call_name) => (
-              <li>
-                <A href={`/pallets/${pallet_name}/calls#${call_name}`}>
+              <li class="text-gray-300 hover:text-pink-500">
+                <TryToLink href={`/pallets/${pallet_name}/calls#${call_name}`}>
                   {call_name}
-                </A>
+                </TryToLink>
               </li>
             ))}
           </ul>
@@ -45,17 +52,17 @@ function palletPageContent(
       )}
       {content!.storage_entries.length > 0 && (
         <>
-          <A href={`/pallets/${pallet_name}/storage_entries`}>
+          <TryToLink href={`/pallets/${pallet_name}/storage_entries`}>
             <h2 class="mt-12">Storage Entries</h2>
-          </A>
+          </TryToLink>
           <ul>
             {content!.storage_entries.map((entry_name) => (
-              <li>
-                <A
+              <li class="text-gray-300 hover:text-pink-500">
+                <TryToLink
                   href={`/pallets/${pallet_name}/storage_entries#${entry_name}`}
                 >
                   {entry_name}
-                </A>
+                </TryToLink>
               </li>
             ))}
           </ul>
@@ -63,13 +70,15 @@ function palletPageContent(
       )}
       {content!.constants.length > 0 && (
         <>
-          <A href={`/pallets/${pallet_name}/sto`}>
-            <h2 class="mt-12">Constants</h2>
-          </A>
+          <TryToLink href={`/pallets/${pallet_name}/sto`}>
+            <h2 class="mt-12 text-gray-300 hover:text-pink-500">Constants</h2>
+          </TryToLink>
           <ul>
             {content!.constants.map((constant) => (
-              <li>
-                <A href={`/pallets/${pallet_name}/constants`}>{constant}</A>
+              <li class="text-gray-300 hover:text-pink-500">
+                <TryToLink href={`/pallets/${pallet_name}/constants`}>
+                  {constant}
+                </TryToLink>
               </li>
             ))}
           </ul>
@@ -78,3 +87,27 @@ function palletPageContent(
     </>
   );
 }
+
+// a Link component that tries to find the correct sidebar item and sets the active side bar item if the href matches.
+const TryToLink = (props: {
+  href: string;
+  children: JSX.Element;
+}): JSX.Element => {
+  return (
+    <Link
+      activeClass=""
+      href={props.href}
+      onClick={() => {
+        let splitPath = props.href.split("#")[0];
+        let found = findInSidebarItems((e) => e.path == splitPath);
+        console.log("found", found);
+        if (found) {
+          setActiveItem(found);
+        }
+      }}
+      style={{ "text-decoration": "none" }}
+    >
+      <span class="text-gray-300 hover:text-pink-500">{props.children}</span>
+    </Link>
+  );
+};

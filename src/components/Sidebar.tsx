@@ -1,6 +1,6 @@
 import { Component, For, JSX, createSignal } from "solid-js";
 import { MetadataSource, appState } from "../state/app_state";
-import { A } from "@solidjs/router";
+import { Link } from "@solidjs/router";
 import {
   HOME_ITEM,
   SidebarItem,
@@ -17,24 +17,25 @@ export const Sidebar: Component<Props> = (props: Props) => {
       <div class="sidebar-scrollbox">
         <ol class="chapter">
           <li class="chapter-item expanded affix">
-            <A
+            <Link
               href="/"
               activeClass=""
               onClick={() => {
                 setActiveItem(HOME_ITEM);
               }}
+              class="p-0"
             >
               <h1
-                class={`mt-0 ${
+                class={`my-0 ${
                   activeItem().path == HOME_ITEM.path && "text-pink-500"
-                }`}
+                } hover:text-pink-500`}
               >
                 Subxt Explorer
               </h1>
-            </A>
+            </Link>
           </li>
           {appState() && (
-            <li class="part-title leading-6 pb-4">
+            <li class="part-title leading-6 pt-6 pb-3">
               {metadataSourceSpan(appState()!.source)}
             </li>
           )}
@@ -58,24 +59,34 @@ function sideBarItem(item: SidebarItem): JSX.Element {
   return (
     <>
       <li class="chapter-item expanded ">
-        <A
+        <Link
           href={item.path}
           activeClass=""
           onClick={() => {
             setActiveItem(item);
           }}
-          class={activeItem().path === item.path ? "active" : ""}
+          // class={activeItem().path === item.path ? "active" : ""}
+          // class="text-gray-300 hover:text-pink-500"
+          style={{}}
         >
-          {!topLevel && <strong>&bull; </strong>}
+          <span
+            class={`${
+              activeItem().path === item.path
+                ? "text-pink-500"
+                : "text-gray-300"
+            } hover:text-pink-500`}
+          >
+            {!topLevel && <strong>&bull; </strong>}
 
-          <span class={topLevel ? "font-bold" : ""}>{item.title}</span>
-          {item.kind.tag === "pallet" && (
-            <span aria-hidden="true" class="text-gray-500">
-              {" "}
-              index={item.kind.index}{" "}
-            </span>
-          )}
-        </A>
+            <span class={topLevel ? "font-bold" : ""}>{item.title}</span>
+            {item.kind.tag === "pallet" && (
+              <span aria-hidden="true" class="text-gray-500">
+                {" "}
+                index={item.kind.index}{" "}
+              </span>
+            )}
+          </span>
+        </Link>
       </li>
       {item.children.length != 0 && (
         <li>

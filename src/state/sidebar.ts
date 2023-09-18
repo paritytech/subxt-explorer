@@ -5,6 +5,28 @@ export const [sidebarItems, setSidebarItems] = createSignal<SidebarItem[]>([]);
 export const HOME_ITEM: SidebarItem = newItem({ tag: "home" });
 export const [activeItem, setActiveItem] = createSignal<SidebarItem>(HOME_ITEM);
 
+export function findInSidebarItems(
+  fn: (item: SidebarItem) => boolean
+): SidebarItem | undefined {
+  return recursiveFind(sidebarItems(), fn);
+}
+
+function recursiveFind(
+  arr: SidebarItem[],
+  fn: (item: SidebarItem) => boolean
+): SidebarItem | undefined {
+  for (const e of arr) {
+    if (fn(e)) {
+      return e;
+    }
+    let childFound = recursiveFind(e.children, fn);
+    if (childFound !== undefined) {
+      return childFound;
+    }
+  }
+  return undefined;
+}
+
 export function newItem(kind: ItemKind): SidebarItem {
   return {
     kind,
