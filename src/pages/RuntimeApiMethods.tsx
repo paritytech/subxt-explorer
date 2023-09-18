@@ -1,9 +1,14 @@
 import { Navigate, useParams } from "@solidjs/router";
 import { MdBookWrapper } from "../components/MdBookWrapper";
-import { AppState, appState } from "../state/app_state";
+import {
+  AppState,
+  RuntimeApiMethodContent,
+  appState,
+} from "../state/app_state";
 import { JSX } from "solid-js";
 import { Docs } from "../components/Docs";
 import { CodeTabLayout } from "../components/CodeTabLayout";
+import { KeyValueTypesLayout } from "../components/KeyValueTypesLayout";
 
 export const RuntimeApiMethodsPage = () => {
   let params = useParams<{ runtime_api: string }>();
@@ -37,9 +42,21 @@ function callsPageContent(
 function methodContent(method: RuntimeApiMethodContent): JSX.Element {
   return (
     <>
-      <h2>{method.name}</h2>
+      <h2>{method.method_name}</h2>
       <Docs mdDocs={method.docs} />
-      todo: input output
+      <KeyValueTypesLayout
+        keyTypes={{
+          title: "API Call Arguments",
+          types: {
+            tag: "named",
+            types: method.input_types,
+          },
+        }}
+        valueType={{
+          title: "API Call Return Type",
+          type: method.value_type,
+        }}
+      ></KeyValueTypesLayout>
       <div class="mt-5">
         <CodeTabLayout
           staticCode={method.code_example_static}

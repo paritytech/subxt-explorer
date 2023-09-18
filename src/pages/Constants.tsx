@@ -11,6 +11,7 @@ import { marked } from "marked";
 import { Code } from "../components/Code";
 import { Docs } from "../components/Docs";
 import { CodeTabLayout } from "../components/CodeTabLayout";
+import { KeyValueTypesLayout } from "../components/KeyValueTypesLayout";
 export const ConstantsPage = () => {
   let params = useParams<{ pallet: string }>();
   return (
@@ -43,15 +44,16 @@ function constantContent(constant: ConstantContent): JSX.Element {
     <>
       <h2>{constant.name}</h2>
       <Docs mdDocs={constant.docs}></Docs>
-      <div>
-        Value type: <br />
-        <code class="text-orange-500">{constant.value_type}</code>
-      </div>
-      <div>
-        Value: <br />
-        <code class="text-orange-500">{constant.value}</code>
-      </div>
-
+      <KeyValueTypesLayout
+        valueType={{
+          title: "Constant Type",
+          type: constant.value_type,
+        }}
+        value={{
+          title: "Constant Value",
+          value: constant.value,
+        }}
+      ></KeyValueTypesLayout>
       <div class="mt-5">
         <CodeTabLayout
           staticCode={constant.code_example_static}

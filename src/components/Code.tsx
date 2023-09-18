@@ -67,7 +67,7 @@ export const Code = ({ code }: { code: string }): JSX.Element => {
   );
 };
 
-function highlight(code: string): string {
+export function highlight(code: string): string {
   return hljs.highlight(code, {
     language: "rust",
   }).value;

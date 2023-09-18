@@ -253,7 +253,9 @@ export interface RuntimeAPITraitContent {
   methods: string[];
 }
 
-export type CallContent = {} & PalletItemConent;
+export type CallContent = {
+  argument_types: NameAndType[];
+} & PalletItemConent;
 
 export type StorageEntryContent = {
   value_type: string; // type path
@@ -262,7 +264,7 @@ export type StorageEntryContent = {
 
 export type ConstantContent = {
   value_type: string; // type path
-  value?: string;
+  value: string;
 } & PalletItemConent;
 
 /**

@@ -6,6 +6,7 @@ import { marked } from "marked";
 import { Code } from "../components/Code";
 import { Docs } from "../components/Docs";
 import { CodeTabLayout } from "../components/CodeTabLayout";
+import { KeyValueTypesLayout } from "../components/KeyValueTypesLayout";
 export const CallsPage = () => {
   let params = useParams<{ pallet: string }>();
   return (
@@ -34,9 +35,16 @@ function callContent(call: CallContent): JSX.Element {
   return (
     <>
       <h2>{call.name}</h2>
-      {/* <div> {JSON.stringify(call.docs)}</div> */}
       <Docs mdDocs={call.docs}></Docs>
-
+      <KeyValueTypesLayout
+        keyTypes={{
+          title: "Call Arguments",
+          types: {
+            tag: "named",
+            types: call.argument_types,
+          },
+        }}
+      ></KeyValueTypesLayout>
       <div class="mt-5">
         <CodeTabLayout
           staticCode={call.code_example_static}
