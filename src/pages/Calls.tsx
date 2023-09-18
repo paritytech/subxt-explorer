@@ -37,13 +37,17 @@ function callContent(call: CallContent): JSX.Element {
       <h2 class="mt-12">{call.name}</h2>
       <Docs mdDocs={call.docs}></Docs>
       <KeyValueTypesLayout
-        keyTypes={{
-          title: "Call Arguments",
-          types: {
-            tag: "named",
-            types: call.argument_types,
-          },
-        }}
+        keyTypes={
+          call.argument_types.length > 0
+            ? {
+                title: "Call Arguments",
+                types: {
+                  tag: "named",
+                  types: call.argument_types,
+                },
+              }
+            : undefined
+        }
       ></KeyValueTypesLayout>
       <div class="mt-5">
         <CodeTabLayout

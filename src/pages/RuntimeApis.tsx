@@ -2,6 +2,7 @@ import { A, Navigate, useParams } from "@solidjs/router";
 import { MdBookWrapper } from "../components/MdBookWrapper";
 import { AppState, appState } from "../state/app_state";
 import { JSX } from "solid-js";
+import { TryToLink } from "../components/TryLinkTo";
 
 export const RuntimeApisPage = () => {
   return <MdBookWrapper>{runtimeApisPageContent(appState())}</MdBookWrapper>;
@@ -18,14 +19,16 @@ function runtimeApisPageContent(state: AppState | undefined): JSX.Element {
       {state!.content.runtime_apis.map((runtimeApi) => (
         <>
           <h2 class="mt-12">
-            <A href={`/runtime_apis/${runtimeApi.name}`}>{runtimeApi.name}</A>
+            <TryToLink href={`/runtime_apis/${runtimeApi.name}`}>
+              {runtimeApi.name}
+            </TryToLink>
           </h2>
           <ul>
             {runtimeApi.methods.map((method) => (
               <li>
-                <A href={`/runtime_apis/${runtimeApi.name}#${method}`}>
+                <TryToLink href={`/runtime_apis/${runtimeApi.name}#${method}`}>
                   {method}
-                </A>
+                </TryToLink>
               </li>
             ))}
           </ul>

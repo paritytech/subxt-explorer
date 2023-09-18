@@ -94,6 +94,8 @@ export const HomePage: Component<Props> = (props: Props) => {
         } else {
           setFile(files[0]);
           setError(undefined);
+          // directly generate new docs as soon as it it dragged in.
+          onGenerateDocsButtonClick();
         }
       }}
     ></FileUploadArea>

@@ -7,6 +7,7 @@ import {
   setActiveItem,
   sidebarItems,
 } from "../state/sidebar";
+import { TryToLink } from "../components/TryLinkTo";
 export const PalletPage = () => {
   let params = useParams<{ pallet: string }>();
   return (
@@ -87,27 +88,3 @@ function palletPageContent(
     </>
   );
 }
-
-// a Link component that tries to find the correct sidebar item and sets the active side bar item if the href matches.
-const TryToLink = (props: {
-  href: string;
-  children: JSX.Element;
-}): JSX.Element => {
-  return (
-    <Link
-      activeClass=""
-      href={props.href}
-      onClick={() => {
-        let splitPath = props.href.split("#")[0];
-        let found = findInSidebarItems((e) => e.path == splitPath);
-        console.log("found", found);
-        if (found) {
-          setActiveItem(found);
-        }
-      }}
-      style={{ "text-decoration": "none" }}
-    >
-      <span class="text-gray-300 hover:text-pink-500">{props.children}</span>
-    </Link>
-  );
-};

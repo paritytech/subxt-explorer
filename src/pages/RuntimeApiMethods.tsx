@@ -45,13 +45,17 @@ function methodContent(method: RuntimeApiMethodContent): JSX.Element {
       <h2 class="mt-12">{method.method_name}</h2>
       <Docs mdDocs={method.docs} />
       <KeyValueTypesLayout
-        keyTypes={{
-          title: "API Call Arguments",
-          types: {
-            tag: "named",
-            types: method.input_types,
-          },
-        }}
+        keyTypes={
+          method.input_types.length > 0
+            ? {
+                title: "API Call Arguments",
+                types: {
+                  tag: "named",
+                  types: method.input_types,
+                },
+              }
+            : undefined
+        }
         valueType={{
           title: "API Call Return Type",
           type: method.value_type,
