@@ -30,7 +30,7 @@ function palletPageContent(
       {content!.calls.length > 0 && (
         <>
           <A href={`/pallets/${pallet_name}/calls`}>
-            <h2 style={{ "margin-top": "16px" }}>Calls</h2>
+            <h2 class="mt-12">Calls</h2>
           </A>
           <ul>
             {content!.calls.map((call_name) => (
@@ -46,7 +46,7 @@ function palletPageContent(
       {content!.storage_entries.length > 0 && (
         <>
           <A href={`/pallets/${pallet_name}/storage_entries`}>
-            <h2 style={{ "margin-top": "16px" }}>Storage Entries</h2>
+            <h2 class="mt-12">Storage Entries</h2>
           </A>
           <ul>
             {content!.storage_entries.map((entry_name) => (
@@ -64,7 +64,7 @@ function palletPageContent(
       {content!.constants.length > 0 && (
         <>
           <A href={`/pallets/${pallet_name}/sto`}>
-            <h2 style={{ "margin-top": "16px" }}>Constants</h2>
+            <h2 class="mt-12">Constants</h2>
           </A>
           <ul>
             {content!.constants.map((constant) => (

@@ -42,7 +42,7 @@ function callsPageContent(
 function methodContent(method: RuntimeApiMethodContent): JSX.Element {
   return (
     <>
-      <h2>{method.method_name}</h2>
+      <h2 class="mt-12">{method.method_name}</h2>
       <Docs mdDocs={method.docs} />
       <KeyValueTypesLayout
         keyTypes={{

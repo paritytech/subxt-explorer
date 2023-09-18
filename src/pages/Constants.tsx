@@ -26,7 +26,6 @@ function constantsPageContent(
   pallet_name: string
 ): JSX.Element {
   let constants = state?.palletConstants(pallet_name);
-  console.log("calls", state, pallet_name, constants);
   if (constants === undefined) {
     return <Navigate href={"/"} />;
   }
@@ -42,7 +41,7 @@ function constantsPageContent(
 function constantContent(constant: ConstantContent): JSX.Element {
   return (
     <>
-      <h2>{constant.name}</h2>
+      <h2 class="mt-12">{constant.name}</h2>
       <Docs mdDocs={constant.docs}></Docs>
       <KeyValueTypesLayout
         valueType={{

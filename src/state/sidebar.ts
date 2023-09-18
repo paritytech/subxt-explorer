@@ -1,3 +1,10 @@
+import { createSignal } from "solid-js";
+
+export const [sidebarItems, setSidebarItems] = createSignal<SidebarItem[]>([]);
+
+export const HOME_ITEM: SidebarItem = newItem({ tag: "home" });
+export const [activeItem, setActiveItem] = createSignal<SidebarItem>(HOME_ITEM);
+
 export function newItem(kind: ItemKind): SidebarItem {
   return {
     kind,
@@ -11,8 +18,8 @@ export interface SidebarItem {
   // title: string;
   // prefix: string | undefined;
   kind: ItemKind;
-  next?: string;
-  prev?: string;
+  next?: SidebarItem;
+  prev?: SidebarItem;
   path: string;
   title: string;
   children: SidebarItem[];
@@ -26,6 +33,7 @@ export type ItemKind =
   | {
       tag: "pallet";
       pallet: string;
+      index: number;
     }
   | {
       tag: "calls";
@@ -40,41 +48,41 @@ export type ItemKind =
       pallet: string;
     };
 
-export const HOME_ITEM: ItemKind = { tag: "home" };
+// Note currently not necessary
 
-export function pathToItemKind(path: string): ItemKind | undefined {
-  let segs = path.split("/").filter((e) => e.length > 0);
-  if (segs.length == 0) {
-    return HOME_ITEM;
-  }
-  switch (segs[0]!) {
-    case "runtime_apis":
-      if (segs[1]) {
-        return { tag: "runtime_api", runtime_api: segs[1] };
-      } else {
-        return { tag: "runtime_apis" };
-      }
-    case "custom_values":
-      return { tag: "custom_values" };
-    case "pallets":
-      if (segs[1]) {
-        switch (segs[2]) {
-          case "calls":
-            return { tag: "calls", pallet: segs[1] };
-          case "storage_entries":
-            return { tag: "storage_entries", pallet: segs[1] };
-          case "constants":
-            return { tag: "constants", pallet: segs[1] };
-          default:
-            return { tag: "pallet", pallet: segs[1] };
-        }
-      } else {
-        return HOME_ITEM;
-      }
-    default:
-      return HOME_ITEM;
-  }
-}
+// export function pathToItemKind(path: string): ItemKind | undefined {
+//   let segs = path.split("/").filter((e) => e.length > 0);
+//   if (segs.length == 0) {
+//     return HOME_ITEM;
+//   }
+//   switch (segs[0]!) {
+//     case "runtime_apis":
+//       if (segs[1]) {
+//         return { tag: "runtime_api", runtime_api: segs[1] };
+//       } else {
+//         return { tag: "runtime_apis" };
+//       }
+//     case "custom_values":
+//       return { tag: "custom_values" };
+//     case "pallets":
+//       if (segs[1]) {
+//         switch (segs[2]) {
+//           case "calls":
+//             return { tag: "calls", pallet: segs[1] };
+//           case "storage_entries":
+//             return { tag: "storage_entries", pallet: segs[1] };
+//           case "constants":
+//             return { tag: "constants", pallet: segs[1] };
+//           default:
+//             return { tag: "pallet", pallet: segs[1], index: -1 };
+//         }
+//       } else {
+//         return HOME_ITEM;
+//       }
+//     default:
+//       return HOME_ITEM;
+//   }
+// }
 
 export function itemKindToPath(item: ItemKind): string {
   switch (item.tag) {
@@ -108,7 +116,7 @@ export function itemKindToTitle(item: ItemKind): string {
     case "custom_values":
       return "Custom Value";
     case "pallet":
-      return item.pallet;
+      return `${item.pallet}`;
     case "calls":
       return "Calls";
     case "storage_entries":

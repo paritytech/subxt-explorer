@@ -1,12 +1,14 @@
-import { Component, For, JSX, Ref, onCleanup, onMount } from "solid-js";
+import { Component, For, JSX, createSignal } from "solid-js";
+import { MetadataSource, appState } from "../state/app_state";
+import { A } from "@solidjs/router";
 import {
-  AppState,
-  MetadataSource,
-  appState,
+  HOME_ITEM,
+  SidebarItem,
+  activeItem,
+  newItem,
+  setActiveItem,
   sidebarItems,
-} from "../state/app_state";
-import { A, useParams } from "@solidjs/router";
-import { SidebarItem } from "../models/sidebar";
+} from "../state/sidebar";
 interface Props {}
 
 export const Sidebar: Component<Props> = (props: Props) => {
@@ -18,22 +20,26 @@ export const Sidebar: Component<Props> = (props: Props) => {
             <A
               href="/"
               activeClass=""
-              // class={!params.path || params.path === "/" ? "active" : ""}
+              onClick={() => {
+                setActiveItem(HOME_ITEM);
+              }}
             >
-              Subxt Explorer
-              {/* {JSON.stringify(useParams<{ path?: string }>())} */}
+              <h1
+                class={`mt-0 ${
+                  activeItem().path == HOME_ITEM.path && "text-pink-500"
+                }`}
+              >
+                Subxt Explorer
+              </h1>
             </A>
           </li>
           {appState() && (
-            <li class="part-title">
-              <div class="text-teal-400">
-                {metadataSourceString(appState()!.source)}
-              </div>
+            <li class="part-title leading-6 pb-4">
+              {metadataSourceSpan(appState()!.source)}
             </li>
           )}
-          <For each={sidebarItems()}>
-            {(item, i) => sideBarItem(item, `${i() + 1}.`)}
-          </For>
+
+          <For each={sidebarItems()}>{(item, i) => sideBarItem(item)}</For>
         </ol>
       </div>
       <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
@@ -41,23 +47,40 @@ export const Sidebar: Component<Props> = (props: Props) => {
   );
 };
 
-function sideBarItem(item: SidebarItem, prefix: string): JSX.Element {
-  let params = useParams<{ path?: string }>();
+function sideBarItem(item: SidebarItem): JSX.Element {
+  // let params = useParams<{ path?: string }>();
+
+  let topLevel =
+    item.kind.tag === "runtime_apis" ||
+    item.kind.tag === "pallet" ||
+    item.kind.tag === "custom_values";
 
   return (
     <>
       <li class="chapter-item expanded ">
-        <A href={item.path} class={params.path === item.path ? "active" : ""}>
-          <strong aria-hidden="true">{prefix}</strong> {item.title}{" "}
-          {params.path}
+        <A
+          href={item.path}
+          activeClass=""
+          onClick={() => {
+            setActiveItem(item);
+          }}
+          class={activeItem().path === item.path ? "active" : ""}
+        >
+          {!topLevel && <strong>&bull; </strong>}
+
+          <span class={topLevel ? "font-bold" : ""}>{item.title}</span>
+          {item.kind.tag === "pallet" && (
+            <span aria-hidden="true" class="text-gray-500">
+              {" "}
+              index={item.kind.index}{" "}
+            </span>
+          )}
         </A>
       </li>
       {item.children.length != 0 && (
         <li>
           <ol class="section">
-            {item.children.map((subitem, j) =>
-              sideBarItem(subitem, `${prefix}${j + 1}.`)
-            )}
+            {item.children.map((subitem) => sideBarItem(subitem))}
           </ol>
         </li>
       )}
@@ -65,12 +88,22 @@ function sideBarItem(item: SidebarItem, prefix: string): JSX.Element {
   );
 }
 
-function metadataSourceString(source: MetadataSource): string {
+function metadataSourceSpan(source: MetadataSource): JSX.Element {
   switch (source.tag) {
     case "url":
-      return `Source: ${source.url}`;
+      return (
+        <span>
+          {"Connected to: "}
+          <span class="text-pink-500">{source.url}</span>
+        </span>
+      );
     case "file":
-      return `Source: ${source.file.name}`;
+      return (
+        <span>
+          {"Metadata from: "}
+          <span class="text-pink-500">{source.file.name}</span>
+        </span>
+      );
   }
 }
 

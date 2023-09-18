@@ -17,7 +17,7 @@ function runtimeApisPageContent(state: AppState | undefined): JSX.Element {
 
       {state!.content.runtime_apis.map((runtimeApi) => (
         <>
-          <h2 style={{ "margin-top": "0px" }}>
+          <h2 class="mt-12">
             <A href={`/runtime_apis/${runtimeApi.name}`}>{runtimeApi.name}</A>
           </h2>
           <ul>

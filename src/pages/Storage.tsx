@@ -69,14 +69,14 @@ function storageEntryContent(
 
   return (
     <>
-      <h2>{entry.name}</h2>
+      <h2 class="mt-12">{entry.name}</h2>
       <Docs mdDocs={entry.docs}></Docs>
       <div>
         <KeyValueTypesLayout
           keyTypes={{
             title:
               entry.key_types.length == 0
-                ? "Accessed without Key"
+                ? "No key needed for querying"
                 : entry.key_types.length == 1
                 ? "Key Type"
                 : "Key Types",
@@ -91,34 +91,38 @@ function storageEntryContent(
           }}
         ></KeyValueTypesLayout>
         <Show when={entry.key_types.length === 0}>
-          {sectionHeading("Value")}
+          <div class="flex justify-between">
+            {sectionHeading("Value")}
+            <button
+              onClick={fetchStorageValue}
+              class={`btn ${storageValue()?.tag === "loading" && "disabled"}`}
+            >
+              <span class={`fa fa-repeat mr-2`}></span> Reload Value
+            </button>
+          </div>
+
           <table class="mx-0 my-8">
             <tbody>
               <tr>
-                <td>
-                  <button
-                    onClick={fetchStorageValue}
-                    class={`btn ${
-                      storageValue()?.tag === "loading" && "disabled"
-                    }`}
-                  >
-                    <span class={`fa fa-repeat mr-2`}></span> Reload Value
-                  </button>
-                </td>
                 <td>
                   <div>
                     <Show when={storageValue()?.tag === "loading"}>
                       <i class="fa fa-spinner animate-spin"></i> Loading...
                     </Show>
-                    <Show when={storageValue()?.tag === "error"}>None</Show>
+                    <Show when={storageValue()?.tag === "error"}>
+                      <div class="font-mono whitespace-pre-wrap h-min">
+                        <code class="p-0">None</code>
+                      </div>
+                    </Show>
                     <Show when={storageValue()?.tag === "value"}>
-                      Value:{" "}
-                      <span class="text-orange-500">
-                        {
-                          (storageValue() as { tag: "value"; value: string })
-                            .value
-                        }
-                      </span>
+                      <div class="text-pink-500 hljs-class font-mono whitespace-pre-wrap h-min">
+                        <code class="p-0">
+                          {
+                            (storageValue() as { tag: "value"; value: string })
+                              .value
+                          }
+                        </code>
+                      </div>
                     </Show>
                   </div>
                 </td>

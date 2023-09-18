@@ -34,7 +34,7 @@ function callsPageContent(
 function callContent(call: CallContent): JSX.Element {
   return (
     <>
-      <h2>{call.name}</h2>
+      <h2 class="mt-12">{call.name}</h2>
       <Docs mdDocs={call.docs}></Docs>
       <KeyValueTypesLayout
         keyTypes={{

@@ -6,7 +6,8 @@ import {
   ItemKind,
   itemKindToPath,
   newItem,
-} from "../models/sidebar";
+  setSidebarItems,
+} from "./sidebar";
 import { readFileAsBytes } from "../utils";
 
 export type MetadataSource =
@@ -18,8 +19,6 @@ export type MetadataSource =
       tag: "file";
       file: File;
     };
-
-export const [sidebarItems, setSidebarItems] = createSignal<SidebarItem[]>([]);
 
 export const [appState, setAppState] = createSignal<AppState | undefined>(
   undefined
@@ -68,7 +67,11 @@ export class AppState {
     }
     // pallets
     for (const pallet of this.content.pallets) {
-      let item = newItem({ tag: "pallet", pallet: pallet.name });
+      let item = newItem({
+        tag: "pallet",
+        pallet: pallet.name,
+        index: pallet.index,
+      });
       if (pallet.calls.length != 0) {
         item.children.push(newItem({ tag: "calls", pallet: pallet.name }));
       }
@@ -81,6 +84,23 @@ export class AppState {
         item.children.push(newItem({ tag: "constants", pallet: pallet.name }));
       }
       items.push(item);
+    }
+    // go over items to set next and prev items (for navigation):
+    let flattened: SidebarItem[] = [];
+    function add_to_flattened(item: SidebarItem) {
+      flattened.push(item);
+      for (const child of item.children) {
+        add_to_flattened(child);
+      }
+    }
+    for (const item of items) {
+      add_to_flattened(item);
+    }
+    for (let i = 0; i < flattened.length; i++) {
+      const item = flattened[i];
+      // Note: I think bounds checks are not necessary in JS, so i omit them.
+      item.prev = flattened[i - 1];
+      item.next = flattened[i + 1];
     }
     return items;
   }
@@ -135,7 +155,6 @@ export class AppState {
       let content = this.client.storageEntryContent(palletName, entryName) as
         | StorageEntryContent
         | undefined;
-      console.log(content);
       if (content !== undefined) {
         items.push(content);
       } else {
@@ -242,6 +261,7 @@ export interface MetadataContent {
 }
 
 export interface PalletContent {
+  index: number;
   name: string;
   calls: string[];
   storage_entries: string[];

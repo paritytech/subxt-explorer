@@ -85,7 +85,7 @@ function typeDisplay(type: string, name?: string): JSX.Element {
     <tr>
       {name && <td class="align-top">{name} </td>}
       <td>
-        <div class="text-blue-400 hljs-class font-mono whitespace-pre-wrap h-min">
+        <div class="text-pink-500 hljs-class font-mono whitespace-pre-wrap h-min">
           <code class="p-0">{type}</code>
         </div>
       </td>
