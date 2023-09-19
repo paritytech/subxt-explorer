@@ -90,7 +90,9 @@ function storageEntryContent(
             type: entry.value_type,
           }}
         ></KeyValueTypesLayout>
-        <Show when={entry.key_types.length === 0}>
+        <Show
+          when={entry.key_types.length === 0 && storageValue() !== undefined}
+        >
           <div class="flex justify-between">
             {sectionHeading("Value")}
             <button

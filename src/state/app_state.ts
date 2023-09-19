@@ -7,7 +7,7 @@ import {
   itemKindToPath,
   newItem,
   setSidebarItems,
-} from "./sidebar";
+} from "./sidebar_state";
 import { readFileAsBytes } from "../utils";
 
 export type MetadataSource =

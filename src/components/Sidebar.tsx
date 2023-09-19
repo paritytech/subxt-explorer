@@ -8,7 +8,7 @@ import {
   newItem,
   setActiveItem,
   sidebarItems,
-} from "../state/sidebar";
+} from "../state/sidebar_state";
 interface Props {}
 
 export const Sidebar: Component<Props> = (props: Props) => {

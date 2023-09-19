@@ -1,5 +1,5 @@
 import { Component } from "solid-js";
-import { activeItem, setActiveItem } from "../state/sidebar";
+import { activeItem, setActiveItem } from "../state/sidebar_state";
 import { Link } from "@solidjs/router";
 interface Props {}
 export const NavWideWrapper: Component<Props> = (props: Props) => {

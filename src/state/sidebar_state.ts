@@ -70,7 +70,7 @@ export type ItemKind =
       pallet: string;
     };
 
-// Note currently not necessary
+// Note: currently not necessary
 
 // export function pathToItemKind(path: string): ItemKind | undefined {
 //   let segs = path.split("/").filter((e) => e.length > 0);

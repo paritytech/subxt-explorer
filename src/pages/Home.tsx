@@ -1,4 +1,4 @@
-import { Component, Ref, createSignal } from "solid-js";
+import { Component, JSX, Ref, createSignal } from "solid-js";
 import { DEFAULT_WS_URL } from "../constants";
 import {
   MetadataSource,
@@ -131,7 +131,6 @@ export const HomePage: Component<Props> = (props: Props) => {
   /// JSX
   return (
     <MdBookWrapper>
-      <DebugComponent></DebugComponent>
       <h1>Subxt Node Explorer</h1>
       Ever wondered how to interact with a custom substrate node using Subxt?
       Upload a scale encoded metadata file or input a substrate node url to get
@@ -159,6 +158,23 @@ export const HomePage: Component<Props> = (props: Props) => {
           Generate Docs{" "}
         </button>
       </div>
+      {subxtExplanationSection()}
     </MdBookWrapper>
   );
 };
+
+function subxtExplanationSection(): JSX.Element {
+  return (
+    <div>
+      <h2>Subxt - Interact with Substrate-based Blockchains</h2>
+      Subxt is a library to <strong class="text-pink-500">sub</strong>mit{" "}
+      <strong class="text-pink-500">ex</strong>trinsics to a substrate node via
+      RPC. You can find more info about Subxt on Github:
+      <div class="mt-3">
+        <a href="https://github.com/paritytech/subxt">
+          <span class="fa fa-github mr-3"></span>Subxt on Github
+        </a>
+      </div>
+    </div>
+  );
+}

@@ -6,7 +6,7 @@ import {
   findInSidebarItems,
   setActiveItem,
   sidebarItems,
-} from "../state/sidebar";
+} from "../state/sidebar_state";
 import { TryToLink } from "../components/TryLinkTo";
 export const PalletPage = () => {
   let params = useParams<{ pallet: string }>();

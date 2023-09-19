@@ -1,19 +1,8 @@
-import {
-  Component,
-  JSX,
-  Match,
-  Ref,
-  Switch,
-  onCleanup,
-  onMount,
-} from "solid-js";
+import { Component, JSX } from "solid-js";
 import { Sidebar } from "./Sidebar";
 import { NavWrapper } from "./NavWrapper";
 import { NavWideWrapper } from "./NavWideWrapper";
 import { MenuBar } from "./MenuBar";
-import { sidebar } from "../state/visual_state";
-import { HomePage } from "../pages/Home";
-import { appState } from "../state/app_state";
 
 interface Props {
   children?: JSX.Element;

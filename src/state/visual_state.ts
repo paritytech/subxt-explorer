@@ -5,7 +5,7 @@ export const STORAGE_ADDR_THEME = "mdbook-theme";
 export const STORAGE_ADDR_SIDEBAR = "mdbook-sidebar";
 export const STORAGE_ADDR_SIDEBAR_SCROLL = "sidebar-scroll";
 
-// // Work around some values being stored in localStorage wrapped in quotes.
+// Work around some values being stored in localStorage wrapped in quotes.
 function localStorageQuoteWorkaround() {
   try {
     var theme = localStorage.getItem("mdbook-theme");
@@ -28,7 +28,6 @@ function localStorageQuoteWorkaround() {
 }
 localStorageQuoteWorkaround();
 
-// Setup Signals
 export type SidebarState = "visible" | "hidden";
 
 export const [sidebar, setSidebar]: Signal<SidebarState> = createSignal(
@@ -58,7 +57,7 @@ function initSidebarSignal(): SidebarState {
   return sidebar as SidebarState;
 }
 
-// whenever the sidebar signal changes, we also want to adjust the class on the html.
+// Whenever the sidebar signal changes, we also want to adjust the class on the html.
 createEffect((prevSidebar: SidebarState) => {
   let currentSidebar = sidebar();
   HTML.classList.remove(`sidebar-${prevSidebar}`);
@@ -71,9 +70,12 @@ export type Theme = "light" | "rust" | "coal" | "navy" | "ayu";
 export const [theme, setTheme]: Signal<Theme> = createSignal(initThemeSignal());
 
 function initThemeSignal(): Theme {
-  let default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches
-    ? "navy"
-    : "navy"; // todo: change back to light
+  let default_theme = "navy";
+
+  // Note: this is how MdBook does theming: currently not used.
+  // window.matchMedia("(prefers-color-scheme: dark)").matches
+  //   ? "navy"
+  //   : "light";
   let themeUnvalidated = undefined;
   try {
     themeUnvalidated = localStorage.getItem(STORAGE_ADDR_THEME);

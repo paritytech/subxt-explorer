@@ -1,6 +1,6 @@
 import { Link } from "@solidjs/router";
 import { JSX } from "solid-js";
-import { findInSidebarItems, setActiveItem } from "../state/sidebar";
+import { findInSidebarItems, setActiveItem } from "../state/sidebar_state";
 
 // a Link component that tries to find the correct sidebar item and sets the active side bar item if the href matches.
 export const TryToLink = (props: {
