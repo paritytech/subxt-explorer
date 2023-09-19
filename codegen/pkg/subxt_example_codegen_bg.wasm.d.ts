@@ -1,0 +1,30 @@
+/* tslint:disable */
+/* eslint-disable */
+export const memory: WebAssembly.Memory;
+export function __wbg_client_free(a: number): void;
+export function client_fromBytes(a: number, b: number, c: number, d: number): void;
+export function client_fromUrl(a: number, b: number): number;
+export function client_metadataContent(a: number): number;
+export function client_palletDocs(a: number, b: number, c: number): number;
+export function client_palletContent(a: number, b: number, c: number): number;
+export function client_callContent(a: number, b: number, c: number, d: number, e: number): number;
+export function client_storageEntryContent(a: number, b: number, c: number, d: number, e: number): number;
+export function client_constantContent(a: number, b: number, c: number, d: number, e: number): number;
+export function client_runtimeApiTraitDocs(a: number, b: number, c: number): number;
+export function client_runtimeApiTraitContent(a: number, b: number, c: number): number;
+export function client_runtimeApiMethodContent(a: number, b: number, c: number, d: number, e: number): number;
+export function client_fetchKeylessStorageValue(a: number, b: number, c: number, d: number, e: number): number;
+export function rustsecp256k1_v0_8_1_context_create(a: number): number;
+export function rustsecp256k1_v0_8_1_context_destroy(a: number): void;
+export function rustsecp256k1_v0_8_1_default_illegal_callback_fn(a: number, b: number): void;
+export function rustsecp256k1_v0_8_1_default_error_callback_fn(a: number, b: number): void;
+export function __wbindgen_malloc(a: number, b: number): number;
+export function __wbindgen_realloc(a: number, b: number, c: number, d: number): number;
+export const __wbindgen_export_2: WebAssembly.Table;
+export function _dyn_core__ops__function__FnMut__A____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__h35b789309903b8ca(a: number, b: number, c: number): void;
+export function wasm_bindgen__convert__closures__invoke0_mut__h30d4e4bc6f0ee9eb(a: number, b: number): void;
+export function _dyn_core__ops__function__FnMut__A____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__h2b06220ad61007bb(a: number, b: number, c: number): void;
+export function _dyn_core__ops__function__FnMut_____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__hf299729373c72b5c(a: number, b: number): void;
+export function __wbindgen_add_to_stack_pointer(a: number): number;
+export function __wbindgen_exn_store(a: number): void;
+export function wasm_bindgen__convert__closures__invoke2_mut__h2770653243ea8522(a: number, b: number, c: number, d: number): void;
