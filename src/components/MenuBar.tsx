@@ -76,7 +76,7 @@ export const MenuBar: Component<Props> = (props: Props) => {
           </button> */}
         </div>
 
-        <h1 class="menu-title">Subxt Metadata Explorer</h1>
+        <h1 class="menu-title">Subxt Explorer</h1>
 
         <div class="right-buttons">
           {/* <a
