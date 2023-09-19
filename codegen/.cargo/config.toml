@@ -1,0 +1,18 @@
+[rust-analyzer]
+checkArgs = [
+    "--target",
+    "wasm32-unknown-unknown",
+    # "--features",
+    # "web",
+    # "--no-default-features",
+]
+
+[build]
+features = ["web"]
+default-features = false
+target = "wasm32-unknown-unknown"
+
+[check]
+features = ["web"]
+default-features = false
+target = "wasm32-unknown-unknown"
