@@ -21,8 +21,5 @@ export default defineConfig({
   },
   build: {
     target: "esnext",
-    rollupOptions: {
-      external: ["subxt_example_codegen"],
-    },
   },
 });
