@@ -1,5 +1,5 @@
-import { defineConfig } from 'vite';
-import solidPlugin from 'vite-plugin-solid';
+import { defineConfig } from "vite";
+import solidPlugin from "vite-plugin-solid";
 import wasm from "vite-plugin-wasm";
 import topLevelAwait from "vite-plugin-top-level-await";
 // import devtools from 'solid-devtools/vite';
@@ -20,7 +20,9 @@ export default defineConfig({
     port: 4000,
   },
   build: {
-    target: 'esnext',
-   
+    target: "esnext",
+    rollupOptions: {
+      external: ["subxt_example_codegen"],
+    },
   },
 });
