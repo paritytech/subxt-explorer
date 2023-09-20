@@ -2664,7 +2664,7 @@ checksum = "734676eb262c623cec13c3155096e08d1f8f29adce39ba17948b18dad1e54142"
 [[package]]
 name = "subxt"
 version = "0.31.0"
-source = "git+https://github.com/paritytech/subxt?branch=tadeo-hepperle-example-code-gen#1cdf564dee708848040cb49c3cf577d9f908a896"
+source = "git+https://github.com/paritytech/subxt?branch=master#12e343449eca10d8c3c4870f12c9c34605d78918"
 dependencies = [
  "async-trait",
  "base58",
@@ -2697,10 +2697,9 @@ dependencies = [
 [[package]]
 name = "subxt-codegen"
 version = "0.31.0"
-source = "git+https://github.com/paritytech/subxt?branch=tadeo-hepperle-example-code-gen#1cdf564dee708848040cb49c3cf577d9f908a896"
+source = "git+https://github.com/paritytech/subxt?branch=master#12e343449eca10d8c3c4870f12c9c34605d78918"
 dependencies = [
  "frame-metadata 16.0.0",
- "getrandom",
  "heck",
  "hex",
  "jsonrpsee",
@@ -2717,7 +2716,7 @@ dependencies = [
 [[package]]
 name = "subxt-lightclient"
 version = "0.31.0"
-source = "git+https://github.com/paritytech/subxt?branch=tadeo-hepperle-example-code-gen#1cdf564dee708848040cb49c3cf577d9f908a896"
+source = "git+https://github.com/paritytech/subxt?branch=master#12e343449eca10d8c3c4870f12c9c34605d78918"
 dependencies = [
  "futures",
  "futures-timer",
@@ -2742,7 +2741,7 @@ dependencies = [
 [[package]]
 name = "subxt-macro"
 version = "0.31.0"
-source = "git+https://github.com/paritytech/subxt?branch=tadeo-hepperle-example-code-gen#1cdf564dee708848040cb49c3cf577d9f908a896"
+source = "git+https://github.com/paritytech/subxt?branch=master#12e343449eca10d8c3c4870f12c9c34605d78918"
 dependencies = [
  "darling 0.20.3",
  "proc-macro-error",
@@ -2753,7 +2752,7 @@ dependencies = [
 [[package]]
 name = "subxt-metadata"
 version = "0.31.0"
-source = "git+https://github.com/paritytech/subxt?branch=tadeo-hepperle-example-code-gen#1cdf564dee708848040cb49c3cf577d9f908a896"
+source = "git+https://github.com/paritytech/subxt?branch=master#12e343449eca10d8c3c4870f12c9c34605d78918"
 dependencies = [
  "frame-metadata 16.0.0",
  "parity-scale-codec",
@@ -2765,7 +2764,7 @@ dependencies = [
 [[package]]
 name = "subxt-signer"
 version = "0.31.0"
-source = "git+https://github.com/paritytech/subxt?branch=tadeo-hepperle-example-code-gen#1cdf564dee708848040cb49c3cf577d9f908a896"
+source = "git+https://github.com/paritytech/subxt?branch=master#12e343449eca10d8c3c4870f12c9c34605d78918"
 dependencies = [
  "bip39",
  "hex",

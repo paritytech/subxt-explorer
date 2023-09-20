@@ -1,0 +1,12 @@
+[build]
+command = '''
+rustup toolchain install nightly
+rustup default nightly 
+rustup target add wasm32-unknown-unknown
+cargo install wasm-pack
+cd codegen
+wasm-pack build --no-default-features --features web 
+cd .. 
+npm run build
+'''
+publish = "dist" # Change this to the directory where your built web app is located.

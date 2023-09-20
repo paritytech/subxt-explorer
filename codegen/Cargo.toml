@@ -13,7 +13,6 @@ native = ["subxt/native"]
 
 web = [
     "subxt/web",
-    "subxt-codegen/web",
     "js-sys",
     "wasm-bindgen",
     "wasm-bindgen-futures",
@@ -22,28 +21,14 @@ web = [
 
 [dependencies]
 
-# these local dependencies can be used if you prefer developing locally:
-# subxt = { path = "../subxt/subxt", default-features = false, features = [
-#     "jsonrpsee",
-# ], target_arch = "wasm32" }
-# subxt-metadata = { path = "../subxt/metadata" }
-# subxt-codegen = { path = "../subxt/codegen", default-features = false, features = [
-#     "web",
-# ] }
-# subxt-signer = { path = "../subxt/signer", features = ["subxt"] }
-# 
-
-subxt = { git = "https://github.com/paritytech/subxt", branch = "tadeo-hepperle-example-code-gen", default-features = false, features = [
+subxt = { git = "https://github.com/paritytech/subxt", branch = "master", default-features = false, features = [
     "jsonrpsee",
 ], target_arch = "wasm32" }
-subxt-metadata = { git = "https://github.com/paritytech/subxt", branch = "tadeo-hepperle-example-code-gen" }
-subxt-codegen = { git = "https://github.com/paritytech/subxt", branch = "tadeo-hepperle-example-code-gen", default-features = false, features = [
-    "web",
-] }
-subxt-signer = { git = "https://github.com/paritytech/subxt", branch = "tadeo-hepperle-example-code-gen", features = [
+subxt-metadata = { git = "https://github.com/paritytech/subxt", branch = "master" }
+subxt-codegen = { git = "https://github.com/paritytech/subxt", branch = "master", default-features = false }
+subxt-signer = { git = "https://github.com/paritytech/subxt", branch = "master", features = [
     "subxt",
 ] }
-
 
 syn = "2.0.29"
 quote = "1.0.33"

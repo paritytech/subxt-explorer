@@ -75,8 +75,7 @@ impl<'a> ExampleGenerator<'a> {
     pub fn new_from_metadata_file(metadata_file_path: &str) -> Result<Self, anyhow::Error> {
         let metadata_bytes = std::fs::read(metadata_file_path)?;
         let mut metadata = subxt_metadata::Metadata::decode(&mut &metadata_bytes[..])?;
-        RuntimeGenerator::ensure_unique_type_paths(&mut metadata);
-
+        metadata.ensure_unique_type_paths();
         let context = ExampleContext::from_file(metadata_file_path, false);
         Ok(Self::new(metadata.into(), Cow::Owned(context)))
     }
