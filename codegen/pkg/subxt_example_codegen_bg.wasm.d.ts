@@ -21,10 +21,10 @@ export function rustsecp256k1_v0_8_1_default_error_callback_fn(a: number, b: num
 export function __wbindgen_malloc(a: number, b: number): number;
 export function __wbindgen_realloc(a: number, b: number, c: number, d: number): number;
 export const __wbindgen_export_2: WebAssembly.Table;
-export function _dyn_core__ops__function__FnMut__A____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__h35b789309903b8ca(a: number, b: number, c: number): void;
-export function wasm_bindgen__convert__closures__invoke0_mut__h30d4e4bc6f0ee9eb(a: number, b: number): void;
-export function _dyn_core__ops__function__FnMut__A____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__h2b06220ad61007bb(a: number, b: number, c: number): void;
-export function _dyn_core__ops__function__FnMut_____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__hf299729373c72b5c(a: number, b: number): void;
+export function _dyn_core__ops__function__FnMut__A____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__hc3f81254b5dc232e(a: number, b: number, c: number): void;
+export function wasm_bindgen__convert__closures__invoke0_mut__hd168eb3328f3f450(a: number, b: number): void;
+export function _dyn_core__ops__function__FnMut__A____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__h348568d34870410a(a: number, b: number, c: number): void;
+export function _dyn_core__ops__function__FnMut_____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__hb38218011135b361(a: number, b: number): void;
 export function __wbindgen_add_to_stack_pointer(a: number): number;
 export function __wbindgen_exn_store(a: number): void;
-export function wasm_bindgen__convert__closures__invoke2_mut__h2770653243ea8522(a: number, b: number, c: number, d: number): void;
+export function wasm_bindgen__convert__closures__invoke2_mut__h18654300fdc9e39e(a: number, b: number, c: number, d: number): void;
