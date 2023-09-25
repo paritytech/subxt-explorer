@@ -28,7 +28,9 @@ jobs:
         run: cargo install wasm-pack
 
       - name: Build the WASM module
-        run: wasm-pack build --no-default-features --features web
+        run: |
+          cd ./codegen
+          wasm-pack build --no-default-features --features web
 
       - name: Setup Node
         uses: actions/setup-node@v3
