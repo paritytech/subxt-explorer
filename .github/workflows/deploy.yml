@@ -14,6 +14,22 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
+      - name: Install Rust nightly toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly
+          override: true
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@a95ba195448af2da9b00fb742d14ffaaf3c21f43
+
+      - name: Install Wasm-pack
+        run: cargo install wasm-pack
+
+      - name: Build the WASM module
+        run: wasm-pack build --no-default-features --features web
+
       - name: Setup Node
         uses: actions/setup-node@v3
 
