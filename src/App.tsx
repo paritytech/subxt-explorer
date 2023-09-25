@@ -12,7 +12,7 @@ import { RuntimeApiMethodsPage } from "./pages/RuntimeApiMethods";
 
 const App: Component = () => {
   return (
-    <Router base="">
+    <Router base="/subxt-explorer">
       <Routes>
         <Route path="/" component={HomePage}></Route>
         <Route path="/runtime_apis" component={RuntimeApisPage}></Route>
