@@ -35,16 +35,18 @@ use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote, ToTokens};
 use scale_info::{form::PortableForm, TypeDef, Variant};
 use subxt::ext::codec::Decode;
-use subxt_codegen::{DerivesRegistry, RuntimeGenerator, TypeGenerator, TypeSubstitutes};
+use subxt_codegen::{DerivesRegistry, TypeGenerator, TypeSubstitutes};
 use subxt_metadata::{
     PalletMetadata, RuntimeApiMetadata, RuntimeApiMethodMetadata, StorageEntryMetadata,
     StorageEntryType,
 };
 
 pub mod context;
+pub mod descriptions;
 /// empty mod, copy paste stuff in here to validate code quickly
 mod generated;
 pub mod values;
+
 #[cfg(feature = "web")]
 pub mod wasm_interface;
 #[cfg(feature = "web")]

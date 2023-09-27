@@ -13,8 +13,9 @@ use subxt_metadata::{Metadata, PalletMetadata, RuntimeApiMetadata};
 use wasm_bindgen::{convert::IntoWasmAbi, prelude::*};
 
 use crate::{
-    context::ExampleContext, format_code, format_scale_value_string, format_type,
-    storage_entry_key_ty_ids, ExampleGenerator, PruneTypePath,
+    context::ExampleContext, descriptions::type_structure_description, format_code,
+    format_scale_value_string, format_type, storage_entry_key_ty_ids, ExampleGenerator,
+    PruneTypePath,
 };
 
 macro_rules! console_log {
@@ -122,6 +123,18 @@ impl Client {
         let type_path_string = format_type(&type_path_string);
         Some(type_path_string)
     }
+
+    fn type_description(&self, type_id: u32) -> anyhow::Result<TypeDescription> {
+        let type_path = self
+            .resolve_type_path(type_id)
+            .ok_or_else(|| anyhow!("type with id {type_id} not found."))?;
+        let type_structure = type_structure_description(type_id, &self.metadata())?;
+
+        Ok(TypeDescription {
+            type_path,
+            type_structure,
+        })
+    }
 }
 
 #[wasm_bindgen]
@@ -134,6 +147,7 @@ impl Client {
         metadata_file_name: &str,
         bytes: js_sys::Uint8Array,
     ) -> Result<Client, String> {
+        console_error_panic_hook::set_once();
         // AFAIK no efficient way to just "view" the Uint8Array withput copying the bytes.
         let bytes = bytes.to_vec();
         let metadata: Metadata = Metadata::decode(&mut &bytes[..]).map_err(|e| format!("{e}"))?;
@@ -158,15 +172,15 @@ impl Client {
     /// Creates an OnlineClient from a given url
     #[wasm_bindgen(js_name = "fromUrl")]
     pub async fn from_url(url: &str) -> Result<Client, String> {
+        console_error_panic_hook::set_once();
         console_log!("try to create client from url {url}");
-        let client_or_err = subxt::OnlineClient::<SubstrateConfig>::from_url(url).await;
-        match client_or_err {
-            Ok(client) => Ok(Client::new(ClientKind::Online {
-                url: url.into(),
-                client,
-            })),
-            Err(err) => Err(format!("{err}")),
-        }
+        let client = subxt::OnlineClient::<SubstrateConfig>::from_url(url)
+            .await
+            .map_err(|e| e.to_string())?;
+        Ok(Client::new(ClientKind::Online {
+            url: url.into(),
+            client,
+        }))
     }
 
     #[wasm_bindgen(js_name = "metadataContent")]
@@ -210,10 +224,12 @@ impl Client {
                     .name
                     .as_ref()
                     .ok_or_else(|| anyhow!("field of call variant does not have name"))?;
-                let type_path = self
-                    .resolve_type_path(field.ty.id)
-                    .ok_or_else(|| anyhow!("could not resolve the type of a call variant field"))?;
-                Ok(NameAndType { name, type_path })
+                let type_description = self.type_description(field.ty.id)?;
+
+                Ok(NameAndType {
+                    name,
+                    type_description,
+                })
             })
             .collect::<Result<Vec<_>, anyhow::Error>>()?;
 
@@ -256,20 +272,19 @@ impl Client {
             .example_gen_dynamic
             .storage_example_wrapped(pallet_name, entry_name)?;
 
-        let value_type = self.resolve_type_path(entry.entry_type().value_ty())?;
-
-        let key_types: Vec<String> =
+        let value_type = self.type_description(entry.entry_type().value_ty())?;
+        let key_types: Vec<TypeDescription> =
             storage_entry_key_ty_ids(&self.example_gen_static.type_gen(), entry)
                 .into_iter()
-                .map(|ty_id| self.resolve_type_path(ty_id))
-                .collect::<Option<Vec<String>>>()?;
+                .map(|ty_id| self.type_description(ty_id))
+                .collect::<anyhow::Result<Vec<TypeDescription>>>()?;
 
         let content = StorageEntryContent {
             pallet_name,
             name: entry_name,
             docs: entry.docs(),
-            value_type: &value_type,
-            key_types: &key_types,
+            value_type,
+            key_types,
             code_example_static: &format_code(&code_example_static.to_string()),
             code_example_dynamic: &format_code(&code_example_dynamic.to_string()),
         };
@@ -296,13 +311,13 @@ impl Client {
 
         let value = self.constant_at(pallet_name, constant_name)?;
         let value_str = format_scale_value_string(&value.to_string());
-        let value_type = self.resolve_type_path(constant.ty())?;
+        let value_type = self.type_description(constant.ty())?;
 
         let content = ConstantContent {
             pallet_name,
             name: constant_name,
             docs: constant.docs(),
-            value_type: &value_type,
+            value_type,
             value: &value_str,
             code_example_static: &format_code(&code_example_static.to_string()),
             code_example_dynamic: &format_code(&code_example_dynamic.to_string()),
@@ -320,6 +335,7 @@ impl Client {
             .expect("should always work")
             .into()
     }
+
     #[wasm_bindgen(js_name = "runtimeApiTraitContent")]
     pub fn runtime_api_trait_content(&self, runtime_api_trait_name: &str) -> MyJsValue {
         let metadata = self.metadata();
@@ -344,14 +360,15 @@ impl Client {
         let input_types = method
             .inputs()
             .map(|e| {
-                self.resolve_type_path(e.ty).map(|type_path| NameAndType {
-                    name: &e.name,
-                    type_path,
-                })
+                self.type_description(e.ty)
+                    .map(|type_description| NameAndType {
+                        name: &e.name,
+                        type_description,
+                    })
             })
-            .collect::<Option<Vec<NameAndType>>>()?;
+            .collect::<anyhow::Result<Vec<NameAndType>>>()?;
 
-        let value_type = self.resolve_type_path(method.output_ty())?;
+        let value_type = self.type_description(method.output_ty())?;
 
         // static code example
         let code_example_static = self
@@ -370,7 +387,7 @@ impl Client {
             code_example_static: &format_code(&code_example_static.to_string()),
             code_example_dynamic: &format_code(&code_example_dynamic.to_string()),
             input_types: &input_types,
-            value_type: &value_type,
+            value_type,
         };
 
         serde_wasm_bindgen::to_value(&content)
@@ -550,8 +567,8 @@ pub struct StorageEntryContent<'a> {
     pub docs: &'a [String],
     pub code_example_static: &'a str,
     pub code_example_dynamic: &'a str,
-    pub value_type: &'a str,
-    pub key_types: &'a [String],
+    pub value_type: TypeDescription,
+    pub key_types: Vec<TypeDescription>,
 }
 
 /// Represents all the information about a constant that we want to show to a user.
@@ -563,7 +580,7 @@ pub struct ConstantContent<'a> {
     pub code_example_static: &'a str,
     pub code_example_dynamic: &'a str,
     pub value: &'a str,
-    pub value_type: &'a str,
+    pub value_type: TypeDescription,
 }
 
 #[derive(Serialize)]
@@ -574,12 +591,18 @@ pub struct RuntimeApiMethodContent<'a> {
     pub code_example_static: &'a str,
     pub code_example_dynamic: &'a str,
     pub input_types: &'a [NameAndType<'a>],
-    pub value_type: &'a str,
+    pub value_type: TypeDescription,
 }
 
 #[derive(Serialize)]
 pub struct NameAndType<'a> {
     pub name: &'a str,
     // just out of convenience a String. Should not matter too much
+    pub type_description: TypeDescription,
+}
+
+#[derive(Serialize)]
+pub struct TypeDescription {
     pub type_path: String,
+    pub type_structure: String,
 }

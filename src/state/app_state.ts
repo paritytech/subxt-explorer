@@ -278,12 +278,12 @@ export type CallContent = {
 } & PalletItemConent;
 
 export type StorageEntryContent = {
-  value_type: string; // type path
-  key_types: string[]; // type paths
+  value_type: TypeDescription; // type path
+  key_types: TypeDescription[]; // type paths
 } & PalletItemConent;
 
 export type ConstantContent = {
-  value_type: string; // type path
+  value_type: TypeDescription; // type path
   value: string;
 } & PalletItemConent;
 
@@ -310,5 +310,12 @@ export interface RuntimeApiMethodContent {
 
 export interface NameAndType {
   name: string; // type name
-  type_path: string; // type path
+  type_description: TypeDescription; // type path
+}
+
+export interface TypeDescription {
+  // e.g. runtime_types::sp_runtime::transaction_validity::TransactionSource
+  type_path: string;
+  // e.g. TransactionSource { hello: String, num: u8 }
+  type_structure: string;
 }

@@ -87,7 +87,7 @@ function storageEntryContent(
           }}
           valueType={{
             title: "Value Type",
-            type: entry.value_type,
+            type_description: entry.value_type,
           }}
         ></KeyValueTypesLayout>
         <Show
@@ -97,7 +97,9 @@ function storageEntryContent(
             {sectionHeading("Value")}
             <button
               onClick={fetchStorageValue}
-              class={`btn ${storageValue()?.tag === "loading" && "disabled"}`}
+              class={`btn py-0  ${
+                storageValue()?.tag === "loading" && "disabled"
+              }`}
             >
               <span class={`fa fa-repeat mr-2`}></span> Reload Value
             </button>

@@ -58,7 +58,7 @@ function methodContent(method: RuntimeApiMethodContent): JSX.Element {
         }
         valueType={{
           title: "API Call Return Type",
-          type: method.value_type,
+          type_description: method.value_type,
         }}
       ></KeyValueTypesLayout>
       <div class="mt-5">

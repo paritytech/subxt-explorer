@@ -1,6 +1,6 @@
-import { Component, JSX } from "solid-js";
+import { Component, JSX, createSignal } from "solid-js";
 import { highlight } from "./Code";
-import { NameAndType } from "../state/app_state";
+import { NameAndType, TypeDescription } from "../state/app_state";
 export interface Props {
   keyTypes?: KeyTypesSection;
   valueType?: ValueTypeSection;
@@ -10,32 +10,44 @@ export interface Props {
 interface KeyTypesSection {
   title?: string;
   types:
-    | { tag: "unnamed"; types: string[] }
+    | { tag: "unnamed"; types: TypeDescription[] }
     | { tag: "named"; types: NameAndType[] };
 }
 
 interface ValueTypeSection {
   title?: string;
-  type: string;
+  type_description: TypeDescription;
 }
 
 interface ValueSection {
   title?: string;
   value: string;
 }
+
 export const KeyValueTypesLayout: Component<Props> = (props: Props) => {
-  let keyTypesElement: JSX.Element;
+  let [valueTypeMode, setValueTypeMode] = createSignal<"path" | "structure">(
+    "structure"
+  );
+
+  let [keyTypeMode, setKeyTypeMode] = createSignal<"path" | "structure">(
+    "structure"
+  );
+
+  let keyTypes: {
+    name?: string;
+    type_description: TypeDescription;
+  }[];
   if (props.keyTypes !== undefined) {
     switch (props.keyTypes.types.tag) {
       case "unnamed":
-        keyTypesElement = props.keyTypes.types.types.map((type) =>
-          typeDisplay(type)
-        );
+        keyTypes = props.keyTypes.types.types.map((type_description) => {
+          return {
+            type_description,
+          };
+        });
         break;
       case "named":
-        keyTypesElement = props.keyTypes.types.types.map((type) =>
-          typeDisplay(type.type_path, type.name)
-        );
+        keyTypes = props.keyTypes.types.types;
         break;
     }
   }
@@ -43,34 +55,77 @@ export const KeyValueTypesLayout: Component<Props> = (props: Props) => {
   return (
     <>
       {props.keyTypes && (
-        <div>
-          {sectionHeading(props.keyTypes.title || "Key Type")}
-          {keyTypesElement && (
-            <table class="mx-0 my-8">
-              <tbody>{keyTypesElement}</tbody>
-            </table>
-          )}
-        </div>
+        <TypeDisplay
+          title={props.keyTypes.title || "Key Type"}
+          types={keyTypes!}
+        ></TypeDisplay>
       )}
+
       {props.valueType && (
-        <div>
-          {sectionHeading(props.valueType.title || "Value Type")}
-          <table class="mx-0 my-8">
-            <tbody>{typeDisplay(props.valueType.type)}</tbody>
-          </table>
-        </div>
+        <TypeDisplay
+          title="Value Type"
+          types={[
+            {
+              type_description: props.valueType.type_description,
+            },
+          ]}
+        ></TypeDisplay>
       )}
       {props.value && (
         <div>
           {sectionHeading(props.value.title || "Value")}
           <table class="mx-0 my-8">
-            <tbody>{typeDisplay(props.value.value)}</tbody>
+            <tbody>{trDisplay(props.value.value)}</tbody>
           </table>
         </div>
       )}
     </>
   );
 };
+
+function TypeDisplay(props: {
+  title: string;
+  types: {
+    name?: string;
+    type_description: TypeDescription;
+  }[];
+}) {
+  let [typeMode, setTypeMode] = createSignal<"path" | "structure">("structure");
+
+  return (
+    <div>
+      <div class="flex justify-between">
+        {sectionHeading(props.title)}
+        <button
+          onClick={() => {
+            if (typeMode() === "structure") {
+              setTypeMode("path");
+            } else {
+              setTypeMode("structure");
+            }
+          }}
+          class="btn mb-0 py-0"
+        >
+          {typeMode() === "structure"
+            ? "Show Type Path"
+            : "Show Type Structure"}
+        </button>
+      </div>
+      <table class="mx-0 my-8">
+        <tbody>
+          {props.types.map((e) =>
+            trDisplay(
+              typeMode() === "structure"
+                ? e.type_description.type_structure
+                : e.type_description.type_path,
+              e.name
+            )
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+}
 
 export function sectionHeading(title: string): JSX.Element {
   return (
@@ -80,13 +135,13 @@ export function sectionHeading(title: string): JSX.Element {
   );
 }
 
-function typeDisplay(type: string, name?: string): JSX.Element {
+function trDisplay(element: string, name?: string): JSX.Element {
   return (
     <tr>
       {name && <td class="align-top">{name} </td>}
       <td>
         <div class="text-pink-500 hljs-class font-mono whitespace-pre-wrap h-min">
-          <code class="p-0">{type}</code>
+          <code class="p-0">{element}</code>
         </div>
       </td>
     </tr>

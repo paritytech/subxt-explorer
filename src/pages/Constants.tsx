@@ -46,7 +46,7 @@ function constantContent(constant: ConstantContent): JSX.Element {
       <KeyValueTypesLayout
         valueType={{
           title: "Constant Type",
-          type: constant.value_type,
+          type_description: constant.value_type,
         }}
         value={{
           title: "Constant Value",
