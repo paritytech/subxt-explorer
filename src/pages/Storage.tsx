@@ -105,9 +105,9 @@ function storageEntryContent(
             </button>
           </div>
 
-          <table class="mx-0 my-8">
+          <table class="mx-0 my-8 w-full">
             <tbody>
-              <tr>
+              <tr class="w-full">
                 <td>
                   <div>
                     <Show when={storageValue()?.tag === "loading"}>
@@ -119,7 +119,7 @@ function storageEntryContent(
                       </div>
                     </Show>
                     <Show when={storageValue()?.tag === "value"}>
-                      <div class="text-pink-500 hljs-class font-mono whitespace-pre-wrap h-min">
+                      <div class="text-pink-500 hljs-class font-mono whitespace-pre-wrap h-min max-h-code overflow-scroll">
                         <code class="p-0">
                           {
                             (storageValue() as { tag: "value"; value: string })

@@ -13,11 +13,12 @@ use subxt_metadata::{Metadata, PalletMetadata, RuntimeApiMetadata};
 use wasm_bindgen::{convert::IntoWasmAbi, prelude::*};
 
 use crate::{
-    context::ExampleContext, descriptions::type_structure_description, format_code,
+    context::ExampleContext, descriptions::type_description_formatted, format_code,
     format_scale_value_string, format_type, storage_entry_key_ty_ids, ExampleGenerator,
     PruneTypePath,
 };
 
+#[macro_export]
 macro_rules! console_log {
     // Note that this is using the `log` function imported above during
     // `bare_bones`
@@ -26,10 +27,10 @@ macro_rules! console_log {
 
 #[wasm_bindgen]
 extern "C" {
-    fn alert(s: &str);
+    pub fn alert(s: &str);
 
     #[wasm_bindgen(js_namespace = console)]
-    fn log(s: &str);
+    pub fn log(s: &str);
 
 }
 
@@ -128,7 +129,7 @@ impl Client {
         let type_path = self
             .resolve_type_path(type_id)
             .ok_or_else(|| anyhow!("type with id {type_id} not found."))?;
-        let type_structure = type_structure_description(type_id, &self.metadata())?;
+        let type_structure = type_description_formatted(type_id, &self.metadata())?;
 
         Ok(TypeDescription {
             type_path,

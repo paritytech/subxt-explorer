@@ -1,4 +1,4 @@
-import { Component, JSX, createSignal } from "solid-js";
+import { Component, JSX, Show, createSignal } from "solid-js";
 import { highlight } from "./Code";
 import { NameAndType, TypeDescription } from "../state/app_state";
 export interface Props {
@@ -74,7 +74,7 @@ export const KeyValueTypesLayout: Component<Props> = (props: Props) => {
       {props.value && (
         <div>
           {sectionHeading(props.value.title || "Value")}
-          <table class="mx-0 my-8">
+          <table class="mx-0 my-8 w-full">
             <tbody>{trDisplay(props.value.value)}</tbody>
           </table>
         </div>
@@ -96,22 +96,30 @@ function TypeDisplay(props: {
     <div>
       <div class="flex justify-between">
         {sectionHeading(props.title)}
-        <button
-          onClick={() => {
-            if (typeMode() === "structure") {
-              setTypeMode("path");
-            } else {
-              setTypeMode("structure");
-            }
-          }}
-          class="btn mb-0 py-0"
+
+        <Show
+          when={props.types.some(
+            (e) =>
+              e.type_description.type_path != e.type_description.type_structure
+          )}
         >
-          {typeMode() === "structure"
-            ? "Show Type Path"
-            : "Show Type Structure"}
-        </button>
+          <button
+            onClick={() => {
+              if (typeMode() === "structure") {
+                setTypeMode("path");
+              } else {
+                setTypeMode("structure");
+              }
+            }}
+            class="btn mb-0 py-0"
+          >
+            {typeMode() === "structure"
+              ? "Show Type Path"
+              : "Show Type Structure"}
+          </button>
+        </Show>
       </div>
-      <table class="mx-0 my-8">
+      <table class="mx-0 my-8 w-full">
         <tbody>
           {props.types.map((e) =>
             trDisplay(
@@ -137,10 +145,10 @@ export function sectionHeading(title: string): JSX.Element {
 
 function trDisplay(element: string, name?: string): JSX.Element {
   return (
-    <tr>
+    <tr class="w-full">
       {name && <td class="align-top">{name} </td>}
       <td>
-        <div class="text-pink-500 hljs-class font-mono whitespace-pre-wrap h-min">
+        <div class="text-pink-500 hljs-class font-mono whitespace-pre-wrap h-min max-h-code overflow-scroll">
           <code class="p-0">{element}</code>
         </div>
       </td>
