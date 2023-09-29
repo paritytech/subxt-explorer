@@ -47,7 +47,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 wasm-pack build --dev --no-default-features --features web
 ```
 
-(without the `--dev` flag, wasm-opt will take about 2 minutes, which is annoying.)
+(without the `--dev` flag, wasm-opt will be applied. Takes about 2 minutes, which is annoying.)
 
 ### Native
 

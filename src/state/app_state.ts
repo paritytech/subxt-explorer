@@ -83,6 +83,9 @@ export class AppState {
       if (pallet.constants.length != 0) {
         item.children.push(newItem({ tag: "constants", pallet: pallet.name }));
       }
+      if (pallet.events.length != 0) {
+        item.children.push(newItem({ tag: "events", pallet: pallet.name }));
+      }
       items.push(item);
     }
     // go over items to set next and prev items (for navigation):
@@ -187,6 +190,28 @@ export class AppState {
     return items;
   }
 
+  palletEvents(palletName: string): EventContent[] | undefined {
+    const pallet = this.palletContent(palletName);
+    if (pallet === undefined) {
+      return undefined;
+    }
+
+    const items: EventContent[] = [];
+
+    for (const eventName of pallet.events) {
+      let content = this.client.eventContent(palletName, eventName) as
+        | EventContent
+        | undefined;
+      if (content !== undefined) {
+        items.push(content);
+      } else {
+        console.error("Error: undefined call content for event", eventName);
+      }
+    }
+
+    return items;
+  }
+
   runtimeApiDocs(runtimeApiTraitName: string): string[] | undefined {
     return this.client.runtimeApiTraitDocs(runtimeApiTraitName) as
       | string[]
@@ -266,6 +291,7 @@ export interface PalletContent {
   calls: string[];
   storage_entries: string[];
   constants: string[];
+  events: string[];
 }
 
 export interface RuntimeAPITraitContent {
@@ -275,6 +301,10 @@ export interface RuntimeAPITraitContent {
 
 export type CallContent = {
   argument_types: NameAndType[];
+} & PalletItemConent;
+
+export type EventContent = {
+  field_types: NameAndType[];
 } & PalletItemConent;
 
 export type StorageEntryContent = {

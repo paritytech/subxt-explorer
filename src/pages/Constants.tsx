@@ -23,17 +23,17 @@ export const ConstantsPage = () => {
 
 function constantsPageContent(
   state: AppState | undefined,
-  pallet_name: string
+  pallet: string
 ): JSX.Element {
-  let constants = state?.palletConstants(pallet_name);
+  let constants = state?.palletConstants(pallet);
   if (constants === undefined) {
     return <Navigate href={"/"} />;
   }
   return (
     <>
-      <h1>{pallet_name} Pallet: Constants</h1>
-      There are {constants.length} calls available on the {pallet_name} Pallet.
-      {constants.map((call) => constantContent(call))}
+      <h1>{pallet} Pallet: Constants</h1>
+      There are {constants.length} calls available on the {pallet} Pallet.
+      {constants.map(constantContent)}
     </>
   );
 }

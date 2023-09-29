@@ -16,17 +16,17 @@ export const CallsPage = () => {
 
 function callsPageContent(
   state: AppState | undefined,
-  pallet_name: string
+  pallet: string
 ): JSX.Element {
-  let calls = state?.palletCalls(pallet_name);
+  let calls = state?.palletCalls(pallet);
   if (calls === undefined) {
     return <Navigate href={"/"} />;
   }
   return (
     <>
-      <h1>{pallet_name} Pallet: Calls</h1>
-      There are {calls.length} calls available on the {pallet_name} Pallet.
-      {calls.map((call) => callContent(call))}
+      <h1>{pallet} Pallet: Calls</h1>
+      There are {calls.length} calls available on the {pallet} Pallet.
+      {calls.map(callContent)}
     </>
   );
 }

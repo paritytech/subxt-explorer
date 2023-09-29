@@ -19,72 +19,75 @@ export const PalletPage = () => {
 
 function palletPageContent(
   state: AppState | undefined,
-  pallet_name: string
+  pallet: string
 ): JSX.Element {
-  let docs = state?.palletDocs(pallet_name);
-  let content = state?.palletContent(pallet_name);
+  let docs = state?.palletDocs(pallet);
+  let content = state?.palletContent(pallet);
   if (docs === undefined || console === undefined) {
     return <Navigate href={"/"} />;
   }
   return (
     <>
       <h1>
-        <span class="">{pallet_name}</span> Pallet
+        <span class="">{pallet}</span> Pallet
       </h1>
       There is no Documentation available for the System Pallet.
-      {/* TODO: Right now no calls are available {JSON.stringify(docs)} */}
       {content!.calls.length > 0 && (
-        <>
-          <TryToLink href={`/pallets/${pallet_name}/calls`}>
-            <h2 class="mt-12" style={{ "text-decoration": "none" }}>
-              Calls
-            </h2>
-          </TryToLink>
-          <ul>
-            {content!.calls.map((call_name) => (
-              <li class="text-gray-300 hover:text-pink-500">
-                <TryToLink href={`/pallets/${pallet_name}/calls#${call_name}`}>
-                  {call_name}
-                </TryToLink>
-              </li>
-            ))}
-          </ul>
-        </>
+        <PalletItemSection
+          title="Calls"
+          titleHref={`/pallets/${pallet}/calls`}
+          items={content!.calls}
+          itemToHref={(e) => `/pallets/${pallet}/calls#${e}`}
+        ></PalletItemSection>
       )}
       {content!.storage_entries.length > 0 && (
-        <>
-          <TryToLink href={`/pallets/${pallet_name}/storage_entries`}>
-            <h2 class="mt-12">Storage Entries</h2>
-          </TryToLink>
-          <ul>
-            {content!.storage_entries.map((entry_name) => (
-              <li class="text-gray-300 hover:text-pink-500">
-                <TryToLink
-                  href={`/pallets/${pallet_name}/storage_entries#${entry_name}`}
-                >
-                  {entry_name}
-                </TryToLink>
-              </li>
-            ))}
-          </ul>
-        </>
+        <PalletItemSection
+          title="Storage Entries"
+          titleHref={`/pallets/${pallet}/storage_entries`}
+          items={content!.storage_entries}
+          itemToHref={(e) => `/pallets/${pallet}/storage_entries#${e}`}
+        ></PalletItemSection>
       )}
       {content!.constants.length > 0 && (
-        <>
-          <TryToLink href={`/pallets/${pallet_name}/sto`}>
-            <h2 class="mt-12 text-gray-300 hover:text-pink-500">Constants</h2>
-          </TryToLink>
-          <ul>
-            {content!.constants.map((constant) => (
-              <li class="text-gray-300 hover:text-pink-500">
-                <TryToLink href={`/pallets/${pallet_name}/constants`}>
-                  {constant}
-                </TryToLink>
-              </li>
-            ))}
-          </ul>
-        </>
+        <PalletItemSection
+          title="Constants"
+          titleHref={`/pallets/${pallet}/constants`}
+          items={content!.constants}
+          itemToHref={(e) => `/pallets/${pallet}/constants#${e}`}
+        ></PalletItemSection>
       )}
+      {content!.events.length > 0 && (
+        <PalletItemSection
+          title="Events"
+          titleHref={`/pallets/${pallet}/events`}
+          items={content!.events}
+          itemToHref={(e) => `/pallets/${pallet}/events#${e}`}
+        ></PalletItemSection>
+      )}
+    </>
+  );
+}
+
+type PalletItemSectionProps = {
+  title: string;
+  titleHref: string;
+  items: string[];
+  itemToHref: (item: string) => string;
+};
+
+function PalletItemSection(props: PalletItemSectionProps): JSX.Element {
+  return (
+    <>
+      <TryToLink href={props.titleHref}>
+        <h2 class="mt-12 text-gray-300 hover:text-pink-500">{props.title}</h2>
+      </TryToLink>
+      <ul>
+        {props.items.map((item) => (
+          <li class="text-gray-300 hover:text-pink-500">
+            <TryToLink href={props.itemToHref(item)}>{item}</TryToLink>
+          </li>
+        ))}
+      </ul>
     </>
   );
 }

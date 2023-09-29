@@ -68,6 +68,10 @@ export type ItemKind =
   | {
       tag: "constants";
       pallet: string;
+    }
+  | {
+      tag: "events";
+      pallet: string;
     };
 
 // Note: currently not necessary
@@ -124,6 +128,8 @@ export function itemKindToPath(item: ItemKind): string {
       return `/pallets/${item.pallet}/storage_entries`;
     case "constants":
       return `/pallets/${item.pallet}/constants`;
+    case "events":
+      return `/pallets/${item.pallet}/events`;
   }
 }
 
@@ -145,5 +151,7 @@ export function itemKindToTitle(item: ItemKind): string {
       return "Storage Entries";
     case "constants":
       return "Constants";
+    case "events":
+      return "Events";
   }
 }

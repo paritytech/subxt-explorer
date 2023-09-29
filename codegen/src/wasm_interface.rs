@@ -228,7 +228,7 @@ impl Client {
                 let type_description = self.type_description(field.ty.id)?;
 
                 Ok(NameAndType {
-                    name,
+                    name: Cow::Borrowed(&name),
                     type_description,
                 })
             })
@@ -328,6 +328,44 @@ impl Client {
             .into()
     }
 
+    #[wasm_bindgen(js_name = "eventContent")]
+    pub fn event_content(&self, pallet_name: &str, event_name: &str) -> MyJsValue {
+        let metadata = self.metadata();
+        let pallet_metadata = metadata.pallet_by_name(pallet_name)?;
+        let event = pallet_metadata
+            .event_variants()?
+            .iter()
+            .find(|e| e.name == event_name)?;
+
+        let field_types = event
+            .fields
+            .iter()
+            .enumerate()
+            .map(|(i, field)| {
+                let name = field
+                    .name
+                    .as_ref()
+                    .map(|name| Cow::Borrowed(name.as_str()))
+                    .unwrap_or_else(|| Cow::Owned(format!("_{i}")));
+                let type_description = self.type_description(field.ty.id)?;
+                Ok(NameAndType {
+                    name,
+                    type_description,
+                })
+            })
+            .collect::<Result<Vec<_>, anyhow::Error>>()?;
+
+        let content = EventContent {
+            pallet_name,
+            name: &event.name,
+            docs: &event.docs,
+            field_types: &field_types,
+        };
+        serde_wasm_bindgen::to_value(&content)
+            .expect("should always work")
+            .into()
+    }
+
     #[wasm_bindgen(js_name = "runtimeApiTraitDocs")]
     pub fn runtime_api_trait_docs(&self, runtime_api_trait_name: &str) -> MyJsValue {
         let metadata = self.metadata();
@@ -363,7 +401,7 @@ impl Client {
             .map(|e| {
                 self.type_description(e.ty)
                     .map(|type_description| NameAndType {
-                        name: &e.name,
+                        name: Cow::Borrowed(&e.name),
                         type_description,
                     })
             })
@@ -506,22 +544,27 @@ pub struct PalletContent<'a> {
     pub calls: Vec<&'a str>,
     pub storage_entries: Vec<&'a str>,
     pub constants: Vec<&'a str>,
+    pub events: Vec<&'a str>,
 }
 
 impl<'a> PalletContent<'a> {
     pub fn from_pallet_metadata(pallet_metadata: PalletMetadata<'a>) -> PalletContent<'a> {
         let name = pallet_metadata.name();
-        let calls: Vec<&str> = if let Some(c) = pallet_metadata.call_variants() {
-            c.iter().map(|c| c.name.as_str()).collect()
-        } else {
-            vec![]
-        };
-        let storage_items = if let Some(s) = pallet_metadata.storage() {
-            s.entries().iter().map(|s| s.name()).collect()
-        } else {
-            vec![]
-        };
+        let calls: Vec<&str> = pallet_metadata
+            .call_variants()
+            .map(|c| c.iter().map(|c| c.name.as_str()).collect())
+            .unwrap_or_default();
+        let storage_items = pallet_metadata
+            .storage()
+            .map(|s| s.entries().iter().map(|s| s.name()).collect())
+            .unwrap_or_default();
+
         let constants = pallet_metadata.constants().map(|c| c.name()).collect();
+
+        let events = pallet_metadata
+            .event_variants()
+            .map(|e| e.iter().map(|e| e.name.as_str()).collect())
+            .unwrap_or_default();
 
         PalletContent {
             index: pallet_metadata.index(),
@@ -529,6 +572,7 @@ impl<'a> PalletContent<'a> {
             calls,
             storage_entries: storage_items,
             constants,
+            events,
         }
     }
 }
@@ -584,6 +628,15 @@ pub struct ConstantContent<'a> {
     pub value_type: TypeDescription,
 }
 
+/// Represents all the information about a pallet event that we want to show to a user.
+#[derive(Serialize)]
+pub struct EventContent<'a> {
+    pub pallet_name: &'a str,
+    pub name: &'a str,
+    pub docs: &'a [String],
+    pub field_types: &'a [NameAndType<'a>],
+}
+
 #[derive(Serialize)]
 pub struct RuntimeApiMethodContent<'a> {
     pub runtime_api_trait_name: &'a str,
@@ -597,7 +650,7 @@ pub struct RuntimeApiMethodContent<'a> {
 
 #[derive(Serialize)]
 pub struct NameAndType<'a> {
-    pub name: &'a str,
+    pub name: Cow<'a, str>,
     // just out of convenience a String. Should not matter too much
     pub type_description: TypeDescription,
 }

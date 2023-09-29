@@ -21,16 +21,16 @@ export const StoragePage = () => {
 
 function storagePageContent(
   state: AppState | undefined,
-  pallet_name: string
+  pallet: string
 ): JSX.Element {
-  let entries = state?.palletStorageEntries(pallet_name);
+  let entries = state?.palletStorageEntries(pallet);
   if (entries === undefined) {
     return <Navigate href={"/"} />;
   } else {
     return (
       <>
-        <h1>{pallet_name} Pallet: Storage Entries</h1>
-        There are {entries.length} storage entries on the {pallet_name} Pallet.
+        <h1>{pallet} Pallet: Storage Entries</h1>
+        There are {entries.length} storage entries on the {pallet} Pallet.
         {entries.map((entry) => storageEntryContent(state!, entry))}
       </>
     );
