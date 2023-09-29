@@ -14,19 +14,8 @@ import { CodeTabLayout } from "../components/CodeTabLayout";
 import { KeyValueTypesLayout } from "../components/KeyValueTypesLayout";
 
 export const EventsPage = () => {
-  let params = useParams<{ pallet: string }>();
-  return (
-    <MdBookWrapper>
-      {eventsPageContent(appState(), params.pallet)}
-    </MdBookWrapper>
-  );
-};
-
-function eventsPageContent(
-  state: AppState | undefined,
-  pallet: string
-): JSX.Element {
-  let events = state?.palletEvents(pallet);
+  let pallet = useParams<{ pallet: string }>().pallet;
+  let events = appState()?.palletEvents(pallet);
   if (events === undefined) {
     return <Navigate href={"/"} />;
   }
@@ -37,7 +26,7 @@ function eventsPageContent(
       {events.map(eventContent)}
     </>
   );
-}
+};
 
 function eventContent(event: EventContent): JSX.Element {
   return (

@@ -11,19 +11,8 @@ import {
   sectionHeading,
 } from "../components/KeyValueTypesLayout";
 export const StoragePage = () => {
-  let params = useParams<{ pallet: string }>();
-  return (
-    <MdBookWrapper>
-      {storagePageContent(appState(), params.pallet)}
-    </MdBookWrapper>
-  );
-};
-
-function storagePageContent(
-  state: AppState | undefined,
-  pallet: string
-): JSX.Element {
-  let entries = state?.palletStorageEntries(pallet);
+  let pallet = useParams<{ pallet: string }>().pallet;
+  let entries = appState()?.palletStorageEntries(pallet);
   if (entries === undefined) {
     return <Navigate href={"/"} />;
   } else {
@@ -31,11 +20,11 @@ function storagePageContent(
       <>
         <h1>{pallet} Pallet: Storage Entries</h1>
         There are {entries.length} storage entries on the {pallet} Pallet.
-        {entries.map((entry) => storageEntryContent(state!, entry))}
+        {entries.map((entry) => storageEntryContent(appState()!, entry))}
       </>
     );
   }
-}
+};
 
 // undefined for storage entries that require keys to be fetched.
 type StorageValueState =

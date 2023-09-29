@@ -11,33 +11,22 @@ import { CodeTabLayout } from "../components/CodeTabLayout";
 import { KeyValueTypesLayout } from "../components/KeyValueTypesLayout";
 
 export const RuntimeApiMethodsPage = () => {
-  let params = useParams<{ runtime_api: string }>();
-  return (
-    <MdBookWrapper>
-      {callsPageContent(appState(), params.runtime_api)}
-    </MdBookWrapper>
-  );
-};
-
-function callsPageContent(
-  state: AppState | undefined,
-  runtimeApiName: string
-): JSX.Element {
-  let docs = state?.runtimeApiDocs(runtimeApiName);
-  let methods = state?.runtimeApiMethods(runtimeApiName);
+  let runtimeApi = useParams<{ runtime_api: string }>().runtime_api;
+  let docs = appState()?.runtimeApiDocs(runtimeApi);
+  let methods = appState()?.runtimeApiMethods(runtimeApi);
   if (docs === undefined || methods === undefined) {
     return <Navigate href={"/"} />;
   }
   return (
     <>
-      <h1>Runtime API: {runtimeApiName}</h1>
+      <h1>Runtime API: {runtimeApi}</h1>
       {docs && <Docs mdDocs={docs} />}
-      There are {methods.length} methods available on the {runtimeApiName}{" "}
-      Runtime API.
+      There are {methods.length} methods available on the {runtimeApi} Runtime
+      API.
       {methods.map((method) => methodContent(method))}
     </>
   );
-}
+};
 
 function methodContent(method: RuntimeApiMethodContent): JSX.Element {
   return (

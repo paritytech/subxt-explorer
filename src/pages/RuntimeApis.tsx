@@ -5,18 +5,13 @@ import { JSX } from "solid-js";
 import { TryToLink } from "../components/TryLinkTo";
 
 export const RuntimeApisPage = () => {
-  return <MdBookWrapper>{runtimeApisPageContent(appState())}</MdBookWrapper>;
-};
-
-function runtimeApisPageContent(state: AppState | undefined): JSX.Element {
-  if (!state?.content.runtime_apis.length) {
+  if (!appState()?.content.runtime_apis.length) {
     return <Navigate href={"/"} />;
   }
   return (
     <>
       <h1>Runtime APIs</h1>
-
-      {state!.content.runtime_apis.map((runtimeApi) => (
+      {appState()!.content.runtime_apis.map((runtimeApi) => (
         <>
           <h2 class="mt-12">
             <TryToLink href={`/runtime_apis/${runtimeApi.name}`}>
@@ -36,4 +31,4 @@ function runtimeApisPageContent(state: AppState | undefined): JSX.Element {
       ))}
     </>
   );
-}
+};

@@ -8,17 +8,8 @@ import { Docs } from "../components/Docs";
 import { CodeTabLayout } from "../components/CodeTabLayout";
 import { KeyValueTypesLayout } from "../components/KeyValueTypesLayout";
 export const CallsPage = () => {
-  let params = useParams<{ pallet: string }>();
-  return (
-    <MdBookWrapper>{callsPageContent(appState(), params.pallet)}</MdBookWrapper>
-  );
-};
-
-function callsPageContent(
-  state: AppState | undefined,
-  pallet: string
-): JSX.Element {
-  let calls = state?.palletCalls(pallet);
+  let pallet = useParams<{ pallet: string }>().pallet;
+  let calls = appState()?.palletCalls(pallet);
   if (calls === undefined) {
     return <Navigate href={"/"} />;
   }
@@ -29,7 +20,7 @@ function callsPageContent(
       {calls.map(callContent)}
     </>
   );
-}
+};
 
 function callContent(call: CallContent): JSX.Element {
   return (

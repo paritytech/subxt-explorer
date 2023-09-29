@@ -335,7 +335,7 @@ export interface RuntimeApiMethodContent {
   code_example_static: string;
   code_example_dynamic: string;
   input_types: NameAndType[];
-  value_type: string;
+  value_type: TypeDescription;
 }
 
 export interface NameAndType {

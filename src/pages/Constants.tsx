@@ -13,19 +13,8 @@ import { Docs } from "../components/Docs";
 import { CodeTabLayout } from "../components/CodeTabLayout";
 import { KeyValueTypesLayout } from "../components/KeyValueTypesLayout";
 export const ConstantsPage = () => {
-  let params = useParams<{ pallet: string }>();
-  return (
-    <MdBookWrapper>
-      {constantsPageContent(appState(), params.pallet)}
-    </MdBookWrapper>
-  );
-};
-
-function constantsPageContent(
-  state: AppState | undefined,
-  pallet: string
-): JSX.Element {
-  let constants = state?.palletConstants(pallet);
+  let pallet = useParams<{ pallet: string }>().pallet;
+  let constants = appState()?.palletConstants(pallet);
   if (constants === undefined) {
     return <Navigate href={"/"} />;
   }
@@ -36,7 +25,7 @@ function constantsPageContent(
       {constants.map(constantContent)}
     </>
   );
-}
+};
 
 function constantContent(constant: ConstantContent): JSX.Element {
   return (

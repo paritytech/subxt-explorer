@@ -9,20 +9,9 @@ import {
 } from "../state/sidebar_state";
 import { TryToLink } from "../components/TryLinkTo";
 export const PalletPage = () => {
-  let params = useParams<{ pallet: string }>();
-  return (
-    <MdBookWrapper>
-      {palletPageContent(appState(), params.pallet)}
-    </MdBookWrapper>
-  );
-};
-
-function palletPageContent(
-  state: AppState | undefined,
-  pallet: string
-): JSX.Element {
-  let docs = state?.palletDocs(pallet);
-  let content = state?.palletContent(pallet);
+  let pallet = useParams<{ pallet: string }>().pallet;
+  let docs = appState()?.palletDocs(pallet);
+  let content = appState()?.palletContent(pallet);
   if (docs === undefined || console === undefined) {
     return <Navigate href={"/"} />;
   }
@@ -66,7 +55,7 @@ function palletPageContent(
       )}
     </>
   );
-}
+};
 
 type PalletItemSectionProps = {
   title: string;

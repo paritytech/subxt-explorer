@@ -3,6 +3,7 @@ import { Sidebar } from "./Sidebar";
 import { NavWrapper } from "./NavWrapper";
 import { NavWideWrapper } from "./NavWideWrapper";
 import { MenuBar } from "./MenuBar";
+import { activeItem } from "../state/sidebar_state";
 
 interface Props {
   children?: JSX.Element;
@@ -20,10 +21,10 @@ export const MdBookWrapper: Component<Props> = (props: Props) => {
           <div id="content" class="content">
             <main>{props.children}</main>
 
-            <NavWrapper></NavWrapper>
+            <NavWrapper activeItem={activeItem()}></NavWrapper>
           </div>
 
-          <NavWideWrapper></NavWideWrapper>
+          <NavWideWrapper activeItem={activeItem()}></NavWideWrapper>
         </div>
       </div>
     </>

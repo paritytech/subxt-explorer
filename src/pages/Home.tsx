@@ -130,7 +130,7 @@ export const HomePage: Component<Props> = (props: Props) => {
 
   /// JSX
   return (
-    <MdBookWrapper>
+    <>
       <h1>Subxt Explorer</h1>
       Ever wondered how to interact with a custom substrate node using Subxt?
       Upload a scale encoded metadata file or input a substrate node url to get
@@ -159,7 +159,7 @@ export const HomePage: Component<Props> = (props: Props) => {
         </button>
       </div>
       {subxtExplanationSection()}
-    </MdBookWrapper>
+    </>
   );
 };
 
