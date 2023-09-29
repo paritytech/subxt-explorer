@@ -3,7 +3,7 @@
 Check it out at https://paritytech.github.io/subxt-explorer/.
 
 An SPA for exploring metadata of substrate based blockchains in the Browser.
-Uses (Subxt)[https://github.com/paritytech/subxt] in WASM to connect to nodes, fetch storage values and generate example code snippets of how to interact with the chain using Subxt.
+Uses [Subxt](https://github.com/paritytech/subxt) in WASM to connect to nodes, fetch storage values and generate example code snippets of how to interact with the chain using Subxt.
 
 ## Development:
 
