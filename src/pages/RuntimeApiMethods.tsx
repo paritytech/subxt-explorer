@@ -12,19 +12,27 @@ import { KeyValueTypesLayout } from "../components/KeyValueTypesLayout";
 import { AnchoredH2 } from "../components/AnchoredH2";
 
 export const RuntimeApiMethodsPage = () => {
-  let runtimeApi = useParams<{ runtime_api: string }>().runtime_api;
-  let docs = appState()?.runtimeApiDocs(runtimeApi);
-  let methods = appState()?.runtimeApiMethods(runtimeApi);
-  if (docs === undefined || methods === undefined) {
+  let props = () => {
+    let runtimeApi = useParams<{ runtime_api: string }>().runtime_api;
+    let docs = appState()?.runtimeApiDocs(runtimeApi);
+    let methods = appState()?.runtimeApiMethods(runtimeApi);
+    return {
+      runtimeApi,
+      docs,
+      methods,
+    };
+  };
+
+  if (props().docs === undefined || props().methods === undefined) {
     return <Navigate href={"/"} />;
   }
   return (
     <>
-      <h1>Runtime API: {runtimeApi}</h1>
-      {docs && <Docs mdDocs={docs} />}
-      There are {methods.length} methods available on the {runtimeApi} Runtime
-      API.
-      {methods.map((method) => methodContent(method))}
+      <h1>Runtime API: {props().runtimeApi}</h1>
+      {props().docs && <Docs mdDocs={props().docs!} />}
+      There are {props().methods!.length} methods available on the{" "}
+      {props().runtimeApi} Runtime API.
+      {props().methods!.map((method) => methodContent(method))}
     </>
   );
 };

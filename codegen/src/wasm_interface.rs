@@ -174,7 +174,7 @@ impl Client {
     #[wasm_bindgen(js_name = "fromUrl")]
     pub async fn from_url(url: &str) -> Result<Client, String> {
         console_error_panic_hook::set_once();
-        console_log!("try to create client from url {url}");
+        console_log!("create client from url {url}");
         let client = subxt::OnlineClient::<SubstrateConfig>::from_url(url)
             .await
             .map_err(|e| e.to_string())?;
@@ -205,7 +205,6 @@ impl Client {
         let metadata = self.metadata();
         let pallet_metadata = metadata.pallet_by_name(pallet_name)?;
         let pallet_content = PalletContent::from_pallet_metadata(pallet_metadata);
-        console_log!("pallet {pallet_name} found, content: {pallet_content:?}");
         serde_wasm_bindgen::to_value(&pallet_content)
             .expect("should always work")
             .into()

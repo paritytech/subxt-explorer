@@ -12,16 +12,26 @@ import {
 } from "../components/KeyValueTypesLayout";
 import { AnchoredH2 } from "../components/AnchoredH2";
 export const StoragePage = () => {
-  let pallet = useParams<{ pallet: string }>().pallet;
-  let entries = appState()?.palletStorageEntries(pallet);
-  if (entries === undefined) {
+  let props = () => {
+    let pallet = useParams<{ pallet: string }>().pallet;
+    let entries = appState()?.palletStorageEntries(pallet);
+    return {
+      pallet,
+      entries,
+    };
+  };
+
+  if (props().entries === undefined) {
     return <Navigate href={"/"} />;
   } else {
     return (
       <>
-        <h1>{pallet} Pallet: Storage Entries</h1>
-        There are {entries.length} storage entries on the {pallet} Pallet.
-        {entries.map((entry) => storageEntryContent(appState()!, entry))}
+        <h1>{props().pallet} Pallet: Storage Entries</h1>
+        There are {props().entries!.length} storage entries on the{" "}
+        {props().pallet} Pallet.
+        {props().entries!.map((entry) =>
+          storageEntryContent(appState()!, entry)
+        )}
       </>
     );
   }

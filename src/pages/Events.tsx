@@ -15,16 +15,24 @@ import { KeyValueTypesLayout } from "../components/KeyValueTypesLayout";
 import { AnchoredH2 } from "../components/AnchoredH2";
 
 export const EventsPage = () => {
-  let pallet = useParams<{ pallet: string }>().pallet;
-  let events = appState()?.palletEvents(pallet);
-  if (events === undefined) {
+  let props = () => {
+    let pallet = useParams<{ pallet: string }>().pallet;
+    let events = appState()?.palletEvents(pallet);
+    return {
+      pallet,
+      events,
+    };
+  };
+
+  if (props().events === undefined) {
     return <Navigate href={"/"} />;
   }
   return (
     <>
-      <h1>{pallet} Pallet: Events</h1>
-      There are {events.length} events available on the {pallet} Pallet.
-      {events.map(eventContent)}
+      <h1>{props().pallet} Pallet: Events</h1>
+      There are {props().events!.length} events available on the{" "}
+      {props().pallet} Pallet.
+      {props().events!.map(eventContent)}
     </>
   );
 };

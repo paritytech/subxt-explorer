@@ -9,16 +9,24 @@ import { CodeTabLayout } from "../components/CodeTabLayout";
 import { KeyValueTypesLayout } from "../components/KeyValueTypesLayout";
 import { AnchoredH2 } from "../components/AnchoredH2";
 export const CallsPage = () => {
-  let pallet = useParams<{ pallet: string }>().pallet;
-  let calls = appState()?.palletCalls(pallet);
-  if (calls === undefined) {
+  let props = () => {
+    let pallet = useParams<{ pallet: string }>().pallet;
+    let calls = appState()?.palletCalls(pallet);
+    return {
+      pallet,
+      calls,
+    };
+  };
+
+  if (props().calls === undefined) {
     return <Navigate href={"/"} />;
   }
   return (
     <>
-      <h1>{pallet} Pallet: Calls</h1>
-      There are {calls.length} calls available on the {pallet} Pallet.
-      {calls.map(callContent)}
+      <h1>{props().pallet} Pallet: Calls</h1>
+      There are {props().calls!.length} calls available on the {props().pallet}{" "}
+      Pallet.
+      {props().calls!.map(callContent)}
     </>
   );
 };

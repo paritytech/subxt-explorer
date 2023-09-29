@@ -10,10 +10,11 @@ import { StoragePage } from "./pages/Storage";
 import { ConstantsPage } from "./pages/Constants";
 import { RuntimeApiMethodsPage } from "./pages/RuntimeApiMethods";
 import { EventsPage } from "./pages/Events";
+import { Sidebar } from "./components/Sidebar";
 
 const App: Component = () => {
   return (
-    <Router source={hashIntegration()}>
+    <Router base="/subxt-explorer" source={hashIntegration()}>
       <MdBookWrapper>
         <Routes>
           <Route path="/" component={HomePage}></Route>

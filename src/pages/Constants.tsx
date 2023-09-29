@@ -14,16 +14,24 @@ import { CodeTabLayout } from "../components/CodeTabLayout";
 import { KeyValueTypesLayout } from "../components/KeyValueTypesLayout";
 import { AnchoredH2 } from "../components/AnchoredH2";
 export const ConstantsPage = () => {
-  let pallet = useParams<{ pallet: string }>().pallet;
-  let constants = appState()?.palletConstants(pallet);
-  if (constants === undefined) {
+  let props = () => {
+    let pallet = useParams<{ pallet: string }>().pallet;
+    let constants = appState()?.palletConstants(pallet);
+    return {
+      pallet,
+      constants,
+    };
+  };
+
+  if (props().constants === undefined) {
     return <Navigate href={"/"} />;
   }
   return (
     <>
-      <h1>{pallet} Pallet: Constants</h1>
-      There are {constants.length} calls available on the {pallet} Pallet.
-      {constants.map(constantContent)}
+      <h1>{props().pallet} Pallet: Constants</h1>
+      There are {props().constants!.length} calls available on the{" "}
+      {props().pallet} Pallet.
+      {props().constants!.map(constantContent)}
     </>
   );
 };
