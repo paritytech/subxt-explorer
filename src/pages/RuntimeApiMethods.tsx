@@ -9,6 +9,7 @@ import { JSX } from "solid-js";
 import { Docs } from "../components/Docs";
 import { CodeTabLayout } from "../components/CodeTabLayout";
 import { KeyValueTypesLayout } from "../components/KeyValueTypesLayout";
+import { AnchoredH2 } from "../components/AnchoredH2";
 
 export const RuntimeApiMethodsPage = () => {
   let runtimeApi = useParams<{ runtime_api: string }>().runtime_api;
@@ -31,7 +32,7 @@ export const RuntimeApiMethodsPage = () => {
 function methodContent(method: RuntimeApiMethodContent): JSX.Element {
   return (
     <>
-      <h2 class="mt-12">{method.method_name}</h2>
+      <AnchoredH2 title={method.method_name}></AnchoredH2>
       <Docs mdDocs={method.docs} />
       <KeyValueTypesLayout
         keyTypes={

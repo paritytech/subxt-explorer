@@ -7,6 +7,7 @@ import { Code } from "../components/Code";
 import { Docs } from "../components/Docs";
 import { CodeTabLayout } from "../components/CodeTabLayout";
 import { KeyValueTypesLayout } from "../components/KeyValueTypesLayout";
+import { AnchoredH2 } from "../components/AnchoredH2";
 export const CallsPage = () => {
   let pallet = useParams<{ pallet: string }>().pallet;
   let calls = appState()?.palletCalls(pallet);
@@ -25,7 +26,7 @@ export const CallsPage = () => {
 function callContent(call: CallContent): JSX.Element {
   return (
     <>
-      <h2 class="mt-12">{call.name}</h2>
+      <AnchoredH2 title={call.name}></AnchoredH2>
       <Docs mdDocs={call.docs}></Docs>
       <KeyValueTypesLayout
         keyTypes={

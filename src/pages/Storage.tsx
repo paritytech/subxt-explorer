@@ -10,6 +10,7 @@ import {
   KeyValueTypesLayout,
   sectionHeading,
 } from "../components/KeyValueTypesLayout";
+import { AnchoredH2 } from "../components/AnchoredH2";
 export const StoragePage = () => {
   let pallet = useParams<{ pallet: string }>().pallet;
   let entries = appState()?.palletStorageEntries(pallet);
@@ -58,7 +59,7 @@ function storageEntryContent(
 
   return (
     <>
-      <h2 class="mt-12">{entry.name}</h2>
+      <AnchoredH2 title={entry.name}></AnchoredH2>
       <Docs mdDocs={entry.docs}></Docs>
       <div>
         <KeyValueTypesLayout

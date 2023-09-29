@@ -12,6 +12,7 @@ import { Code } from "../components/Code";
 import { Docs } from "../components/Docs";
 import { CodeTabLayout } from "../components/CodeTabLayout";
 import { KeyValueTypesLayout } from "../components/KeyValueTypesLayout";
+import { AnchoredH2 } from "../components/AnchoredH2";
 
 export const EventsPage = () => {
   let pallet = useParams<{ pallet: string }>().pallet;
@@ -31,7 +32,7 @@ export const EventsPage = () => {
 function eventContent(event: EventContent): JSX.Element {
   return (
     <>
-      <h2 class="mt-12">{event.name}</h2>
+      <AnchoredH2 title={event.name}></AnchoredH2>
       <Docs mdDocs={event.docs}></Docs>
       <KeyValueTypesLayout
         keyTypes={{

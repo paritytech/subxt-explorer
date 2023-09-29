@@ -35,3 +35,11 @@
 .max-h-code{
     max-height: 40rem;
 }
+
+
+.heading-anchor{
+    position: absolute;
+    width: 0px;
+    height: 0px;
+    top: -64px;
+}

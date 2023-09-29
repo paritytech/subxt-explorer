@@ -13,7 +13,7 @@ import { EventsPage } from "./pages/Events";
 
 const App: Component = () => {
   return (
-    <Router base="/subxt-explorer">
+    <Router source={hashIntegration()}>
       <MdBookWrapper>
         <Routes>
           <Route path="/" component={HomePage}></Route>

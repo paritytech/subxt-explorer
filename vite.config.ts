@@ -22,5 +22,5 @@ export default defineConfig({
   build: {
     target: "esnext",
   },
-  base: "/subxt-explorer",
+  base: "/subxt-explorer/",
 });
