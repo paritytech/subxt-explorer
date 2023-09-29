@@ -14,7 +14,7 @@ import { Sidebar } from "./components/Sidebar";
 
 const App: Component = () => {
   return (
-    <Router base="/subxt-explorer" source={hashIntegration()}>
+    <Router source={hashIntegration()}>
       <MdBookWrapper>
         <Routes>
           <Route path="/" component={HomePage}></Route>
