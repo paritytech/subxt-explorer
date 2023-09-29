@@ -517,12 +517,15 @@ impl<'a> MetadataContent<'a> {
             .pallets()
             .map(PalletContent::from_pallet_metadata)
             .collect();
-        pallets.sort_by(|a, b| a.index.cmp(&b.index));
+
+        // sort all pallets by name, not by index
+        pallets.sort_by(|a, b| a.name.cmp(&b.name));
 
         let runtime_apis: Vec<RuntimeApiTraitContent> = metadata
             .runtime_api_traits()
             .map(RuntimeApiTraitContent::from_metadata)
             .collect();
+
         let custom_values: Vec<String> = metadata
             .custom()
             .iter()
