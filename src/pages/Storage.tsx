@@ -63,7 +63,7 @@ function storageEntryContent(
     }
   }
   // fetch the value in storage when the component is loaded
-  if (entry.key_types.length === 0 && state.source.tag == "url") {
+  if (entry.key_types.length === 0 && state.clientKind.tag == "url") {
     fetchStorageValue();
   }
 

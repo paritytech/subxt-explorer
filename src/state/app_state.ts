@@ -10,7 +10,7 @@ import {
 } from "./sidebar_state";
 import { readFileAsBytes } from "../utils";
 
-export type MetadataSource =
+export type ClientKind =
   | {
       tag: "url";
       url: string;
@@ -25,28 +25,28 @@ export const [appState, setAppState] = createSignal<AppState | undefined>(
 );
 
 export class AppState {
-  source: MetadataSource;
+  clientKind: ClientKind;
   client: Client;
   content: MetadataContent;
 
-  constructor(source: MetadataSource, client: Client) {
-    this.source = source;
+  constructor(clientKind: ClientKind, client: Client) {
+    this.clientKind = clientKind;
     this.client = client;
     this.content = client.metadataContent() as MetadataContent;
   }
 
-  static async fetchFromSource(source: MetadataSource): Promise<AppState> {
+  static async fetchFromSource(clientKind: ClientKind): Promise<AppState> {
     let client: Client;
-    switch (source.tag) {
+    switch (clientKind.tag) {
       case "url":
-        client = await Client.fromUrl(source.url);
+        client = await Client.fromUrl(clientKind.url);
         break;
       case "file":
-        let bytes = await readFileAsBytes(source.file);
-        client = Client.fromBytes(source.file.name, bytes);
+        let bytes = await readFileAsBytes(clientKind.file);
+        client = Client.fromBytes(clientKind.file.name, bytes);
         break;
     }
-    return new AppState(source, client);
+    return new AppState(clientKind, client);
   }
 
   constructSidebarItems(): SidebarItem[] {
@@ -269,7 +269,7 @@ export class AppState {
 // }
 
 export async function fetchMetadataAndInitState(
-  source: MetadataSource
+  source: ClientKind
 ): Promise<void> {
   setAppState(undefined);
   setSidebarItems([]);

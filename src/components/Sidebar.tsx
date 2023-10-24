@@ -1,5 +1,5 @@
 import { Component, For, JSX, createSignal } from "solid-js";
-import { MetadataSource, appState } from "../state/app_state";
+import { ClientKind, appState } from "../state/app_state";
 import { Link } from "@solidjs/router";
 import {
   HOME_ITEM,
@@ -9,6 +9,7 @@ import {
   setActiveItem,
   sidebarItems,
 } from "../state/sidebar_state";
+import { searchParamString } from "../state/app_config";
 interface Props {}
 
 export const Sidebar: Component<Props> = (props: Props) => {
@@ -36,7 +37,7 @@ export const Sidebar: Component<Props> = (props: Props) => {
           </li>
           {appState() && (
             <li class="part-title leading-6 pt-6 pb-3">
-              {metadataSourceSpan(appState()!.source)}
+              {metadataSourceSpan(appState()!.clientKind)}
             </li>
           )}
 
@@ -60,7 +61,7 @@ function sideBarItem(item: SidebarItem): JSX.Element {
     <>
       <li class="chapter-item expanded ">
         <Link
-          href={item.path}
+          href={item.path + searchParamString()}
           activeClass=""
           onClick={() => {
             setActiveItem(item);
@@ -99,7 +100,7 @@ function sideBarItem(item: SidebarItem): JSX.Element {
   );
 }
 
-function metadataSourceSpan(source: MetadataSource): JSX.Element {
+function metadataSourceSpan(source: ClientKind): JSX.Element {
   switch (source.tag) {
     case "url":
       return (

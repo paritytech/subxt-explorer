@@ -1,7 +1,7 @@
-import { Component, JSX, Ref, createSignal } from "solid-js";
+import { Component, JSX, Ref, createEffect, createSignal } from "solid-js";
 import { DEFAULT_WS_URL } from "../constants";
 import {
-  MetadataSource,
+  ClientKind,
   fetchMetadataAndInitState,
   setAppState,
 } from "../state/app_state";
@@ -9,29 +9,28 @@ import { MdBookWrapper } from "../components/MdBookWrapper";
 import { DebugComponent } from "../components/DebugComponent";
 import { FileUploadArea } from "../components/FileUploadArea";
 import { TabLayout, TabWithContent } from "../components/TabLayout";
+import { useSearchParams } from "@solidjs/router";
+import { appConfig, setClientKindOfAppConfig } from "../state/app_config";
+// import { appConfig } from "../state/app_config";
 
 interface Props {}
 export const HomePage: Component<Props> = (props: Props) => {
-  let fileInputRef: HTMLInputElement | undefined;
-
   /// Signals
 
-  let [tab, setTab] = createSignal<"file" | "url">("url");
-
-  let [url, setUrl] = createSignal<string>(DEFAULT_WS_URL);
-
   let [file, setFile] = createSignal<File | undefined>(undefined);
-
-  let [loadingState, setLoadingState] = createSignal<"none" | "loading">(
-    "none"
-  );
 
   let [error, setError] = createSignal<string | undefined>(undefined);
 
   let [isDraggingOnUpload, setIsDraggingOnUpload] =
     createSignal<boolean>(false);
 
-  const metadataSource = (): MetadataSource | undefined => {
+  let [tab, setTab] = createSignal<"file" | "url">("url");
+  let [url, setUrl] = createSignal<string>(DEFAULT_WS_URL);
+  let [loadingState, setLoadingState] = createSignal<"none" | "loading">(
+    "none"
+  );
+
+  const clientKind = (): ClientKind | undefined => {
     if (error() !== undefined) {
       return undefined;
     }
@@ -44,24 +43,46 @@ export const HomePage: Component<Props> = (props: Props) => {
   };
 
   const generateDocsButtonClickable = (): boolean => {
-    return loadingState() === "none" && !!metadataSource();
+    return loadingState() === "none" && !!clientKind();
   };
 
   /// State Managements
 
+  const [_searchParams, setSearchParams] = useSearchParams();
   /**
    * # Panics
    *
    * Panics if metadataSource === undefined
    */
-  async function onGenerateDocsButtonClick() {
+  async function generateDocs() {
     setLoadingState("loading");
+    let kind = clientKind()!;
+    setClientKindOfAppConfig(kind, setSearchParams);
     try {
-      await fetchMetadataAndInitState(metadataSource()!);
+      await fetchMetadataAndInitState(kind);
     } catch (ex: any) {
       setError(ex.toString());
     }
     setLoadingState("none");
+  }
+
+  // on home screen load: if the appConfig is not undefined, set up the ui on this page in the right way and generate the docs
+  let configClientKind = appConfig().clientKind;
+  console.log(configClientKind);
+  if (configClientKind != undefined) {
+    switch (configClientKind.tag) {
+      case "url":
+        setUrl(configClientKind.url);
+        setTab("url");
+        generateDocs();
+        break;
+      case "file":
+        throw "Should not get here, appConfig should never have file as a clientKind";
+        break;
+    }
+  } else {
+    setTab("url");
+    setUrl(DEFAULT_WS_URL);
   }
 
   const urlTabContent = (
@@ -95,7 +116,7 @@ export const HomePage: Component<Props> = (props: Props) => {
           setFile(files[0]);
           setError(undefined);
           // directly generate new docs as soon as it it dragged in.
-          onGenerateDocsButtonClick();
+          generateDocs();
         }
       }}
     ></FileUploadArea>
@@ -148,7 +169,7 @@ export const HomePage: Component<Props> = (props: Props) => {
         <button
           class={`btn ${generateDocsButtonClickable() ? "" : "disabled"}`}
           disabled={!generateDocsButtonClickable()}
-          onClick={onGenerateDocsButtonClick}
+          onClick={generateDocs}
         >
           {loadingState() === "loading" ? (
             <span class="fa fa-spinner mr-3 animate-spin"></span>
