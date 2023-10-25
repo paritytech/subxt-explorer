@@ -14,7 +14,6 @@ export const TryToLink = (props: {
       onClick={() => {
         let splitPath = props.href.split("#")[0];
         let found = findInSidebarItems((e) => e.path == splitPath);
-        console.log("found", found);
         if (found) {
           setActiveItem(found);
         }

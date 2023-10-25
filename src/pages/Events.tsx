@@ -1,11 +1,11 @@
 import { Navigate, useParams } from "@solidjs/router";
 import { MdBookWrapper } from "../components/MdBookWrapper";
 import {
-  AppState,
+  ClientWrapper,
   CallContent,
   EventContent,
-  appState,
-} from "../state/app_state";
+  clientWrapper,
+} from "../state/client_wrapper";
 import { JSX } from "solid-js";
 import { marked } from "marked";
 import { Code } from "../components/Code";
@@ -17,7 +17,7 @@ import { AnchoredH2 } from "../components/AnchoredH2";
 export const EventsPage = () => {
   let props = () => {
     let pallet = useParams<{ pallet: string }>().pallet;
-    let events = appState()?.palletEvents(pallet);
+    let events = clientWrapper()?.palletEvents(pallet);
     return {
       pallet,
       events,

@@ -1,108 +1,75 @@
-import { createMemo, createSignal } from "solid-js";
-import { ClientKind } from "./app_state";
+import { createMemo, createSignal, from } from "solid-js";
+import { ClientKind } from "./client_wrapper";
 import { Location, useSearchParams } from "@solidjs/router";
 
-export interface AppConfig {
+export class AppConfig {
   clientKind: ClientKind | undefined;
+
+  constructor(clientKind: ClientKind | undefined) {
+    this.clientKind = clientKind;
+  }
+
+  toParams(): Record<string, string> {
+    let params: Record<string, string> = {};
+
+    switch (this.clientKind?.tag) {
+      case undefined:
+        break;
+      case "url":
+        params["url"] = this.clientKind.url;
+        break;
+      case "file":
+        break;
+    }
+
+    return params;
+  }
+
+  toParamsString(): string {
+    return paramsToString(this.toParams());
+  }
+
+  static fromParams(params: Record<string, string>): AppConfig {
+    let clientKind: ClientKind | undefined = undefined;
+    let url = params["url"];
+    if (url) {
+      clientKind = {
+        tag: "url",
+        url: decodeURI(url),
+      };
+    }
+    return new AppConfig(clientKind);
+  }
+
+  equals(other: AppConfig): boolean {
+    return clientKindsEqual(this.clientKind, other.clientKind);
+  }
 }
 
 /**
  * AppConfig contains some basic settings, is initially created from
  * the browser url and local storage and can be updated at runtime.
  */
-export const [appConfig, setAppConfig] = createSignal<AppConfig>({
-  clientKind: undefined,
-});
+// export const [appConfig, setAppConfig] = createSignal<AppConfig>({
+//   clientKind: undefined,
+// });
 
-export const [
-  latestSuccessfulClientCreation,
-  setLatestSuccessfulClientCreation,
-] = createSignal<ClientKind | undefined>(undefined);
+// export const [
+//   latestSuccessfulClientCreation,
+//   setLatestSuccessfulClientCreation,
+// ] = createSignal<ClientKind | undefined>(undefined);
 
-export function homeRedirectUrl(fromPath: string): string {
-  let config = appConfig();
-  let params: Record<string, string> = appConfigToSearchParams(config);
-  params.redirect = fromPath;
-  return `/${paramsToString(params)}`;
-}
-
-export const appConfigSearchParamString = () => {
-  let params = appConfigToSearchParams(appConfig());
-  return paramsToString(params);
-};
+// export function homeRedirectUrl(fromPath: string): string {
+//   // let config = appConfig();
+//   let params: Record<string, string> = appConfigToSearchParams(config);
+//   params.redirect = fromPath;
+//   return `/${paramsToString(params)}`;
+// }
 
 //createMemo();
 
-function paramsToString(params: Record<string, string>): string {
-  let paramString =
-    "?" +
-    Object.entries(params)
-      .map((kv) => kv.map(encodeURIComponent).join("="))
-      .join("&");
-  return paramString;
-}
-
-/**
- * updates the url and the appConfig state.
- */
-export function appConfigUpdateClientKind(
-  clientKind: ClientKind,
-  setSearchParams: (params: Record<string, string>) => void
-) {
-  setAppConfig((prev) => {
-    let next: AppConfig = { ...prev, clientKind };
-    setSearchParams(appConfigToSearchParams(next));
-    return next;
-  });
-  // setAppConfig(clientKind);
-}
-
-function appConfigToSearchParams(config: AppConfig): Record<string, string> {
-  let params: Record<string, string> = {};
-
-  switch (config.clientKind?.tag) {
-    case undefined:
-      break;
-    case "url":
-      params["url"] = config.clientKind.url;
-      break;
-    case "file":
-      break;
-  }
-
-  return params;
-}
-
-export interface AppConfigAndPath {
-  config: AppConfig;
-  pathname: string;
-}
-export function extractAppConfigAndPath(location: Location): AppConfigAndPath {
-  let { pathname, query } = location;
-  return {
-    pathname,
-    config: extractAppConfigFromSearchParams(query),
-  };
-}
-
-export function extractAppConfigFromSearchParams(
-  params: Record<string, string>
-): AppConfig {
-  let clientKind: ClientKind | undefined = undefined;
-  let url = params["url"];
-  if (url) {
-    clientKind = {
-      tag: "url",
-      url: decodeURI(url),
-    };
-  }
-  return {
-    clientKind,
-  };
-}
-
-export function appConfigEquals(c1: AppConfig, c2: AppConfig): boolean {
-  return clientKindsEqual(c1.clientKind, c2.clientKind);
+export function paramsToString(params: Record<string, string>): string {
+  return new URLSearchParams(Object.entries(params)).toString();
 }
 
 export function clientKindsEqual(

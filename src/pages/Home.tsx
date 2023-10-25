@@ -1,124 +1,208 @@
-import { Component, JSX, Ref, createEffect, createSignal } from "solid-js";
+import {
+  Accessor,
+  Component,
+  JSX,
+  Ref,
+  Setter,
+  createEffect,
+  createSignal,
+  onMount,
+} from "solid-js";
 import { DEFAULT_WS_URL } from "../constants";
-import { ClientKind, initAppState, setAppState } from "../state/app_state";
+import {
+  ClientKind,
+  clientWrapper,
+  initAppState,
+  setClientWrapper,
+} from "../state/client_wrapper";
 import { MdBookWrapper } from "../components/MdBookWrapper";
 import { DebugComponent } from "../components/DebugComponent";
 import { FileUploadArea } from "../components/FileUploadArea";
 import { TabLayout, TabWithContent } from "../components/TabLayout";
 import { useNavigate, useSearchParams } from "@solidjs/router";
-import {
-  appConfig,
-  appConfigSearchParamString,
-  appConfigUpdateClientKind,
-  clientKindsEqual,
-  latestSuccessfulClientCreation,
-  setLatestSuccessfulClientCreation,
-} from "../state/app_config";
+import { AppConfig, clientKindsEqual } from "../state/app_config";
 // import { appConfig } from "../state/app_config";
 
-interface Props {}
-export const HomePage: Component<Props> = (props: Props) => {
-  const [searchParams, setSearchParams] = useSearchParams();
-
-  // A path where to redirect the user after generation has finished.
-  // this should only be set, if the Generation has been started on page load (valid appConfig extracted from url)
-  let redirectAfterGeneratePath: string | undefined = searchParams.redirect;
-  if (redirectAfterGeneratePath) {
-    console.log(
-      `Loaded HomePage. Will redirect to ${redirectAfterGeneratePath} after Generate finished.`
-    );
+/**
+ * A singleton class for the HomePage State.
+ * Makes it easy to set fields from other locations.
+ */
+export class HomePageState {
+  _appConfig: AppConfig;
+  get appConfig(): AppConfig {
+    return this._appConfig;
   }
 
-  let [file, setFile] = createSignal<File | undefined>(undefined);
+  set appConfig(config: AppConfig) {
+    this._appConfig = config;
+    this.#setAppConfigParamString(config.toParamsString());
+  }
 
-  let [error, setError] = createSignal<string | undefined>(undefined);
+  #setAppConfigParamString: Setter<string>;
+  appConfigParamString: Accessor<string>;
 
-  let [isDraggingOnUpload, setIsDraggingOnUpload] =
-    createSignal<boolean>(false);
+  file: Accessor<File | undefined>;
+  setFile: Setter<File | undefined>;
+  error: Accessor<string | undefined>;
+  setError: Setter<string | undefined>;
+  tab: Accessor<"file" | "url">;
+  setTab: Setter<"file" | "url">;
+  url: Accessor<string>;
+  setUrl: Setter<string>;
+  loadingState: Accessor<"none" | "loading">;
+  setLoadingState: Setter<"none" | "loading">;
 
-  let [tab, setTab] = createSignal<"file" | "url">("url");
-  let [url, setUrl] = createSignal<string>(DEFAULT_WS_URL);
-  let [loadingState, setLoadingState] = createSignal<"none" | "loading">(
-    "none"
-  );
+  #setSearchParams?: (params: Record<string, string>) => void;
+  #navigate?: (path: string) => void;
 
-  const homeScreenClientKind = (): ClientKind | undefined => {
-    if (error() !== undefined) {
+  infuseNavigationFns(
+    setSearchParams: (params: Record<string, string>) => void,
+    navigate: (path: string) => void
+  ) {
+    this.#setSearchParams = setSearchParams;
+    this.#navigate = navigate;
+  }
+
+  constructor() {
+    this._appConfig = new AppConfig(undefined);
+    let [file, setFile] = createSignal<File | undefined>(undefined);
+    this.file = file;
+    this.setFile = setFile;
+    let [error, setError] = createSignal<string | undefined>(undefined);
+    this.error = error;
+    this.setError = setError;
+    let [tab, setTab] = createSignal<"file" | "url">("url");
+    this.tab = tab;
+    this.setTab = setTab;
+    let [url, setUrl] = createSignal<string>(DEFAULT_WS_URL);
+    this.url = url;
+    this.setUrl = setUrl;
+    let [loadingState, setLoadingState] = createSignal<"none" | "loading">(
+      "none"
+    );
+    this.loadingState = loadingState;
+    this.setLoadingState = setLoadingState;
+
+    let [appConfigParamString, setAppConfigParamString] = createSignal<string>(
+      this._appConfig.toParamsString()
+    );
+    this.appConfigParamString = appConfigParamString;
+    this.#setAppConfigParamString = setAppConfigParamString;
+  }
+
+  static #instance: HomePageState;
+  static get instance(): HomePageState {
+    if (HomePageState.#instance === undefined) {
+      HomePageState.#instance = new HomePageState();
+    }
+    return HomePageState.#instance;
+  }
+
+  clientKindFromTab = (): ClientKind | undefined => {
+    if (this.error() !== undefined) {
       return undefined;
     }
-    if (tab() === "file" && file() !== undefined) {
-      return { tag: "file", file: file()! };
-    } else if (tab() === "url" && url()) {
-      return { tag: "url", url: url() };
+    if (this.tab() === "file" && this.file() !== undefined) {
+      return { tag: "file", file: this.file()! };
+    } else if (this.tab() === "url" && this.url()) {
+      return { tag: "url", url: this.url() };
     }
     return undefined;
   };
 
-  const generateDocsButtonClickable = (): boolean => {
-    return loadingState() === "none" && !!homeScreenClientKind();
+  generateButtonClickable = (): boolean => {
+    return this.loadingState() === "none" && !!this.clientKindFromTab();
   };
 
-  // should be used when Generate button clicked / metadata dragged in.
-  // Updates the query params in the url as well.
-  async function generateDocsAndUpdateAppConfig(clientKind: ClientKind) {
-    appConfigUpdateClientKind(clientKind, setSearchParams);
-    generateDocs(clientKind);
+  async generateDocsAndUpdateAppConfig() {
+    let clientKind = this.clientKindFromTab();
+    if (clientKind === undefined || this.#setSearchParams === undefined) {
+      return;
+    }
+    this.appConfig = new AppConfig(clientKind);
+    // todo!() remove this
+    // setAppConfig((prev) => {
+    //   let next: AppConfig = { ...prev, clientKind };
+    //   this.#setSearchParams!(appConfigToSearchParams(next));
+    //   return next;
+    // });
+    await this.#generate(clientKind);
   }
 
-  let navigate = useNavigate();
-  // called on page load and when Generate button clicked / metadata dragged in.
-  async function generateDocs(clientKind: ClientKind) {
-    setLoadingState("loading");
+  async #generate(clientKind: ClientKind) {
+    this.setLoadingState("loading");
     try {
-      console.log("init app state", clientKind);
       await initAppState(clientKind);
-      setLatestSuccessfulClientCreation(clientKind);
       // if redirect query param set, navigate to the correct page:
-      if (redirectAfterGeneratePath) {
-        let paramsString = appConfigSearchParamString();
-        navigate(`${redirectAfterGeneratePath}${paramsString}`);
+      if (this.redirectToPath) {
+        let paramsString = this.appConfig.toParamsString();
+        let completeRedirectPath = `${this.redirectToPath}${paramsString}`;
+        console.log("GENERATE REDIRECT: redirecting to", completeRedirectPath);
+        this.#navigate!(completeRedirectPath);
+        this.redirectToPath = undefined;
       }
     } catch (ex: any) {
-      setLatestSuccessfulClientCreation(undefined);
-      setError(ex.toString());
+      this.setError(ex.toString());
     }
-    setLoadingState("none");
+    this.setLoadingState("none");
   }
 
-  // on home screen load: if the appConfig is not undefined, set up the ui on this page in the right way and generate the docs
-  let configClientKind = appConfig().clientKind;
-  if (
-    configClientKind != undefined &&
-    !clientKindsEqual(configClientKind, latestSuccessfulClientCreation())
-  ) {
-    switch (configClientKind.tag) {
-      case "url":
-        setUrl(configClientKind.url);
-        setTab("url");
-        generateDocs(configClientKind);
-        break;
-      case "file":
-        setFile(configClientKind.file);
-        setTab("file");
-        generateDocs(configClientKind);
-        break;
-      default:
-        break;
+  redirectToPath: string | undefined = undefined;
+  setRedirectToPath = (flag: string) => {
+    this.redirectToPath = flag;
+  };
+
+  onHomePageLoad() {
+    let configClientKind = this.appConfig.clientKind;
+    if (
+      configClientKind != undefined &&
+      !clientKindsEqual(configClientKind, clientWrapper()?.clientKindInCreation)
+    ) {
+      switch (configClientKind.tag) {
+        case "url":
+          this.setUrl(configClientKind.url);
+          this.setTab("url");
+          this.#generate(configClientKind);
+          break;
+        case "file":
+          this.setFile(configClientKind.file);
+          this.setTab("file");
+          this.#generate(configClientKind);
+          break;
+        default:
+          break;
+      }
     }
   }
+}
+
+interface Props {}
+export const HomePage: Component<Props> = (props: Props) => {
+  let state = HomePageState.instance;
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  state.infuseNavigationFns(setSearchParams, navigate);
+  if (searchParams.redirect) {
+    state.setRedirectToPath(searchParams.redirect);
+  }
+
+  let [isDraggingOnUpload, setIsDraggingOnUpload] =
+    createSignal<boolean>(false);
+
+  state.onHomePageLoad();
 
   const urlTabContent = (
     <input
       class="w-full bg-zinc-dark p-2 rounded-md border-2 outline-none focus:border-teal-400 border-solid  border-gray-500 "
       type="text"
-      value={url()}
+      value={state.url()}
       onInput={(e) => {
-        setUrl(e.target.value);
-        setError(undefined);
+        state.setUrl(e.target.value);
+        state.setError(undefined);
       }}
       onChange={(e) => {
-        setUrl(e.target.value);
-        setError(undefined);
+        state.setUrl(e.target.value);
+        state.setError(undefined);
       }}
     />
   );
@@ -127,18 +211,18 @@ export const HomePage: Component<Props> = (props: Props) => {
     <FileUploadArea
       isDragging={isDraggingOnUpload()}
       setDragging={setIsDraggingOnUpload}
-      fileName={file()?.name}
+      fileName={state.file()?.name}
       description={`Drag Metadata File here, or click "Upload"`}
       onDropOrUpload={(files) => {
         if (files === undefined) {
-          setError("Something went wrong with the file upload.");
+          state.setError("Something went wrong with the file upload.");
         } else if (files.length !== 1) {
-          setError("Please only select a single file.");
+          state.setError("Please only select a single file.");
         } else {
-          setFile(files[0]);
-          setError(undefined);
+          state.setFile(files[0]);
+          state.setError(undefined);
           // directly generate new docs as soon as it it dragged in.
-          generateDocsAndUpdateAppConfig(homeScreenClientKind()!);
+          state.generateDocsAndUpdateAppConfig();
         }
       }}
     ></FileUploadArea>
@@ -148,10 +232,10 @@ export const HomePage: Component<Props> = (props: Props) => {
     {
       tab: {
         title: "Url",
-        active: () => tab() == "url",
+        active: () => state.tab() == "url",
         onClick: () => {
-          setTab("url");
-          setError(undefined);
+          state.setTab("url");
+          state.setError(undefined);
         },
         icon: "fa-link",
       },
@@ -160,10 +244,10 @@ export const HomePage: Component<Props> = (props: Props) => {
     {
       tab: {
         title: "File",
-        active: () => tab() == "file",
+        active: () => state.tab() == "file",
         onClick: () => {
-          setTab("file");
-          setError(undefined);
+          state.setTab("file");
+          state.setError(undefined);
         },
         icon: "fa-file",
       },
@@ -184,19 +268,19 @@ export const HomePage: Component<Props> = (props: Props) => {
         tabsContainerClass="mt-5"
         contentContainerClass="py-5 my-5"
       ></TabLayout>
-      {error() && (
-        <div class="text-center w-full text-red-400 mb-4">{error()}</div>
+      {state.error() && (
+        <div class="text-center w-full text-red-400 mb-4">{state.error()}</div>
       )}
       <div>
         <button
-          class={`btn ${generateDocsButtonClickable() ? "" : "disabled"}`}
-          disabled={!generateDocsButtonClickable()}
+          class={`btn ${state.generateButtonClickable() ? "" : "disabled"}`}
+          disabled={!state.generateButtonClickable()}
           onClick={() => {
             // assumption: Button is only clickable if homeScreenClientKind() is a valid value.
-            generateDocsAndUpdateAppConfig(homeScreenClientKind()!);
+            state.generateDocsAndUpdateAppConfig();
           }}
         >
-          {loadingState() === "loading" ? (
+          {state.loadingState() === "loading" ? (
             <span class="fa fa-spinner mr-3 animate-spin"></span>
           ) : (
             <span class="fa fa-play mr-4"></span>
@@ -204,12 +288,12 @@ export const HomePage: Component<Props> = (props: Props) => {
           Generate Docs{" "}
         </button>
       </div>
-      {subxtExplanationSection()}
+      <SubxtExplanationSection />
     </>
   );
 };
 
-function subxtExplanationSection(): JSX.Element {
+function SubxtExplanationSection(): JSX.Element {
   return (
     <div>
       <h2>Subxt - Interact with Substrate-based Blockchains</h2>

@@ -16,7 +16,6 @@ export const NavWideWrapper: Component<Props> = (props: Props) => {
           aria-label="Previous chapter"
           aria-keyshortcuts="Left"
           onClick={() => {
-            console.log(props.activeItem);
             setActiveItem(props.activeItem.prev!);
           }}
         >

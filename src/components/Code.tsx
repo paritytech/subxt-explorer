@@ -41,7 +41,6 @@ export const Code = ({ code }: { code: string }): JSX.Element => {
                 codeToCopy = code;
               }
               navigator.clipboard.writeText(codeToCopy);
-              console.log("Code copied to clipboard:", codeToCopy);
             }}
           >
             <i class="tooltiptext"></i>

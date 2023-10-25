@@ -20,20 +20,24 @@ export type ClientKind =
       file: File;
     };
 
-export const [appState, setAppState] = createSignal<AppState | undefined>(
-  undefined
-);
+export const [clientWrapper, setClientWrapper] = createSignal<
+  ClientWrapper | undefined
+>(undefined);
 
-export class AppState {
+export class ClientWrapper {
   client: Client;
+  clientKindInCreation: ClientKind;
   content: MetadataContent;
 
-  constructor(client: Client) {
+  constructor(client: Client, clientKindInCreation: ClientKind) {
     this.client = client;
+    this.clientKindInCreation = clientKindInCreation;
     this.content = client.metadataContent() as MetadataContent;
   }
 
-  static async createSelfWithClient(clientKind: ClientKind): Promise<AppState> {
+  static async createSelfWithClient(
+    clientKind: ClientKind
+  ): Promise<ClientWrapper> {
     let client: Client;
     switch (clientKind.tag) {
       case "url":
@@ -44,7 +48,11 @@ export class AppState {
         client = Client.fromBytes(clientKind.file.name, bytes);
         break;
     }
-    return new AppState(client);
+    return new ClientWrapper(client, clientKind);
+  }
+
+  hasOnlineCapabilities(): boolean {
+    return this.clientKindInCreation.tag === "url";
   }
 
   constructSidebarItems(): SidebarItem[] {
@@ -260,13 +268,13 @@ export class AppState {
   }
 }
 
-export async function initAppState(source: ClientKind): Promise<void> {
-  setAppState(undefined);
+export async function initAppState(clientKind: ClientKind): Promise<void> {
+  setClientWrapper(undefined);
   setSidebarItems([]);
-  let state = await AppState.createSelfWithClient(source);
+  let state = await ClientWrapper.createSelfWithClient(clientKind);
   let items = state.constructSidebarItems();
   setSidebarItems(items);
-  setAppState(state);
+  setClientWrapper(state);
 }
 
 export interface MetadataContent {

@@ -9,7 +9,6 @@ export const DebugComponent = (): JSX.Element => {
       <button
         onClick={() => {
           let searchParams = new URLSearchParams(window.location.search);
-          console.log(searchParams);
           searchParams.set("foo", Math.random().toString());
           // setSearchParams({ hello:  });
         }}

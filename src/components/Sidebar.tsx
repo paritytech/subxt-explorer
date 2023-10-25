@@ -1,5 +1,5 @@
 import { Component, For, JSX, createSignal } from "solid-js";
-import { ClientKind, appState } from "../state/app_state";
+import { ClientKind, clientWrapper } from "../state/client_wrapper";
 import { Link } from "@solidjs/router";
 import {
   HOME_ITEM,
@@ -9,7 +9,7 @@ import {
   setActiveItem,
   sidebarItems,
 } from "../state/sidebar_state";
-import { appConfig, appConfigSearchParamString } from "../state/app_config";
+import { HomePageState } from "../pages/Home";
 interface Props {}
 
 export const Sidebar: Component<Props> = (props: Props) => {
@@ -19,7 +19,7 @@ export const Sidebar: Component<Props> = (props: Props) => {
         <ol class="chapter">
           <li class="chapter-item expanded affix">
             <Link
-              href={`/${appConfigSearchParamString()}`}
+              href={`/?${HomePageState.instance.appConfigParamString()}`}
               activeClass=""
               onClick={() => {
                 setActiveItem(HOME_ITEM);
@@ -35,9 +35,9 @@ export const Sidebar: Component<Props> = (props: Props) => {
               </h1>
             </Link>
           </li>
-          {appState() && (
+          {clientWrapper() && (
             <li class="part-title leading-6 pt-6 pb-3">
-              {metadataSourceSpan(appConfig().clientKind!)}
+              {metadataSourceSpan(clientWrapper()!.clientKindInCreation!)}
             </li>
           )}
 
@@ -61,7 +61,7 @@ function sideBarItem(item: SidebarItem): JSX.Element {
     <>
       <li class="chapter-item expanded ">
         <Link
-          href={item.path + appConfigSearchParamString()}
+          href={`${item.path}?${HomePageState.instance.appConfigParamString()}`}
           activeClass=""
           onClick={() => {
             setActiveItem(item);
@@ -100,20 +100,20 @@ function sideBarItem(item: SidebarItem): JSX.Element {
   );
 }
 
-function metadataSourceSpan(source: ClientKind): JSX.Element {
-  switch (source.tag) {
+function metadataSourceSpan(ck: ClientKind): JSX.Element {
+  switch (ck.tag) {
     case "url":
       return (
         <span>
           {"Connected to: "}
-          <span class="text-pink-500">{source.url}</span>
+          <span class="text-pink-500">{ck.url}</span>
         </span>
       );
     case "file":
       return (
         <span>
           {"Metadata from: "}
-          <span class="text-pink-500">{source.file.name}</span>
+          <span class="text-pink-500">{ck.file.name}</span>
         </span>
       );
   }

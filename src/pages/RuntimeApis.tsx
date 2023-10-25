@@ -1,17 +1,17 @@
 import { A, Navigate, useParams } from "@solidjs/router";
 import { MdBookWrapper } from "../components/MdBookWrapper";
-import { AppState, appState } from "../state/app_state";
+import { ClientWrapper, clientWrapper } from "../state/client_wrapper";
 import { JSX } from "solid-js";
 import { TryToLink } from "../components/TryLinkTo";
 
 export const RuntimeApisPage = () => {
-  if (!appState()?.content.runtime_apis.length) {
+  if (!clientWrapper()?.content.runtime_apis.length) {
     return <Navigate href={"/"} />;
   }
   return (
     <>
       <h1>Runtime APIs</h1>
-      {appState()!.content.runtime_apis.map((runtimeApi) => (
+      {clientWrapper()!.content.runtime_apis.map((runtimeApi) => (
         <>
           <h2 class="mt-12">
             <TryToLink href={`/runtime_apis/${runtimeApi.name}`}>
