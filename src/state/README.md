@@ -1,14 +1,16 @@
-# Application State explained
+# Warning: DEPRECATED / OUTDATED
+
+## Application State explained
 
 There are a few state islands that dictate the state of the App. They are all implemented as SolidJs Signals.
 
-## [App Config](app_config.ts)
+### [App Config](app_config.ts)
 
 ```
 appState: AppConfig | undefined
 ```
 
-## [App State](app_state.ts)
+### [App State](app_state.ts)
 
 ```
 appState: {
@@ -16,7 +18,7 @@ appState: {
 }
 ```
 
-## [Sidebar State](sidebar_state.ts)
+### [Sidebar State](sidebar_state.ts)
 
 ```ts
 sidebarItems: SidebarItem[]

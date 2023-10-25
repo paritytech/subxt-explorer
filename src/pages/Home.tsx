@@ -26,6 +26,7 @@ import { setSidebarVisibility } from "../state/visual_state";
 
 /**
  * A singleton class for the HomePage State.
+ * Actually controls quite a bit of the entire app state.
  * Makes it easy to set fields from other locations.
  */
 export class HomePageState {
