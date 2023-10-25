@@ -35,7 +35,7 @@ use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote, ToTokens};
 use scale_info::{form::PortableForm, TypeDef, Variant};
 use subxt::ext::codec::Decode;
-use subxt_codegen::{DerivesRegistry, TypeGenerator, TypeSubstitutes};
+use subxt_codegen::__private::{DerivesRegistry, TypeGenerator, TypeSubstitutes};
 use subxt_metadata::{
     PalletMetadata, RuntimeApiMetadata, RuntimeApiMethodMetadata, StorageEntryMetadata,
     StorageEntryType,
@@ -495,12 +495,13 @@ impl<'a> ExampleGenerator<'a> {
     //////////////////////////////////////////////
 
     fn type_gen(&self) -> TypeGenerator {
+        let crate_path = default_crate_path();
         TypeGenerator::new(
             self.metadata.types(),
             "runtime_types",
-            TypeSubstitutes::with_default_substitutes(&Default::default()),
-            DerivesRegistry::with_default_derives(&Default::default()),
-            Default::default(),
+            TypeSubstitutes::with_default_substitutes(&crate_path),
+            DerivesRegistry::with_default_derives(&crate_path),
+            crate_path,
             true,
         )
     }
@@ -519,6 +520,11 @@ impl<'a> ExampleGenerator<'a> {
     fn wrap_in_main(&self, code: TokenStream) -> TokenStream {
         wrap_with_imports(code, "main", quote!(), &self.context)
     }
+}
+
+/// The default crate path to use in our type generation.
+fn default_crate_path() -> syn::Path {
+    syn::parse_str("::subxt").unwrap()
 }
 
 /// necessary, because for empty vecs, the type cannot be deduced.

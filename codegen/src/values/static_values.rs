@@ -3,7 +3,7 @@ use anyhow::{anyhow, Ok};
 use proc_macro2::{TokenStream, TokenTree};
 use quote::{format_ident, quote, ToTokens};
 use scale_info::{form::PortableForm, Field, Type, TypeDef, TypeDefPrimitive};
-use subxt_codegen::{CratePath, TypeDefGen, TypeGenerator};
+use subxt_codegen::__private::{TypeDefGen, TypeGenerator};
 
 use crate::PruneTypePath;
 
@@ -83,7 +83,7 @@ fn type_def_example(
         scale_info::TypeDef::Composite(def) => {
             let struct_path = resolve_type_path_omit_generics(type_gen, id);
             let gen_for_unsused_params =
-                TypeDefGen::from_type(ty, type_gen, &CratePath::default(), false)
+                TypeDefGen::from_type(ty, type_gen, &crate::default_crate_path(), false)
                     .expect("should work");
             let fields: TokenStream = fields_example(
                 type_gen,

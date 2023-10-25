@@ -26,7 +26,7 @@ subxt = { git = "https://github.com/paritytech/subxt", branch = "master", defaul
     "jsonrpsee",
 ], target_arch = "wasm32" }
 subxt-metadata = { git = "https://github.com/paritytech/subxt", branch = "master" }
-subxt-codegen = { git = "https://github.com/paritytech/subxt", branch = "master", default-features = false }
+subxt-codegen = { path = "../../subxt/codegen", default-features = false }
 subxt-signer = { git = "https://github.com/paritytech/subxt", branch = "master", features = [
     "subxt",
 ] }
