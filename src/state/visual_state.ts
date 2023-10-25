@@ -30,11 +30,10 @@ localStorageQuoteWorkaround();
 
 export type SidebarState = "visible" | "hidden";
 
-export const [sidebar, setSidebar]: Signal<SidebarState> = createSignal(
-  initSidebarSignal()
-);
+export const [sidebarVisibility, setSidebarVisibility]: Signal<SidebarState> =
+  createSignal(initSidebarVisibilitySignal());
 export function toggleSidebar() {
-  setSidebar((prev) => {
+  setSidebarVisibility((prev) => {
     switch (prev) {
       case "visible":
         return "hidden";
@@ -44,7 +43,7 @@ export function toggleSidebar() {
   });
 }
 
-function initSidebarSignal(): SidebarState {
+function initSidebarVisibilitySignal(): SidebarState {
   var sidebar = null;
   if (document.body.clientWidth >= 1080) {
     try {
@@ -59,7 +58,7 @@ function initSidebarSignal(): SidebarState {
 
 // Whenever the sidebar signal changes, we also want to adjust the class on the html.
 createEffect((prevSidebar: SidebarState) => {
-  let currentSidebar = sidebar();
+  let currentSidebar = sidebarVisibility();
   HTML.classList.remove(`sidebar-${prevSidebar}`);
   HTML.classList.add(`sidebar-${currentSidebar}`);
   return currentSidebar;

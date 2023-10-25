@@ -1,7 +1,6 @@
 import { createSignal } from "solid-js";
 
 export const [sidebarItems, setSidebarItems] = createSignal<SidebarItem[]>([]);
-
 export const HOME_ITEM: SidebarItem = newItem({ tag: "home" });
 export const [activeItem, setActiveItem] = createSignal<SidebarItem>(HOME_ITEM);
 

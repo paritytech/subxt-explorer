@@ -9,7 +9,7 @@ import {
   setActiveItem,
   sidebarItems,
 } from "../state/sidebar_state";
-import { searchParamString } from "../state/app_config";
+import { appConfig, appConfigSearchParamString } from "../state/app_config";
 interface Props {}
 
 export const Sidebar: Component<Props> = (props: Props) => {
@@ -19,7 +19,7 @@ export const Sidebar: Component<Props> = (props: Props) => {
         <ol class="chapter">
           <li class="chapter-item expanded affix">
             <Link
-              href="/"
+              href={`/${appConfigSearchParamString()}`}
               activeClass=""
               onClick={() => {
                 setActiveItem(HOME_ITEM);
@@ -37,7 +37,7 @@ export const Sidebar: Component<Props> = (props: Props) => {
           </li>
           {appState() && (
             <li class="part-title leading-6 pt-6 pb-3">
-              {metadataSourceSpan(appState()!.clientKind)}
+              {metadataSourceSpan(appConfig().clientKind!)}
             </li>
           )}
 
@@ -61,7 +61,7 @@ function sideBarItem(item: SidebarItem): JSX.Element {
     <>
       <li class="chapter-item expanded ">
         <Link
-          href={item.path + searchParamString()}
+          href={item.path + appConfigSearchParamString()}
           activeClass=""
           onClick={() => {
             setActiveItem(item);

@@ -9,6 +9,7 @@ import {
   sidebarItems,
 } from "../state/sidebar_state";
 import { TryToLink } from "../components/TryLinkTo";
+import { appConfigSearchParamString } from "../state/app_config";
 
 // // refetch pallet when
 // let props = () => {
@@ -141,14 +142,18 @@ type PalletItemSectionProps = {
 function PalletItemSection(props: PalletItemSectionProps): JSX.Element {
   return (
     <>
-      <TryToLink href={props.titleHref}>
+      <TryToLink href={props.titleHref + appConfigSearchParamString()}>
         <h2 class="mt-12 text-gray-300 hover:text-pink-500">{props.title}</h2>
       </TryToLink>
       <ul>
         <For each={props.items}>
           {(item) => (
             <li class="text-gray-300 hover:text-pink-500">
-              <TryToLink href={props.itemToHref(item)}>{item}</TryToLink>
+              <TryToLink
+                href={props.itemToHref(item) + appConfigSearchParamString()}
+              >
+                {item}
+              </TryToLink>
             </li>
           )}
         </For>

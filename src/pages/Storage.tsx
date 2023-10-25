@@ -11,6 +11,7 @@ import {
   sectionHeading,
 } from "../components/KeyValueTypesLayout";
 import { AnchoredH2 } from "../components/AnchoredH2";
+import { appConfig } from "../state/app_config";
 export const StoragePage = () => {
   let props = () => {
     let pallet = useParams<{ pallet: string }>().pallet;
@@ -63,7 +64,7 @@ function storageEntryContent(
     }
   }
   // fetch the value in storage when the component is loaded
-  if (entry.key_types.length === 0 && state.clientKind.tag == "url") {
+  if (entry.key_types.length === 0 && appConfig().clientKind?.tag === "url") {
     fetchStorageValue();
   }
 

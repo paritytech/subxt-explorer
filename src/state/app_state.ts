@@ -25,17 +25,15 @@ export const [appState, setAppState] = createSignal<AppState | undefined>(
 );
 
 export class AppState {
-  clientKind: ClientKind;
   client: Client;
   content: MetadataContent;
 
-  constructor(clientKind: ClientKind, client: Client) {
-    this.clientKind = clientKind;
+  constructor(client: Client) {
     this.client = client;
     this.content = client.metadataContent() as MetadataContent;
   }
 
-  static async fetchFromSource(clientKind: ClientKind): Promise<AppState> {
+  static async createSelfWithClient(clientKind: ClientKind): Promise<AppState> {
     let client: Client;
     switch (clientKind.tag) {
       case "url":
@@ -46,7 +44,7 @@ export class AppState {
         client = Client.fromBytes(clientKind.file.name, bytes);
         break;
     }
-    return new AppState(clientKind, client);
+    return new AppState(client);
   }
 
   constructSidebarItems(): SidebarItem[] {
@@ -262,18 +260,10 @@ export class AppState {
   }
 }
 
-// export interface AppState {
-//   source: MetadataSource;
-//   client: Client;
-//   content: MetadataContent;
-// }
-
-export async function fetchMetadataAndInitState(
-  source: ClientKind
-): Promise<void> {
+export async function initAppState(source: ClientKind): Promise<void> {
   setAppState(undefined);
   setSidebarItems([]);
-  let state = await AppState.fetchFromSource(source);
+  let state = await AppState.createSelfWithClient(source);
   let items = state.constructSidebarItems();
   setSidebarItems(items);
   setAppState(state);
