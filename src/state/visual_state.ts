@@ -44,6 +44,8 @@ export function toggleSidebar() {
 }
 
 function initSidebarVisibilitySignal(): SidebarState {
+  return "hidden";
+  // todo!: reintroduce this local storage stuff later. For now it is okay if sidebar is closed in the beginning and opens on generate.
   var sidebar = null;
   if (document.body.clientWidth >= 1080) {
     try {

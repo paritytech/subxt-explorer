@@ -21,6 +21,7 @@ import { FileUploadArea } from "../components/FileUploadArea";
 import { TabLayout, TabWithContent } from "../components/TabLayout";
 import { useNavigate, useSearchParams } from "@solidjs/router";
 import { AppConfig, clientKindsEqual } from "../state/app_config";
+import { setSidebarVisibility } from "../state/visual_state";
 // import { appConfig } from "../state/app_config";
 
 /**
@@ -132,6 +133,7 @@ export class HomePageState {
     this.setLoadingState("loading");
     try {
       await initAppState(clientKind);
+      setSidebarVisibility("visible");
       //  if redirect query param set, navigate to the correct page:
       if (this.redirectPath) {
         let paramsString = this.appConfig.toParamsString();
