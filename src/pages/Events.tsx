@@ -13,6 +13,7 @@ import { Docs } from "../components/Docs";
 import { CodeTabLayout } from "../components/CodeTabLayout";
 import { KeyValueTypesLayout } from "../components/KeyValueTypesLayout";
 import { AnchoredH2 } from "../components/AnchoredH2";
+import { RedirectToHome } from "../components/RedirectToHome";
 
 export const EventsPage = () => {
   let props = () => {
@@ -25,7 +26,7 @@ export const EventsPage = () => {
   };
 
   if (props().events === undefined) {
-    return <Navigate href={"/"} />;
+    return <RedirectToHome />;
   }
   return (
     <>

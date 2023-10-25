@@ -34,6 +34,7 @@ export class HomePageState {
   }
 
   set appConfig(config: AppConfig) {
+    console.log("app config got changed", config);
     this._appConfig = config;
     this.#setAppConfigParamString(config.toParamsString());
   }
@@ -120,26 +121,25 @@ export class HomePageState {
       return;
     }
     this.appConfig = new AppConfig(clientKind);
-    // todo!() remove this
-    // setAppConfig((prev) => {
-    //   let next: AppConfig = { ...prev, clientKind };
-    //   this.#setSearchParams!(appConfigToSearchParams(next));
-    //   return next;
-    // });
+    this.#setSearchParams!(this.appConfig.toParams());
     await this.#generate(clientKind);
   }
 
   async #generate(clientKind: ClientKind) {
+    this.setError(undefined);
+    console.log("GENERATE:", this.appConfig);
+    console.log("GENERATE:", this.appConfig.toParamsString());
     this.setLoadingState("loading");
     try {
       await initAppState(clientKind);
-      // if redirect query param set, navigate to the correct page:
-      if (this.redirectToPath) {
+      //  if redirect query param set, navigate to the correct page:
+      if (this.redirectPath) {
         let paramsString = this.appConfig.toParamsString();
-        let completeRedirectPath = `${this.redirectToPath}${paramsString}`;
+        console.log("paramsString", paramsString);
+        let completeRedirectPath = `${this.redirectPath}?${paramsString}`;
         console.log("GENERATE REDIRECT: redirecting to", completeRedirectPath);
         this.#navigate!(completeRedirectPath);
-        this.redirectToPath = undefined;
+        this.redirectPath = undefined;
       }
     } catch (ex: any) {
       this.setError(ex.toString());
@@ -147,9 +147,9 @@ export class HomePageState {
     this.setLoadingState("none");
   }
 
-  redirectToPath: string | undefined = undefined;
-  setRedirectToPath = (flag: string) => {
-    this.redirectToPath = flag;
+  redirectPath: string | undefined = undefined;
+  setRedirectPath = (path: string) => {
+    this.redirectPath = path;
   };
 
   onHomePageLoad() {
@@ -158,6 +158,7 @@ export class HomePageState {
       configClientKind != undefined &&
       !clientKindsEqual(configClientKind, clientWrapper()?.clientKindInCreation)
     ) {
+      this.#setSearchParams!(this.appConfig.toParams());
       switch (configClientKind.tag) {
         case "url":
           this.setUrl(configClientKind.url);
@@ -179,12 +180,9 @@ export class HomePageState {
 interface Props {}
 export const HomePage: Component<Props> = (props: Props) => {
   let state = HomePageState.instance;
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [_searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   state.infuseNavigationFns(setSearchParams, navigate);
-  if (searchParams.redirect) {
-    state.setRedirectToPath(searchParams.redirect);
-  }
 
   let [isDraggingOnUpload, setIsDraggingOnUpload] =
     createSignal<boolean>(false);

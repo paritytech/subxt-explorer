@@ -15,6 +15,7 @@ import {
   sectionHeading,
 } from "../components/KeyValueTypesLayout";
 import { AnchoredH2 } from "../components/AnchoredH2";
+import { RedirectToHome } from "../components/RedirectToHome";
 export const StoragePage = () => {
   let props = () => {
     let pallet = useParams<{ pallet: string }>().pallet;
@@ -26,7 +27,7 @@ export const StoragePage = () => {
   };
 
   if (props().entries === undefined) {
-    return <Navigate href={"/"} />;
+    return <RedirectToHome />;
   } else {
     return (
       <>

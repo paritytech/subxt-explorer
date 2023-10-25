@@ -3,10 +3,11 @@ import { MdBookWrapper } from "../components/MdBookWrapper";
 import { ClientWrapper, clientWrapper } from "../state/client_wrapper";
 import { JSX } from "solid-js";
 import { TryToLink } from "../components/TryLinkTo";
+import { RedirectToHome } from "../components/RedirectToHome";
 
 export const RuntimeApisPage = () => {
   if (!clientWrapper()?.content.runtime_apis.length) {
-    return <Navigate href={"/"} />;
+    return <RedirectToHome />;
   }
   return (
     <>

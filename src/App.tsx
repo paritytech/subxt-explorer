@@ -43,18 +43,7 @@ const App: Component = () => {
   // this happens only once on page load:
   const location = useLocation();
   let config = AppConfig.fromParams(location.query);
-  let pathname = location.pathname;
   HomePageState.instance.appConfig = config;
-
-  if (!(pathname === "/" || pathname === "")) {
-    let params: Record<string, string> = config.toParams();
-    params.redirect = pathname;
-    let redirectUrl = `/?${paramsToString(params)}`;
-
-    let navigate = useNavigate();
-    console.log("APPSTART: redirecting to", redirectUrl);
-    navigate(redirectUrl, { replace: true });
-  }
 
   // listen to all client side solid router route change events:
   // If the url params indicate a different app config, reload the web app with that config.
@@ -63,21 +52,30 @@ const App: Component = () => {
     let params = location.query;
 
     let configFromParams = AppConfig.fromParams(params);
-
+    console.log(
+      "CreateEffect: ",
+      pathname,
+      Object.entries(params),
+      configFromParams
+    );
     if (!configFromParams.equals(HomePageState.instance.appConfig)) {
+      console.log(
+        "CreateEffect: config changed to",
+        configFromParams,
+        location.pathname
+      );
       HomePageState.instance.appConfig = configFromParams;
       if (pathname === "/" || pathname === "") {
+        console.log("HOME");
         // if already on homepage adjust its UI to the new config:
-        const [_searchParams, setSearchParams] = useSearchParams();
-        setSearchParams(configFromParams.toParams());
         HomePageState.instance.onHomePageLoad();
       } else {
+        console.log("NOT HOME:", pathname);
         // otherwise navigate to homepage and set redirect hook:
-        let params: Record<string, string> = configFromParams.toParams();
-        params.redirect = pathname;
-        let redirectUrl = `/?${paramsToString(params)}`;
-        let navigate = useNavigate();
+        let redirectUrl = `/?${configFromParams.toParamsString()}`;
         console.log("WAS NOT AT HOME: redirecting to", redirectUrl);
+        HomePageState.instance.setRedirectPath(pathname);
+        let navigate = useNavigate();
         navigate(redirectUrl, { replace: true });
       }
     }

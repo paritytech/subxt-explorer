@@ -12,6 +12,7 @@ import { Docs } from "../components/Docs";
 import { CodeTabLayout } from "../components/CodeTabLayout";
 import { KeyValueTypesLayout } from "../components/KeyValueTypesLayout";
 import { AnchoredH2 } from "../components/AnchoredH2";
+import { RedirectToHome } from "../components/RedirectToHome";
 export const CallsPage = () => {
   let props = () => {
     let pallet = useParams<{ pallet: string }>().pallet;
@@ -23,7 +24,7 @@ export const CallsPage = () => {
   };
 
   if (props().calls === undefined) {
-    return <Navigate href={"/"} />;
+    return <RedirectToHome />;
   }
   return (
     <>
