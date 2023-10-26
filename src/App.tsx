@@ -38,6 +38,7 @@ import { ClientKind, initAppState } from "./state/client_wrapper";
 import { wait } from "./utils";
 import { DebugComponent } from "./components/DebugComponent";
 import { AppConfig, paramsToString } from "./state/app_config";
+import { RedirectToHome } from "./components/RedirectToHome";
 
 const App: Component = () => {
   // this happens only once on page load:
@@ -103,6 +104,15 @@ const App: Component = () => {
           path="/pallets/:pallet/constants"
           component={ConstantsPage}
         ></Route>
+
+        <Route
+          path={"*"}
+          component={() => {
+            return <RedirectToHome></RedirectToHome>;
+          }}
+        >
+          {/*  */}
+        </Route>
       </Routes>
     </MdBookWrapper>
   );

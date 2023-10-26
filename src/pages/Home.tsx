@@ -22,6 +22,12 @@ import { TabLayout, TabWithContent } from "../components/TabLayout";
 import { useNavigate, useSearchParams } from "@solidjs/router";
 import { AppConfig, clientKindsEqual } from "../state/app_config";
 import { setSidebarVisibility } from "../state/visual_state";
+import {
+  findInSidebarItems,
+  findSideBarItemByPath,
+  itemKindToPath,
+  setActiveItem,
+} from "../state/sidebar_state";
 // import { appConfig } from "../state/app_config";
 
 /**
@@ -135,19 +141,34 @@ export class HomePageState {
     try {
       await initAppState(clientKind);
       setSidebarVisibility("visible");
-      //  if redirect query param set, navigate to the correct page:
-      if (this.redirectPath) {
-        let paramsString = this.appConfig.toParamsString();
-        console.log("paramsString", paramsString);
-        let completeRedirectPath = `${this.redirectPath}?${paramsString}`;
-        console.log("GENERATE REDIRECT: redirecting to", completeRedirectPath);
-        this.#navigate!(completeRedirectPath);
-        this.redirectPath = undefined;
-      }
+      this.maybeRedirect();
     } catch (ex: any) {
       this.setError(ex.toString());
     }
     this.setLoadingState("none");
+  }
+
+  maybeRedirect() {
+    if (this.redirectPath) {
+      //  if redirect query param set, navigate to the correct page:
+      let sidebarItem = findSideBarItemByPath(this.redirectPath);
+      console.log("wants to redirect to", this.redirectPath, sidebarItem);
+      if (sidebarItem === null) {
+        this.setError(
+          `Cannot redirect to ${this.redirectPath}. It is not a valid page.`
+        );
+      } else {
+        setActiveItem(sidebarItem!);
+        let sanitizedRedirectPath = itemKindToPath(sidebarItem!.kind);
+        let paramsString = this.appConfig.toParamsString();
+        console.log("paramsString", paramsString);
+        let completeRedirectPath = `${sanitizedRedirectPath}?${paramsString}`;
+        console.log("GENERATE REDIRECT: redirecting to", completeRedirectPath);
+        this.#navigate!(completeRedirectPath);
+      }
+
+      this.redirectPath = undefined;
+    }
   }
 
   redirectPath: string | undefined = undefined;
