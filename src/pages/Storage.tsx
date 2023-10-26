@@ -1,6 +1,10 @@
 import { Navigate, useParams } from "@solidjs/router";
 import { MdBookWrapper } from "../components/MdBookWrapper";
-import { AppState, StorageEntryContent, appState } from "../state/app_state";
+import {
+  ClientWrapper,
+  StorageEntryContent,
+  clientWrapper,
+} from "../state/client_wrapper";
 import { JSX, Show, createSignal } from "solid-js";
 import { marked } from "marked";
 import { Code } from "../components/Code";
@@ -11,10 +15,11 @@ import {
   sectionHeading,
 } from "../components/KeyValueTypesLayout";
 import { AnchoredH2 } from "../components/AnchoredH2";
+import { RedirectToHome } from "../components/RedirectToHome";
 export const StoragePage = () => {
   let props = () => {
     let pallet = useParams<{ pallet: string }>().pallet;
-    let entries = appState()?.palletStorageEntries(pallet);
+    let entries = clientWrapper()?.palletStorageEntries(pallet);
     return {
       pallet,
       entries,
@@ -22,7 +27,7 @@ export const StoragePage = () => {
   };
 
   if (props().entries === undefined) {
-    return <Navigate href={"/"} />;
+    return <RedirectToHome />;
   } else {
     return (
       <>
@@ -30,7 +35,7 @@ export const StoragePage = () => {
         There are {props().entries!.length} storage entries on the{" "}
         {props().pallet} Pallet.
         {props().entries!.map((entry) =>
-          storageEntryContent(appState()!, entry)
+          storageEntryContent(clientWrapper()!, entry)
         )}
       </>
     );
@@ -45,7 +50,7 @@ type StorageValueState =
   | { tag: "value"; value: string };
 
 function storageEntryContent(
-  state: AppState,
+  state: ClientWrapper,
   entry: StorageEntryContent
 ): JSX.Element {
   let [storageValue, setStorageValue] = createSignal<StorageValueState>();
@@ -63,7 +68,10 @@ function storageEntryContent(
     }
   }
   // fetch the value in storage when the component is loaded
-  if (entry.key_types.length === 0 && state.source.tag == "url") {
+  if (
+    entry.key_types.length === 0 &&
+    clientWrapper()?.hasOnlineCapabilities()
+  ) {
     fetchStorageValue();
   }
 

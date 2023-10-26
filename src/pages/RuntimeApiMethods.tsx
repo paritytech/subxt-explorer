@@ -1,21 +1,22 @@
 import { Navigate, useParams } from "@solidjs/router";
 import { MdBookWrapper } from "../components/MdBookWrapper";
 import {
-  AppState,
+  ClientWrapper,
   RuntimeApiMethodContent,
-  appState,
-} from "../state/app_state";
+  clientWrapper,
+} from "../state/client_wrapper";
 import { JSX } from "solid-js";
 import { Docs } from "../components/Docs";
 import { CodeTabLayout } from "../components/CodeTabLayout";
 import { KeyValueTypesLayout } from "../components/KeyValueTypesLayout";
 import { AnchoredH2 } from "../components/AnchoredH2";
+import { RedirectToHome } from "../components/RedirectToHome";
 
 export const RuntimeApiMethodsPage = () => {
   let props = () => {
     let runtimeApi = useParams<{ runtime_api: string }>().runtime_api;
-    let docs = appState()?.runtimeApiDocs(runtimeApi);
-    let methods = appState()?.runtimeApiMethods(runtimeApi);
+    let docs = clientWrapper()?.runtimeApiDocs(runtimeApi);
+    let methods = clientWrapper()?.runtimeApiMethods(runtimeApi);
     return {
       runtimeApi,
       docs,
@@ -24,7 +25,7 @@ export const RuntimeApiMethodsPage = () => {
   };
 
   if (props().docs === undefined || props().methods === undefined) {
-    return <Navigate href={"/"} />;
+    return <RedirectToHome />;
   }
   return (
     <>

@@ -1,6 +1,10 @@
 import { Navigate, useParams } from "@solidjs/router";
 import { MdBookWrapper } from "../components/MdBookWrapper";
-import { AppState, CallContent, appState } from "../state/app_state";
+import {
+  ClientWrapper,
+  CallContent,
+  clientWrapper,
+} from "../state/client_wrapper";
 import { JSX } from "solid-js";
 import { marked } from "marked";
 import { Code } from "../components/Code";
@@ -8,10 +12,11 @@ import { Docs } from "../components/Docs";
 import { CodeTabLayout } from "../components/CodeTabLayout";
 import { KeyValueTypesLayout } from "../components/KeyValueTypesLayout";
 import { AnchoredH2 } from "../components/AnchoredH2";
+import { RedirectToHome } from "../components/RedirectToHome";
 export const CallsPage = () => {
   let props = () => {
     let pallet = useParams<{ pallet: string }>().pallet;
-    let calls = appState()?.palletCalls(pallet);
+    let calls = clientWrapper()?.palletCalls(pallet);
     return {
       pallet,
       calls,
@@ -19,7 +24,7 @@ export const CallsPage = () => {
   };
 
   if (props().calls === undefined) {
-    return <Navigate href={"/"} />;
+    return <RedirectToHome />;
   }
   return (
     <>

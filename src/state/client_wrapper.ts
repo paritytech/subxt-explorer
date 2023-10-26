@@ -10,7 +10,7 @@ import {
 } from "./sidebar_state";
 import { readFileAsBytes } from "../utils";
 
-export type MetadataSource =
+export type ClientKind =
   | {
       tag: "url";
       url: string;
@@ -20,33 +20,39 @@ export type MetadataSource =
       file: File;
     };
 
-export const [appState, setAppState] = createSignal<AppState | undefined>(
-  undefined
-);
+export const [clientWrapper, setClientWrapper] = createSignal<
+  ClientWrapper | undefined
+>(undefined);
 
-export class AppState {
-  source: MetadataSource;
+export class ClientWrapper {
   client: Client;
+  clientKindInCreation: ClientKind;
   content: MetadataContent;
 
-  constructor(source: MetadataSource, client: Client) {
-    this.source = source;
+  constructor(client: Client, clientKindInCreation: ClientKind) {
     this.client = client;
+    this.clientKindInCreation = clientKindInCreation;
     this.content = client.metadataContent() as MetadataContent;
   }
 
-  static async fetchFromSource(source: MetadataSource): Promise<AppState> {
+  static async createSelfWithClient(
+    clientKind: ClientKind
+  ): Promise<ClientWrapper> {
     let client: Client;
-    switch (source.tag) {
+    switch (clientKind.tag) {
       case "url":
-        client = await Client.fromUrl(source.url);
+        client = await Client.fromUrl(clientKind.url);
         break;
       case "file":
-        let bytes = await readFileAsBytes(source.file);
-        client = Client.fromBytes(source.file.name, bytes);
+        let bytes = await readFileAsBytes(clientKind.file);
+        client = Client.fromBytes(clientKind.file.name, bytes);
         break;
     }
-    return new AppState(source, client);
+    return new ClientWrapper(client, clientKind);
+  }
+
+  hasOnlineCapabilities(): boolean {
+    return this.clientKindInCreation.tag === "url";
   }
 
   constructSidebarItems(): SidebarItem[] {
@@ -262,21 +268,13 @@ export class AppState {
   }
 }
 
-// export interface AppState {
-//   source: MetadataSource;
-//   client: Client;
-//   content: MetadataContent;
-// }
-
-export async function fetchMetadataAndInitState(
-  source: MetadataSource
-): Promise<void> {
-  setAppState(undefined);
+export async function initAppState(clientKind: ClientKind): Promise<void> {
+  setClientWrapper(undefined);
   setSidebarItems([]);
-  let state = await AppState.fetchFromSource(source);
+  let state = await ClientWrapper.createSelfWithClient(clientKind);
   let items = state.constructSidebarItems();
   setSidebarItems(items);
-  setAppState(state);
+  setClientWrapper(state);
 }
 
 export interface MetadataContent {

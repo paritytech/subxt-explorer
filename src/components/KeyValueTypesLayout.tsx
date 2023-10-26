@@ -1,6 +1,6 @@
 import { Component, JSX, Show, createSignal } from "solid-js";
 import { highlight } from "./Code";
-import { NameAndType, TypeDescription } from "../state/app_state";
+import { NameAndType, TypeDescription } from "../state/client_wrapper";
 export interface Props {
   keyTypes?: KeyTypesSection;
   valueType?: ValueTypeSection;

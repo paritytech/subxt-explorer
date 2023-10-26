@@ -20,3 +20,5 @@ export async function readFileAsBytes(file: File): Promise<Uint8Array> {
     fileReader.readAsArrayBuffer(file);
   });
 }
+
+export const wait = (ms: number) => new Promise((res) => setTimeout(res, ms));
