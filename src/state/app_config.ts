@@ -1,12 +1,38 @@
-import { createMemo, createSignal, from } from "solid-js";
+import { Accessor, Setter, createMemo, createSignal, from } from "solid-js";
 import { ClientKind } from "./client_wrapper";
 import { Location, useSearchParams } from "@solidjs/router";
 
+/**
+ * A config object that is created at the start of the application lifecycle and can be updated at runtime.
+ */
 export class AppConfig {
   clientKind: ClientKind | undefined;
 
+  // Signal
+  #setAppConfigParamString: Setter<string>;
+  appConfigParamString: Accessor<string>;
+
+  static #instance: AppConfig;
+  static get instance(): AppConfig {
+    if (AppConfig.#instance === undefined) {
+      AppConfig.#instance = new AppConfig(undefined);
+    }
+    return AppConfig.#instance;
+  }
+
+  static set instance(value: AppConfig) {
+    console.log("app config got set: ", value);
+    AppConfig.#instance = value;
+    value.#setAppConfigParamString(value.toParamsString());
+  }
+
   constructor(clientKind: ClientKind | undefined) {
     this.clientKind = clientKind;
+    let [appConfigParamString, setAppConfigParamString] = createSignal<string>(
+      this.toParamsString()
+    );
+    this.appConfigParamString = appConfigParamString;
+    this.#setAppConfigParamString = setAppConfigParamString;
   }
 
   toParams(): Record<string, string> {

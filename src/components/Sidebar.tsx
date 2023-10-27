@@ -10,6 +10,7 @@ import {
   sidebarItems,
 } from "../state/sidebar_state";
 import { HomePageState } from "../pages/Home";
+import { AppConfig } from "../state/app_config";
 interface Props {}
 
 export const Sidebar: Component<Props> = (props: Props) => {
@@ -19,7 +20,7 @@ export const Sidebar: Component<Props> = (props: Props) => {
         <ol class="chapter">
           <li class="chapter-item expanded affix">
             <Link
-              href={`/?${HomePageState.instance.appConfigParamString()}`}
+              href={`/?${AppConfig.instance.appConfigParamString()}`}
               activeClass=""
               onClick={() => {
                 setActiveItem(HOME_ITEM);
@@ -61,7 +62,7 @@ function sideBarItem(item: SidebarItem): JSX.Element {
     <>
       <li class="chapter-item expanded ">
         <Link
-          href={`${item.path}?${HomePageState.instance.appConfigParamString()}`}
+          href={`${item.path}?${AppConfig.instance.appConfigParamString()}`}
           activeClass=""
           onClick={() => {
             setActiveItem(item);

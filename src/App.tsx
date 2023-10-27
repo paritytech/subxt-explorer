@@ -36,45 +36,28 @@ import { EventsPage } from "./pages/Events";
 import { Sidebar } from "./components/Sidebar";
 import { ClientKind, initAppState } from "./state/client_wrapper";
 import { wait } from "./utils";
-import { DebugComponent } from "./components/DebugComponent";
 import { AppConfig, paramsToString } from "./state/app_config";
 import { RedirectToHome } from "./components/RedirectToHome";
 
 const App: Component = () => {
-  // this happens only once on page load:
+  // On page load, create a new AppConfig from the URL params.
+  // Note: This code is only called ONCE at the start of the application lifecycle.
   const location = useLocation();
-  let config = AppConfig.fromParams(location.query);
-  HomePageState.instance.appConfig = config;
+  AppConfig.instance = AppConfig.fromParams(location.query);
 
   // listen to all client side solid router route change events:
   // If the url params indicate a different app config, reload the web app with that config.
   createEffect(() => {
     let pathname = location.pathname;
-    let params = location.query;
-
-    let configFromParams = AppConfig.fromParams(params);
-    console.log(
-      "CreateEffect: ",
-      pathname,
-      Object.entries(params),
-      configFromParams
-    );
-    if (!configFromParams.equals(HomePageState.instance.appConfig)) {
-      console.log(
-        "CreateEffect: config changed to",
-        configFromParams,
-        location.pathname
-      );
-      HomePageState.instance.appConfig = configFromParams;
+    let configFromParams = AppConfig.fromParams(location.query);
+    if (!configFromParams.equals(AppConfig.instance)) {
+      AppConfig.instance = configFromParams;
       if (pathname === "/" || pathname === "") {
-        console.log("HOME");
         // if already on homepage adjust its UI to the new config:
         HomePageState.instance.onHomePageLoad();
       } else {
-        console.log("NOT HOME:", pathname);
         // otherwise navigate to homepage and set redirect hook:
         let redirectUrl = `/?${configFromParams.toParamsString()}`;
-        console.log("WAS NOT AT HOME: redirecting to", redirectUrl);
         HomePageState.instance.setRedirectPath(pathname);
         let navigate = useNavigate();
         navigate(redirectUrl, { replace: true });
@@ -85,34 +68,27 @@ const App: Component = () => {
   return (
     <MdBookWrapper>
       <Routes>
-        <Route path="/debug" component={DebugComponent}></Route>
-        <Route path="/" component={HomePage}></Route>
-        <Route path="/runtime_apis" component={RuntimeApisPage}></Route>
+        <Route path="/" component={HomePage} />
+        <Route path="/runtime_apis" component={RuntimeApisPage} />
         <Route
           path="/runtime_apis/:runtime_api"
           component={RuntimeApiMethodsPage}
-        ></Route>
-        <Route path="/custom_values" component={CustomValuesPage}></Route>
-        <Route path="/pallets/:pallet" component={PalletPage}></Route>
-        <Route path="/pallets/:pallet/calls" component={CallsPage}></Route>
-        <Route path="/pallets/:pallet/events" component={EventsPage}></Route>
+        />
+        <Route path="/custom_values" component={CustomValuesPage} />
+        <Route path="/pallets/:pallet" component={PalletPage} />
+        <Route path="/pallets/:pallet/calls" component={CallsPage} />
+        <Route path="/pallets/:pallet/events" component={EventsPage} />
         <Route
           path="/pallets/:pallet/storage_entries"
           component={StoragePage}
-        ></Route>
-        <Route
-          path="/pallets/:pallet/constants"
-          component={ConstantsPage}
-        ></Route>
-
+        />
+        <Route path="/pallets/:pallet/constants" component={ConstantsPage} />
         <Route
           path={"*"}
           component={() => {
             return <RedirectToHome></RedirectToHome>;
           }}
-        >
-          {/*  */}
-        </Route>
+        />
       </Routes>
     </MdBookWrapper>
   );

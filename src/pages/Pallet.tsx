@@ -96,9 +96,7 @@ function PalletItemSection(props: PalletItemSectionProps): JSX.Element {
   return (
     <>
       <TryToLink
-        href={`${
-          props.titleHref
-        }?${HomePageState.instance.appConfigParamString()}`}
+        href={`${props.titleHref}?${AppConfig.instance.appConfigParamString()}`}
       >
         <h2 class="mt-12 text-gray-300 hover:text-pink-500">{props.title}</h2>
       </TryToLink>
@@ -109,7 +107,7 @@ function PalletItemSection(props: PalletItemSectionProps): JSX.Element {
               <TryToLink
                 href={`${props.itemToHref(
                   item
-                )}?${HomePageState.instance.appConfigParamString()}`}
+                )}?${AppConfig.instance.appConfigParamString()}`}
               >
                 {item}
               </TryToLink>

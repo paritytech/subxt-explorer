@@ -3,7 +3,6 @@ import { render } from "solid-js/web";
 import App from "./App";
 import { Router, hashIntegration } from "@solidjs/router";
 
-// body container is a special id used for styling in md-book
 const root = document.getElementById("body-container");
 
 if (import.meta.env.DEV && !(root instanceof HTMLElement)) {

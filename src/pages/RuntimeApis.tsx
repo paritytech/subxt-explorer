@@ -19,7 +19,7 @@ export const RuntimeApisPage = () => {
             <TryToLink
               href={`/runtime_apis/${
                 runtimeApi.name
-              }?${HomePageState.instance.appConfigParamString()}`}
+              }?${AppConfig.instance.appConfigParamString()}`}
             >
               {runtimeApi.name}
             </TryToLink>
@@ -30,7 +30,7 @@ export const RuntimeApisPage = () => {
                 <TryToLink
                   href={`/runtime_apis/${
                     runtimeApi.name
-                  }#${method}?${HomePageState.instance.appConfigParamString()}`}
+                  }#${method}?${AppConfig.instance.appConfigParamString()}`}
                 >
                   {method}
                 </TryToLink>

@@ -15,8 +15,6 @@ import {
   initAppState,
   setClientWrapper,
 } from "../state/client_wrapper";
-import { MdBookWrapper } from "../components/MdBookWrapper";
-import { DebugComponent } from "../components/DebugComponent";
 import { FileUploadArea } from "../components/FileUploadArea";
 import { TabLayout, TabWithContent } from "../components/TabLayout";
 import { useNavigate, useSearchParams } from "@solidjs/router";
@@ -36,20 +34,7 @@ import {
  * Makes it easy to set fields from other locations.
  */
 export class HomePageState {
-  _appConfig: AppConfig;
-  get appConfig(): AppConfig {
-    return this._appConfig;
-  }
-
-  set appConfig(config: AppConfig) {
-    console.log("app config got changed", config);
-    this._appConfig = config;
-    this.#setAppConfigParamString(config.toParamsString());
-  }
-
-  #setAppConfigParamString: Setter<string>;
-  appConfigParamString: Accessor<string>;
-
+  // UI state of the home page:
   file: Accessor<File | undefined>;
   setFile: Setter<File | undefined>;
   error: Accessor<string | undefined>;
@@ -61,6 +46,7 @@ export class HomePageState {
   loadingState: Accessor<"none" | "loading">;
   setLoadingState: Setter<"none" | "loading">;
 
+  // infused by a scope that has access to the router.
   #setSearchParams?: (params: Record<string, string>) => void;
   #navigate?: (path: string) => void;
 
@@ -73,7 +59,6 @@ export class HomePageState {
   }
 
   constructor() {
-    this._appConfig = new AppConfig(undefined);
     let [file, setFile] = createSignal<File | undefined>(undefined);
     this.file = file;
     this.setFile = setFile;
@@ -91,12 +76,6 @@ export class HomePageState {
     );
     this.loadingState = loadingState;
     this.setLoadingState = setLoadingState;
-
-    let [appConfigParamString, setAppConfigParamString] = createSignal<string>(
-      this._appConfig.toParamsString()
-    );
-    this.appConfigParamString = appConfigParamString;
-    this.#setAppConfigParamString = setAppConfigParamString;
   }
 
   static #instance: HomePageState;
@@ -128,15 +107,14 @@ export class HomePageState {
     if (clientKind === undefined || this.#setSearchParams === undefined) {
       return;
     }
-    this.appConfig = new AppConfig(clientKind);
-    this.#setSearchParams!(this.appConfig.toParams());
+    AppConfig.instance = new AppConfig(clientKind);
+    this.#setSearchParams!(AppConfig.instance.toParams());
     await this.#generate(clientKind);
   }
 
   async #generate(clientKind: ClientKind) {
     this.setError(undefined);
-    console.log("GENERATE:", this.appConfig);
-    console.log("GENERATE:", this.appConfig.toParamsString());
+    console.log("kick of generate for appConfig:", AppConfig.instance);
     this.setLoadingState("loading");
     try {
       await initAppState(clientKind);
@@ -160,7 +138,7 @@ export class HomePageState {
       } else {
         setActiveItem(sidebarItem!);
         let sanitizedRedirectPath = itemKindToPath(sidebarItem!.kind);
-        let paramsString = this.appConfig.toParamsString();
+        let paramsString = AppConfig.instance.toParamsString();
         console.log("paramsString", paramsString);
         let completeRedirectPath = `${sanitizedRedirectPath}?${paramsString}`;
         console.log("GENERATE REDIRECT: redirecting to", completeRedirectPath);
@@ -177,12 +155,12 @@ export class HomePageState {
   };
 
   onHomePageLoad() {
-    let configClientKind = this.appConfig.clientKind;
+    let configClientKind = AppConfig.instance.clientKind;
     if (
       configClientKind != undefined &&
       !clientKindsEqual(configClientKind, clientWrapper()?.clientKindInCreation)
     ) {
-      this.#setSearchParams!(this.appConfig.toParams());
+      this.#setSearchParams!(AppConfig.instance.toParams());
       switch (configClientKind.tag) {
         case "url":
           this.setUrl(configClientKind.url);

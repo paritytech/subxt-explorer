@@ -2,6 +2,7 @@ import { Link } from "@solidjs/router";
 import { Component, Show } from "solid-js";
 import { SidebarItem, activeItem, setActiveItem } from "../state/sidebar_state";
 import { HomePageState } from "../pages/Home";
+import { AppConfig } from "../state/app_config";
 interface Props {
   activeItem: SidebarItem;
 }
@@ -13,7 +14,7 @@ export const NavWrapper: Component<Props> = (props: Props) => {
           rel="prev"
           href={`${
             props.activeItem.prev!.path
-          }?${HomePageState.instance.appConfigParamString()}`}
+          }?${AppConfig.instance.appConfigParamString()}`}
           class="mobile-nav-chapters previous"
           title={props.activeItem.prev!.title}
           aria-label="Previous chapter"
@@ -31,7 +32,7 @@ export const NavWrapper: Component<Props> = (props: Props) => {
           rel="next"
           href={`${
             props.activeItem.next!.path
-          }?${HomePageState.instance.appConfigParamString()}`}
+          }?${AppConfig.instance.appConfigParamString()}`}
           class="mobile-nav-chapters next"
           title={props.activeItem.next!.title}
           aria-label="Next chapter"
