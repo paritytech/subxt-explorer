@@ -19,10 +19,9 @@ export class AppConfig {
     return AppConfig.#instance;
   }
 
-  static set instance(value: AppConfig) {
-    console.log("app config got set: ", value);
-    AppConfig.#instance = value;
-    value.#setAppConfigParamString(value.toParamsString());
+  updateWith(clientKind: ClientKind | undefined) {
+    this.clientKind = clientKind;
+    this.#setAppConfigParamString(this.toParamsString());
   }
 
   constructor(clientKind: ClientKind | undefined) {
@@ -39,18 +38,7 @@ export class AppConfig {
   }
 
   toParams(): Record<string, string> {
-    const params: Record<string, string> = {};
-
-    switch (this.clientKind?.tag) {
-      case undefined:
-        break;
-      case "url":
-        params["url"] = this.clientKind.url;
-        break;
-      case "file":
-        break;
-    }
-
+    const params: Record<string, string> = clientKindToParams(this.clientKind);
     return params;
   }
 
@@ -58,16 +46,8 @@ export class AppConfig {
     return paramsToString(this.toParams());
   }
 
-  static fromParams(params: Record<string, string>): AppConfig {
-    let clientKind: ClientKind | undefined = undefined;
-    const url = params["url"];
-    if (url) {
-      clientKind = {
-        tag: "url",
-        url: decodeURI(url),
-      };
-    }
-    return new AppConfig(clientKind);
+  updateWithParams(params: Record<string, string>) {
+    this.clientKind = clientKindFromParams(params);
   }
 
   equals(other: AppConfig): boolean {
@@ -75,27 +55,28 @@ export class AppConfig {
   }
 }
 
-/**
- * AppConfig contains some basic settings, is initially created from
- * the browser url and local storage and can be updated at runtime.
- */
-// export const [appConfig, setAppConfig] = createSignal<AppConfig>({
-//   clientKind: undefined,
-// });
+export function clientKindFromParams(
+  params: Record<string, string>
+): ClientKind | undefined {
+  const url = params["url"];
+  if (url) {
+    return {
+      tag: "url",
+      url: decodeURI(url),
+    };
+  }
+  return undefined;
+}
 
-// export const [
-//   latestSuccessfulClientCreation,
-//   setLatestSuccessfulClientCreation,
-// ] = createSignal<ClientKind | undefined>(undefined);
-
-// export function homeRedirectUrl(fromPath: string): string {
-//   // let config = appConfig();
-//   let params: Record<string, string> = appConfigToSearchParams(config);
-//   params.redirect = fromPath;
-//   return `/${paramsToString(params)}`;
-// }
-
-//createMemo();
+export function clientKindToParams(
+  clientKind: ClientKind | undefined
+): Record<string, string> {
+  const params: Record<string, string> = {};
+  if (clientKind?.tag === "url") {
+    params["url"] = clientKind.url;
+  }
+  return params;
+}
 
 export function paramsToString(params: Record<string, string>): string {
   return new URLSearchParams(Object.entries(params)).toString();

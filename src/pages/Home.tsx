@@ -71,6 +71,11 @@ export class HomePageState {
     return HomePageState.#instance;
   }
 
+  #generating = false;
+  get generating() {
+    return this.#generating;
+  }
+
   // takes the state of the ui elements and translates that into a clientKind that can be used to create a client.
   clientKindFromTab = (): ClientKind | undefined => {
     if (this.error() !== undefined) {
@@ -94,14 +99,18 @@ export class HomePageState {
     if (clientKind === undefined || this.#setSearchParams === undefined) {
       return;
     }
-    AppConfig.instance = new AppConfig(clientKind);
+    AppConfig.instance.updateWith(clientKind);
     this.#setSearchParams!(AppConfig.instance.toParams());
     await this.#generate(clientKind);
   }
 
   async #generate(clientKind: ClientKind) {
+    this.#generating = true;
     this.setError(undefined);
-    console.log("kick of generate for appConfig:", AppConfig.instance);
+    console.log(
+      "Kick off Generate Client for the current AppConfig:",
+      AppConfig.instance
+    );
     this.setLoadingState("loading");
     try {
       await initAppState(clientKind);
@@ -111,6 +120,7 @@ export class HomePageState {
       this.setError(ex.toString());
     }
     this.setLoadingState("none");
+    this.#generating = false;
   }
 
   // if the redirectPath is set, redirect to that path.
@@ -118,7 +128,6 @@ export class HomePageState {
     if (this.#redirectPath) {
       //  if redirect query param set, navigate to the correct page:
       const sidebarItem = findSideBarItemByPath(this.#redirectPath);
-      console.log("wants to redirect to", this.#redirectPath, sidebarItem);
       if (sidebarItem === null) {
         this.setError(
           `Cannot redirect to ${this.#redirectPath}. It is not a valid page.`
@@ -127,9 +136,11 @@ export class HomePageState {
         setActiveItem(sidebarItem!);
         const sanitizedRedirectPath = itemKindToPath(sidebarItem!.kind);
         const paramsString = AppConfig.instance.toParamsString();
-        console.log("paramsString", paramsString);
         const completeRedirectPath = `${sanitizedRedirectPath}?${paramsString}`;
-        console.log("GENERATE REDIRECT: redirecting to", completeRedirectPath);
+        console.log(
+          "Home is done generating and redirects to",
+          completeRedirectPath
+        );
         this.#navigate!(completeRedirectPath);
       }
 

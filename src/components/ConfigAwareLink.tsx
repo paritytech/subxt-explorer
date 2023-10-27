@@ -9,11 +9,13 @@ import { findInSidebarItems, setActiveItem } from "../state/sidebar";
  * 2. It sets the active item in the sidebar to the item that is being linked to.
  */
 export const ConfigAwareLink = (props: AnchorProps): JSX.Element => {
+  const href = () =>
+    props.href + "?" + AppConfig.instance.appConfigParamString();
   return (
     <Link
       {...props}
       activeClass=""
-      href={AppConfig.instance.href(props.href)()}
+      href={href()}
       onClick={() => {
         const splitPath = props.href.split("#")[0];
         const found = findInSidebarItems((e) => e.path == splitPath);
