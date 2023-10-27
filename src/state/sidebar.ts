@@ -1,11 +1,12 @@
-import { createSignal } from "solid-js";
+import { Signal, createEffect, createSignal } from "solid-js";
 
 export const [sidebarItems, setSidebarItems] = createSignal<SidebarItem[]>([]);
+
 export const HOME_ITEM: SidebarItem = newItem({ tag: "home" });
 export const [activeItem, setActiveItem] = createSignal<SidebarItem>(HOME_ITEM);
 
 export function findSideBarItemByPath(path: string): SidebarItem | null {
-  let itemKind = pathToItemKind(path);
+  const itemKind = pathToItemKind(path);
   if (itemKind === undefined) {
     return null;
   }
@@ -26,7 +27,7 @@ function recursiveFind(
     if (fn(e)) {
       return e;
     }
-    let childFound = recursiveFind(e.children, fn);
+    const childFound = recursiveFind(e.children, fn);
     if (childFound !== null) {
       return childFound;
     }
@@ -106,7 +107,7 @@ function itemKindEquals(a: ItemKind, b: ItemKind): boolean {
 // Note: currently not necessary
 
 export function pathToItemKind(path: string): ItemKind | undefined {
-  let segs = path.split("/").filter((e) => e.length > 0);
+  const segs = path.split("/").filter((e) => e.length > 0);
   if (segs.length == 0) {
     return { tag: "home" };
   }
@@ -119,21 +120,26 @@ export function pathToItemKind(path: string): ItemKind | undefined {
       }
     case "custom_values":
       return { tag: "custom_values" };
-    case "pallets":
-      if (segs[1]) {
+    case "pallets": {
+      const pallet = segs[1];
+      if (pallet) {
         switch (segs[2]) {
           case "calls":
-            return { tag: "calls", pallet: segs[1] };
+            return { tag: "calls", pallet };
           case "storage_entries":
-            return { tag: "storage_entries", pallet: segs[1] };
+            return { tag: "storage_entries", pallet };
           case "constants":
-            return { tag: "constants", pallet: segs[1] };
+            return { tag: "constants", pallet };
+          case "events":
+            return { tag: "events", pallet };
           default:
-            return { tag: "pallet", pallet: segs[1], index: -1 };
+            // note: index can currently not be parsed from url
+            return { tag: "pallet", pallet, index: -1 };
         }
       } else {
         return undefined;
       }
+    }
     default:
       return undefined;
   }
@@ -184,3 +190,29 @@ export function itemKindToTitle(item: ItemKind): string {
       return "Events";
   }
 }
+
+const HTML = document.querySelector("html")!;
+
+export type SidebarState = "visible" | "hidden";
+
+export const [sidebarVisibility, setSidebarVisibility]: Signal<SidebarState> =
+  createSignal<SidebarState>("hidden");
+export function toggleSidebar() {
+  setSidebarVisibility((prev) => {
+    switch (prev) {
+      case "visible":
+        return "hidden";
+      case "hidden":
+        return "visible";
+    }
+  });
+}
+
+// Whenever the sidebar signal changes, we also want to adjust the class on the html.
+// This is some baggage from MdBook but we keep it for now.
+createEffect((prevSidebar: SidebarState) => {
+  const currentSidebar = sidebarVisibility();
+  HTML.classList.remove(`sidebar-${prevSidebar}`);
+  HTML.classList.add(`sidebar-${currentSidebar}`);
+  return currentSidebar;
+}, "visible" as SidebarState);

@@ -1,10 +1,5 @@
-import { Navigate, useParams } from "@solidjs/router";
-import { MdBookWrapper } from "../components/MdBookWrapper";
-import {
-  ClientWrapper,
-  RuntimeApiMethodContent,
-  clientWrapper,
-} from "../state/client_wrapper";
+import { useParams } from "@solidjs/router";
+import { RuntimeApiMethodContent, client } from "../state/client";
 import { JSX } from "solid-js";
 import { Docs } from "../components/Docs";
 import { CodeTabLayout } from "../components/CodeTabLayout";
@@ -13,10 +8,10 @@ import { AnchoredH2 } from "../components/AnchoredH2";
 import { RedirectToHome } from "../components/RedirectToHome";
 
 export const RuntimeApiMethodsPage = () => {
-  let props = () => {
-    let runtimeApi = useParams<{ runtime_api: string }>().runtime_api;
-    let docs = clientWrapper()?.runtimeApiDocs(runtimeApi);
-    let methods = clientWrapper()?.runtimeApiMethods(runtimeApi);
+  const props = () => {
+    const runtimeApi = useParams<{ runtime_api: string }>().runtime_api;
+    const docs = client()?.runtimeApiDocs(runtimeApi);
+    const methods = client()?.runtimeApiMethods(runtimeApi);
     return {
       runtimeApi,
       docs,

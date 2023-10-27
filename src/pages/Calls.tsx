@@ -1,22 +1,15 @@
-import { Navigate, useParams } from "@solidjs/router";
-import { MdBookWrapper } from "../components/MdBookWrapper";
-import {
-  ClientWrapper,
-  CallContent,
-  clientWrapper,
-} from "../state/client_wrapper";
+import { useParams } from "@solidjs/router";
+import { CallContent, client } from "../state/client";
 import { JSX } from "solid-js";
-import { marked } from "marked";
-import { Code } from "../components/Code";
 import { Docs } from "../components/Docs";
 import { CodeTabLayout } from "../components/CodeTabLayout";
 import { KeyValueTypesLayout } from "../components/KeyValueTypesLayout";
 import { AnchoredH2 } from "../components/AnchoredH2";
 import { RedirectToHome } from "../components/RedirectToHome";
 export const CallsPage = () => {
-  let props = () => {
-    let pallet = useParams<{ pallet: string }>().pallet;
-    let calls = clientWrapper()?.palletCalls(pallet);
+  const props = () => {
+    const pallet = useParams<{ pallet: string }>().pallet;
+    const calls = client()?.palletCalls(pallet);
     return {
       pallet,
       calls,
@@ -36,10 +29,15 @@ export const CallsPage = () => {
   );
 };
 
-function callContent(call: CallContent): JSX.Element {
+function callContent(call: CallContent, index: number): JSX.Element {
   return (
     <>
-      <AnchoredH2 title={call.name}></AnchoredH2>
+      <AnchoredH2 title={call.name}>
+        <span class="text-gray-500 text-xl float-right mt-5">
+          {" "}
+          index = {index}
+        </span>
+      </AnchoredH2>
       <Docs mdDocs={call.docs}></Docs>
       <KeyValueTypesLayout
         keyTypes={

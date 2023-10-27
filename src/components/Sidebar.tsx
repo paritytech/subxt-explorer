@@ -1,31 +1,20 @@
-import { Component, For, JSX, createSignal } from "solid-js";
-import { ClientKind, clientWrapper } from "../state/client_wrapper";
-import { Link } from "@solidjs/router";
+import { Component, For, JSX } from "solid-js";
+import { ClientKind, client } from "../state/client";
 import {
   HOME_ITEM,
   SidebarItem,
   activeItem,
-  newItem,
-  setActiveItem,
   sidebarItems,
-} from "../state/sidebar_state";
-import { HomePageState } from "../pages/Home";
-interface Props {}
+} from "../state/sidebar";
+import { ConfigAwareLink } from "./ConfigAwareLink";
 
-export const Sidebar: Component<Props> = (props: Props) => {
+export const Sidebar: Component = () => {
   return (
     <nav id="sidebar" class="sidebar" aria-label="Table of contents">
       <div class="sidebar-scrollbox">
         <ol class="chapter">
           <li class="chapter-item expanded affix">
-            <Link
-              href={`/?${HomePageState.instance.appConfigParamString()}`}
-              activeClass=""
-              onClick={() => {
-                setActiveItem(HOME_ITEM);
-              }}
-              class="p-0"
-            >
+            <ConfigAwareLink href={"/"} class="p-0">
               <h1
                 class={`my-0 ${
                   activeItem().path == HOME_ITEM.path && "text-pink-500"
@@ -33,15 +22,15 @@ export const Sidebar: Component<Props> = (props: Props) => {
               >
                 Subxt Explorer
               </h1>
-            </Link>
+            </ConfigAwareLink>
           </li>
-          {clientWrapper() && (
+          {client() && (
             <li class="part-title leading-6 pt-6 pb-3">
-              {metadataSourceSpan(clientWrapper()!.clientKindInCreation!)}
+              {metadataSourceSpan(client()!.clientKindInCreation!)}
             </li>
           )}
 
-          <For each={sidebarItems()}>{(item, i) => sideBarItem(item)}</For>
+          <For each={sidebarItems()}>{(item) => <SideBarItem {...item} />}</For>
         </ol>
       </div>
       <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
@@ -49,10 +38,12 @@ export const Sidebar: Component<Props> = (props: Props) => {
   );
 };
 
-function sideBarItem(item: SidebarItem): JSX.Element {
-  // let params = useParams<{ path?: string }>();
+function SideBarItem(item: SidebarItem): JSX.Element {
+  if (item.kind.tag === "home") {
+    return;
+  }
 
-  let topLevel =
+  const topLevel =
     item.kind.tag === "runtime_apis" ||
     item.kind.tag === "pallet" ||
     item.kind.tag === "custom_values";
@@ -60,16 +51,7 @@ function sideBarItem(item: SidebarItem): JSX.Element {
   return (
     <>
       <li class="chapter-item expanded ">
-        <Link
-          href={`${item.path}?${HomePageState.instance.appConfigParamString()}`}
-          activeClass=""
-          onClick={() => {
-            setActiveItem(item);
-          }}
-          // class={activeItem().path === item.path ? "active" : ""}
-          // class="text-gray-300 hover:text-pink-500"
-          style={{}}
-        >
+        <ConfigAwareLink href={item.path}>
           <span
             class={`${
               activeItem().path === item.path
@@ -87,12 +69,12 @@ function sideBarItem(item: SidebarItem): JSX.Element {
               </span>
             )}
           </span>
-        </Link>
+        </ConfigAwareLink>
       </li>
       {item.children.length != 0 && (
         <li>
           <ol class="section">
-            {item.children.map((subitem) => sideBarItem(subitem))}
+            {item.children.map((subitem) => SideBarItem(subitem))}
           </ol>
         </li>
       )}
@@ -121,8 +103,8 @@ function metadataSourceSpan(ck: ClientKind): JSX.Element {
 
 /*
 
-
-The scrolling code above is adapted from this, which is from some md book js snippet
+Todo:
+In MdBook there is some code to scroll the sidebar to the correct item, we probably need something similar:
 
 <!-- Track and set sidebar scroll position -->
 <script>

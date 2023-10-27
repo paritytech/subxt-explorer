@@ -1,29 +1,13 @@
-import {
-  Switch,
-  type Component,
-  Match,
-  createResource,
-  Suspense,
-  Show,
-  createEffect,
-  useTransition,
-  useContext,
-} from "solid-js";
+import { type Component, createEffect } from "solid-js";
 import { MdBookWrapper } from "./components/MdBookWrapper";
 import { HomePage, HomePageState } from "./pages/Home";
 import {
-  Navigate,
   Route,
   Router,
   Routes,
   hashIntegration,
-  memoryIntegration,
-  pathIntegration,
-  useBeforeLeave,
   useLocation,
   useNavigate,
-  useRouteData,
-  useSearchParams,
 } from "@solidjs/router";
 import { RuntimeApisPage } from "./pages/RuntimeApis";
 import { CustomValuesPage } from "./pages/CustomValues";
@@ -33,50 +17,57 @@ import { StoragePage } from "./pages/Storage";
 import { ConstantsPage } from "./pages/Constants";
 import { RuntimeApiMethodsPage } from "./pages/RuntimeApiMethods";
 import { EventsPage } from "./pages/Events";
-import { Sidebar } from "./components/Sidebar";
-import { ClientKind, initAppState } from "./state/client_wrapper";
-import { wait } from "./utils";
-import { DebugComponent } from "./components/DebugComponent";
-import { AppConfig, paramsToString } from "./state/app_config";
+import {
+  AppConfig,
+  clientKindFromParams,
+  clientKindsEqual,
+} from "./state/app_config";
 import { RedirectToHome } from "./components/RedirectToHome";
+import { findSideBarItemByPath, setActiveItem } from "./state/sidebar";
 
 const App: Component = () => {
-  // this happens only once on page load:
+  return (
+    <Router source={hashIntegration()}>
+      <AppInRouter />
+    </Router>
+  );
+};
+
+export default App;
+
+const AppInRouter: Component = () => {
+  // On page load, create a new AppConfig from the URL params.
+  // Note: This code is only called ONCE at the start of the application lifecycle.
   const location = useLocation();
-  let config = AppConfig.fromParams(location.query);
-  HomePageState.instance.appConfig = config;
+
+  AppConfig.instance.updateWithParams(location.query);
 
   // listen to all client side solid router route change events:
   // If the url params indicate a different app config, reload the web app with that config.
   createEffect(() => {
-    let pathname = location.pathname;
-    let params = location.query;
+    const pathname = location.pathname;
 
-    let configFromParams = AppConfig.fromParams(params);
-    console.log(
-      "CreateEffect: ",
-      pathname,
-      Object.entries(params),
-      configFromParams
-    );
-    if (!configFromParams.equals(HomePageState.instance.appConfig)) {
-      console.log(
-        "CreateEffect: config changed to",
-        configFromParams,
-        location.pathname
-      );
-      HomePageState.instance.appConfig = configFromParams;
+    if (pathname == "/" && HomePageState.instance.generating) {
+      // we do not want anything here to trigger if the home page is currently generating some client connection.
+      return;
+    }
+
+    const newItem = findSideBarItemByPath(pathname);
+    if (newItem) {
+      setActiveItem(newItem);
+    }
+
+    const paramsClientKind = clientKindFromParams(location.query);
+    if (!clientKindsEqual(paramsClientKind, AppConfig.instance.clientKind)) {
+      AppConfig.instance.updateWith(paramsClientKind);
       if (pathname === "/" || pathname === "") {
-        console.log("HOME");
         // if already on homepage adjust its UI to the new config:
-        HomePageState.instance.onHomePageLoad();
+        HomePageState.instance.adjustUiToAppConfigInstance();
       } else {
-        console.log("NOT HOME:", pathname);
         // otherwise navigate to homepage and set redirect hook:
-        let redirectUrl = `/?${configFromParams.toParamsString()}`;
-        console.log("WAS NOT AT HOME: redirecting to", redirectUrl);
+        const redirectUrl = `/?${AppConfig.instance.toParamsString()}`;
         HomePageState.instance.setRedirectPath(pathname);
-        let navigate = useNavigate();
+        const navigate = useNavigate();
         navigate(redirectUrl, { replace: true });
       }
     }
@@ -85,37 +76,28 @@ const App: Component = () => {
   return (
     <MdBookWrapper>
       <Routes>
-        <Route path="/debug" component={DebugComponent}></Route>
-        <Route path="/" component={HomePage}></Route>
-        <Route path="/runtime_apis" component={RuntimeApisPage}></Route>
+        <Route path="/" component={HomePage} />
+        <Route path="/runtime_apis" component={RuntimeApisPage} />
         <Route
           path="/runtime_apis/:runtime_api"
           component={RuntimeApiMethodsPage}
-        ></Route>
-        <Route path="/custom_values" component={CustomValuesPage}></Route>
-        <Route path="/pallets/:pallet" component={PalletPage}></Route>
-        <Route path="/pallets/:pallet/calls" component={CallsPage}></Route>
-        <Route path="/pallets/:pallet/events" component={EventsPage}></Route>
+        />
+        <Route path="/custom_values" component={CustomValuesPage} />
+        <Route path="/pallets/:pallet" component={PalletPage} />
+        <Route path="/pallets/:pallet/calls" component={CallsPage} />
+        <Route path="/pallets/:pallet/events" component={EventsPage} />
         <Route
           path="/pallets/:pallet/storage_entries"
           component={StoragePage}
-        ></Route>
-        <Route
-          path="/pallets/:pallet/constants"
-          component={ConstantsPage}
-        ></Route>
-
+        />
+        <Route path="/pallets/:pallet/constants" component={ConstantsPage} />
         <Route
           path={"*"}
           component={() => {
             return <RedirectToHome></RedirectToHome>;
           }}
-        >
-          {/*  */}
-        </Route>
+        />
       </Routes>
     </MdBookWrapper>
   );
 };
-
-export default App;

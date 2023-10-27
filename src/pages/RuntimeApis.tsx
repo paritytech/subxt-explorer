@@ -1,39 +1,29 @@
-import { A, Navigate, useParams } from "@solidjs/router";
-import { MdBookWrapper } from "../components/MdBookWrapper";
-import { ClientWrapper, clientWrapper } from "../state/client_wrapper";
-import { JSX } from "solid-js";
-import { TryToLink } from "../components/TryLinkTo";
+import { client } from "../state/client";
 import { RedirectToHome } from "../components/RedirectToHome";
-import { HomePageState } from "./Home";
+import { ConfigAwareLink } from "../components/ConfigAwareLink";
 
 export const RuntimeApisPage = () => {
-  if (!clientWrapper()?.content.runtime_apis.length) {
+  if (!client()?.content.runtime_apis.length) {
     return <RedirectToHome />;
   }
   return (
     <>
       <h1>Runtime APIs</h1>
-      {clientWrapper()!.content.runtime_apis.map((runtimeApi) => (
+      {client()!.content.runtime_apis.map((runtimeApi) => (
         <>
           <h2 class="mt-12">
-            <TryToLink
-              href={`/runtime_apis/${
-                runtimeApi.name
-              }?${HomePageState.instance.appConfigParamString()}`}
-            >
+            <ConfigAwareLink href={`/runtime_apis/${runtimeApi.name}`}>
               {runtimeApi.name}
-            </TryToLink>
+            </ConfigAwareLink>
           </h2>
           <ul>
             {runtimeApi.methods.map((method) => (
               <li>
-                <TryToLink
-                  href={`/runtime_apis/${
-                    runtimeApi.name
-                  }#${method}?${HomePageState.instance.appConfigParamString()}`}
+                <ConfigAwareLink
+                  href={`/runtime_apis/${runtimeApi.name}#${method}`}
                 >
                   {method}
-                </TryToLink>
+                </ConfigAwareLink>
               </li>
             ))}
           </ul>

@@ -1,13 +1,6 @@
 import { createSignal } from "solid-js";
-import { Client } from "subxt_example_codegen";
-import {
-  HOME_ITEM,
-  SidebarItem,
-  ItemKind,
-  itemKindToPath,
-  newItem,
-  setSidebarItems,
-} from "./sidebar_state";
+import { Client as WASMClient } from "subxt_example_codegen";
+import { SidebarItem, newItem, setSidebarItems } from "./sidebar";
 import { readFileAsBytes } from "../utils";
 
 export type ClientKind =
@@ -20,35 +13,32 @@ export type ClientKind =
       file: File;
     };
 
-export const [clientWrapper, setClientWrapper] = createSignal<
-  ClientWrapper | undefined
->(undefined);
+export const [client, setClient] = createSignal<Client | undefined>(undefined);
 
-export class ClientWrapper {
-  client: Client;
+export class Client {
+  client: WASMClient;
   clientKindInCreation: ClientKind;
   content: MetadataContent;
 
-  constructor(client: Client, clientKindInCreation: ClientKind) {
+  constructor(client: WASMClient, clientKindInCreation: ClientKind) {
     this.client = client;
     this.clientKindInCreation = clientKindInCreation;
     this.content = client.metadataContent() as MetadataContent;
   }
 
-  static async createSelfWithClient(
-    clientKind: ClientKind
-  ): Promise<ClientWrapper> {
-    let client: Client;
+  static async createSelfWithClient(clientKind: ClientKind): Promise<Client> {
+    let client: WASMClient;
     switch (clientKind.tag) {
       case "url":
-        client = await Client.fromUrl(clientKind.url);
+        client = await WASMClient.fromUrl(clientKind.url);
         break;
-      case "file":
-        let bytes = await readFileAsBytes(clientKind.file);
-        client = Client.fromBytes(clientKind.file.name, bytes);
+      case "file": {
+        const bytes = await readFileAsBytes(clientKind.file);
+        client = WASMClient.fromBytes(clientKind.file.name, bytes);
         break;
+      }
     }
-    return new ClientWrapper(client, clientKind);
+    return new Client(client, clientKind);
   }
 
   hasOnlineCapabilities(): boolean {
@@ -56,10 +46,10 @@ export class ClientWrapper {
   }
 
   constructSidebarItems(): SidebarItem[] {
-    let items: SidebarItem[] = [];
+    const items: SidebarItem[] = [newItem({ tag: "home" })];
     // runtime apis
     if (this.content.runtime_apis.length != 0) {
-      let item = newItem({ tag: "runtime_apis" });
+      const item = newItem({ tag: "runtime_apis" });
       for (const runtimeAPI of this.content.runtime_apis) {
         item.children.push(
           newItem({ tag: "runtime_api", runtime_api: runtimeAPI.name })
@@ -73,7 +63,7 @@ export class ClientWrapper {
     }
     // pallets
     for (const pallet of this.content.pallets) {
-      let item = newItem({
+      const item = newItem({
         tag: "pallet",
         pallet: pallet.name,
         index: pallet.index,
@@ -95,7 +85,7 @@ export class ClientWrapper {
       items.push(item);
     }
     // go over items to set next and prev items (for navigation):
-    let flattened: SidebarItem[] = [];
+    const flattened: SidebarItem[] = [];
     function add_to_flattened(item: SidebarItem) {
       flattened.push(item);
       for (const child of item.children) {
@@ -139,7 +129,7 @@ export class ClientWrapper {
     const items: CallContent[] = [];
 
     for (const callName of pallet.calls) {
-      let content = this.client.callContent(palletName, callName) as
+      const content = this.client.callContent(palletName, callName) as
         | CallContent
         | undefined;
       if (content !== undefined) {
@@ -161,7 +151,7 @@ export class ClientWrapper {
     const items: StorageEntryContent[] = [];
 
     for (const entryName of pallet.storage_entries) {
-      let content = this.client.storageEntryContent(palletName, entryName) as
+      const content = this.client.storageEntryContent(palletName, entryName) as
         | StorageEntryContent
         | undefined;
       if (content !== undefined) {
@@ -183,7 +173,7 @@ export class ClientWrapper {
     const items: ConstantContent[] = [];
 
     for (const entryName of pallet.constants) {
-      let content = this.client.constantContent(palletName, entryName) as
+      const content = this.client.constantContent(palletName, entryName) as
         | ConstantContent
         | undefined;
       if (content !== undefined) {
@@ -205,7 +195,7 @@ export class ClientWrapper {
     const items: EventContent[] = [];
 
     for (const eventName of pallet.events) {
-      let content = this.client.eventContent(palletName, eventName) as
+      const content = this.client.eventContent(palletName, eventName) as
         | EventContent
         | undefined;
       if (content !== undefined) {
@@ -227,14 +217,14 @@ export class ClientWrapper {
   runtimeApiMethods(
     runtimeApiTraitName: string
   ): RuntimeApiMethodContent[] | undefined {
-    let runtimeApi = this.runtimeApiTraitContent(runtimeApiTraitName);
+    const runtimeApi = this.runtimeApiTraitContent(runtimeApiTraitName);
     if (runtimeApi === undefined) {
       return undefined;
     }
-    let methodContents: RuntimeApiMethodContent[] = [];
+    const methodContents: RuntimeApiMethodContent[] = [];
 
     for (const methodName of runtimeApi.methods) {
-      let content = this.client.runtimeApiMethodContent(
+      const content = this.client.runtimeApiMethodContent(
         runtimeApiTraitName,
         methodName
       ) as RuntimeApiMethodContent | undefined;
@@ -260,7 +250,7 @@ export class ClientWrapper {
     palletName: string,
     storageEntryName: string
   ): Promise<string | undefined> {
-    let valueString = await this.client.fetchKeylessStorageValue(
+    const valueString = await this.client.fetchKeylessStorageValue(
       palletName,
       storageEntryName
     );
@@ -269,12 +259,12 @@ export class ClientWrapper {
 }
 
 export async function initAppState(clientKind: ClientKind): Promise<void> {
-  setClientWrapper(undefined);
+  setClient(undefined);
   setSidebarItems([]);
-  let state = await ClientWrapper.createSelfWithClient(clientKind);
-  let items = state.constructSidebarItems();
+  const state = await Client.createSelfWithClient(clientKind);
+  const items = state.constructSidebarItems();
   setSidebarItems(items);
-  setClientWrapper(state);
+  setClient(state);
 }
 
 export interface MetadataContent {

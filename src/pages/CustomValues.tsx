@@ -1,4 +1,3 @@
-import { MdBookWrapper } from "../components/MdBookWrapper";
 export const CustomValuesPage = () => {
   return (
     <>
