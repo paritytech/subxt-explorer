@@ -37,7 +37,7 @@ export class AppConfig {
 
   /// Returns a signal that contains an href to a local path with the current app config as a query string.
   href(path: string): Accessor<string> {
-    return () => `${path}?${this.toParamsString()}`;
+    return () => `${path}?${this.appConfigParamString()}`;
   }
 
   toParams(): Record<string, string> {
