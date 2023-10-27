@@ -34,12 +34,22 @@ import { ConstantsPage } from "./pages/Constants";
 import { RuntimeApiMethodsPage } from "./pages/RuntimeApiMethods";
 import { EventsPage } from "./pages/Events";
 import { Sidebar } from "./components/Sidebar";
-import { ClientKind, initAppState } from "./state/client_wrapper";
+import { ClientKind, initAppState } from "./state/client";
 import { wait } from "./utils";
 import { AppConfig, paramsToString } from "./state/app_config";
 import { RedirectToHome } from "./components/RedirectToHome";
 
 const App: Component = () => {
+  return (
+    <Router source={hashIntegration()}>
+      <AppInRouter />
+    </Router>
+  );
+};
+
+export default App;
+
+const AppInRouter: Component = () => {
   // On page load, create a new AppConfig from the URL params.
   // Note: This code is only called ONCE at the start of the application lifecycle.
   const location = useLocation();
@@ -54,7 +64,7 @@ const App: Component = () => {
       AppConfig.instance = configFromParams;
       if (pathname === "/" || pathname === "") {
         // if already on homepage adjust its UI to the new config:
-        HomePageState.instance.onHomePageLoad();
+        HomePageState.instance.adjustUiToAppConfigInstance();
       } else {
         // otherwise navigate to homepage and set redirect hook:
         let redirectUrl = `/?${configFromParams.toParamsString()}`;
@@ -93,5 +103,3 @@ const App: Component = () => {
     </MdBookWrapper>
   );
 };
-
-export default App;

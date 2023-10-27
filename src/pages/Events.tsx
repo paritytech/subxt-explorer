@@ -1,11 +1,6 @@
 import { Navigate, useParams } from "@solidjs/router";
 import { MdBookWrapper } from "../components/MdBookWrapper";
-import {
-  ClientWrapper,
-  CallContent,
-  EventContent,
-  clientWrapper,
-} from "../state/client_wrapper";
+import { Client, CallContent, EventContent, client } from "../state/client";
 import { JSX } from "solid-js";
 import { marked } from "marked";
 import { Code } from "../components/Code";
@@ -18,7 +13,7 @@ import { RedirectToHome } from "../components/RedirectToHome";
 export const EventsPage = () => {
   let props = () => {
     let pallet = useParams<{ pallet: string }>().pallet;
-    let events = clientWrapper()?.palletEvents(pallet);
+    let events = client()?.palletEvents(pallet);
     return {
       pallet,
       events,

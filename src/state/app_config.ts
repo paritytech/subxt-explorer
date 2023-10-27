@@ -1,5 +1,5 @@
 import { Accessor, Setter, createMemo, createSignal, from } from "solid-js";
-import { ClientKind } from "./client_wrapper";
+import { ClientKind } from "./client";
 import { Location, useSearchParams } from "@solidjs/router";
 
 /**
@@ -33,6 +33,11 @@ export class AppConfig {
     );
     this.appConfigParamString = appConfigParamString;
     this.#setAppConfigParamString = setAppConfigParamString;
+  }
+
+  /// Returns a signal that contains an href to a local path with the current app config as a query string.
+  href(path: string): Accessor<string> {
+    return () => `${path}?${this.toParamsString()}`;
   }
 
   toParams(): Record<string, string> {

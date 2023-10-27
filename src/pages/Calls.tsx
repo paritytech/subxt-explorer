@@ -1,10 +1,6 @@
 import { Navigate, useParams } from "@solidjs/router";
 import { MdBookWrapper } from "../components/MdBookWrapper";
-import {
-  ClientWrapper,
-  CallContent,
-  clientWrapper,
-} from "../state/client_wrapper";
+import { Client, CallContent, client } from "../state/client";
 import { JSX } from "solid-js";
 import { marked } from "marked";
 import { Code } from "../components/Code";
@@ -16,7 +12,7 @@ import { RedirectToHome } from "../components/RedirectToHome";
 export const CallsPage = () => {
   let props = () => {
     let pallet = useParams<{ pallet: string }>().pallet;
-    let calls = clientWrapper()?.palletCalls(pallet);
+    let calls = client()?.palletCalls(pallet);
     return {
       pallet,
       calls,

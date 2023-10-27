@@ -3,7 +3,7 @@ import { Sidebar } from "./Sidebar";
 import { NavWrapper } from "./NavWrapper";
 import { NavWideWrapper } from "./NavWideWrapper";
 import { MenuBar } from "./MenuBar";
-import { activeItem } from "../state/sidebar_state";
+import { activeItem } from "../state/sidebar";
 
 interface Props {
   children?: JSX.Element;

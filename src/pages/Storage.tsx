@@ -1,10 +1,6 @@
 import { Navigate, useParams } from "@solidjs/router";
 import { MdBookWrapper } from "../components/MdBookWrapper";
-import {
-  ClientWrapper,
-  StorageEntryContent,
-  clientWrapper,
-} from "../state/client_wrapper";
+import { Client, StorageEntryContent, client } from "../state/client";
 import { JSX, Show, createSignal } from "solid-js";
 import { marked } from "marked";
 import { Code } from "../components/Code";
@@ -16,10 +12,11 @@ import {
 } from "../components/KeyValueTypesLayout";
 import { AnchoredH2 } from "../components/AnchoredH2";
 import { RedirectToHome } from "../components/RedirectToHome";
+
 export const StoragePage = () => {
   let props = () => {
     let pallet = useParams<{ pallet: string }>().pallet;
-    let entries = clientWrapper()?.palletStorageEntries(pallet);
+    let entries = client()?.palletStorageEntries(pallet);
     return {
       pallet,
       entries,
@@ -34,9 +31,7 @@ export const StoragePage = () => {
         <h1>{props().pallet} Pallet: Storage Entries</h1>
         There are {props().entries!.length} storage entries on the{" "}
         {props().pallet} Pallet.
-        {props().entries!.map((entry) =>
-          storageEntryContent(clientWrapper()!, entry)
-        )}
+        {props().entries!.map((entry) => storageEntryContent(client()!, entry))}
       </>
     );
   }
@@ -50,7 +45,7 @@ type StorageValueState =
   | { tag: "value"; value: string };
 
 function storageEntryContent(
-  state: ClientWrapper,
+  state: Client,
   entry: StorageEntryContent
 ): JSX.Element {
   let [storageValue, setStorageValue] = createSignal<StorageValueState>();
@@ -68,10 +63,7 @@ function storageEntryContent(
     }
   }
   // fetch the value in storage when the component is loaded
-  if (
-    entry.key_types.length === 0 &&
-    clientWrapper()?.hasOnlineCapabilities()
-  ) {
+  if (entry.key_types.length === 0 && client()?.hasOnlineCapabilities()) {
     fetchStorageValue();
   }
 

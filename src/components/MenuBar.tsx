@@ -1,5 +1,5 @@
 import { Component, onMount } from "solid-js";
-import { setSidebarVisibility, toggleSidebar } from "../state/visual_state";
+import { setSidebarVisibility, toggleSidebar } from "../state/sidebar";
 interface Props {}
 export const MenuBar: Component<Props> = (props: Props) => {
   return (

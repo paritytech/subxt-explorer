@@ -1,5 +1,5 @@
-import { createSignal } from "solid-js";
-import { Client } from "subxt_example_codegen";
+import { Accessor, createSignal } from "solid-js";
+import { Client as WASMClient } from "subxt_example_codegen";
 import {
   HOME_ITEM,
   SidebarItem,
@@ -7,7 +7,7 @@ import {
   itemKindToPath,
   newItem,
   setSidebarItems,
-} from "./sidebar_state";
+} from "./sidebar";
 import { readFileAsBytes } from "../utils";
 
 export type ClientKind =
@@ -20,35 +20,31 @@ export type ClientKind =
       file: File;
     };
 
-export const [clientWrapper, setClientWrapper] = createSignal<
-  ClientWrapper | undefined
->(undefined);
+export const [client, setClient] = createSignal<Client | undefined>(undefined);
 
-export class ClientWrapper {
-  client: Client;
+export class Client {
+  client: WASMClient;
   clientKindInCreation: ClientKind;
   content: MetadataContent;
 
-  constructor(client: Client, clientKindInCreation: ClientKind) {
+  constructor(client: WASMClient, clientKindInCreation: ClientKind) {
     this.client = client;
     this.clientKindInCreation = clientKindInCreation;
     this.content = client.metadataContent() as MetadataContent;
   }
 
-  static async createSelfWithClient(
-    clientKind: ClientKind
-  ): Promise<ClientWrapper> {
-    let client: Client;
+  static async createSelfWithClient(clientKind: ClientKind): Promise<Client> {
+    let client: WASMClient;
     switch (clientKind.tag) {
       case "url":
-        client = await Client.fromUrl(clientKind.url);
+        client = await WASMClient.fromUrl(clientKind.url);
         break;
       case "file":
         let bytes = await readFileAsBytes(clientKind.file);
-        client = Client.fromBytes(clientKind.file.name, bytes);
+        client = WASMClient.fromBytes(clientKind.file.name, bytes);
         break;
     }
-    return new ClientWrapper(client, clientKind);
+    return new Client(client, clientKind);
   }
 
   hasOnlineCapabilities(): boolean {
@@ -269,12 +265,12 @@ export class ClientWrapper {
 }
 
 export async function initAppState(clientKind: ClientKind): Promise<void> {
-  setClientWrapper(undefined);
+  setClient(undefined);
   setSidebarItems([]);
-  let state = await ClientWrapper.createSelfWithClient(clientKind);
+  let state = await Client.createSelfWithClient(clientKind);
   let items = state.constructSidebarItems();
   setSidebarItems(items);
-  setClientWrapper(state);
+  setClient(state);
 }
 
 export interface MetadataContent {

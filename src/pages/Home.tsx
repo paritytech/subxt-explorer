@@ -9,24 +9,18 @@ import {
   onMount,
 } from "solid-js";
 import { DEFAULT_WS_URL } from "../constants";
-import {
-  ClientKind,
-  clientWrapper,
-  initAppState,
-  setClientWrapper,
-} from "../state/client_wrapper";
+import { ClientKind, client, initAppState, setClient } from "../state/client";
 import { FileUploadArea } from "../components/FileUploadArea";
 import { TabLayout, TabWithContent } from "../components/TabLayout";
 import { useNavigate, useSearchParams } from "@solidjs/router";
 import { AppConfig, clientKindsEqual } from "../state/app_config";
-import { setSidebarVisibility } from "../state/visual_state";
 import {
   findInSidebarItems,
   findSideBarItemByPath,
   itemKindToPath,
   setActiveItem,
-} from "../state/sidebar_state";
-// import { appConfig } from "../state/app_config";
+  setSidebarVisibility,
+} from "../state/sidebar";
 
 /**
  * A singleton class for the HomePage State.
@@ -78,6 +72,7 @@ export class HomePageState {
     this.setLoadingState = setLoadingState;
   }
 
+  // singleton pattern
   static #instance: HomePageState;
   static get instance(): HomePageState {
     if (HomePageState.#instance === undefined) {
@@ -86,6 +81,7 @@ export class HomePageState {
     return HomePageState.#instance;
   }
 
+  // takes the state of the ui elements and translates that into a clientKind that can be used to create a client.
   clientKindFromTab = (): ClientKind | undefined => {
     if (this.error() !== undefined) {
       return undefined;
@@ -98,11 +94,12 @@ export class HomePageState {
     return undefined;
   };
 
+  // a signal that is true if the generate button is clickable.
   generateButtonClickable = (): boolean => {
     return this.loadingState() === "none" && !!this.clientKindFromTab();
   };
 
-  async generateDocsAndUpdateAppConfig() {
+  async generateAndUpdateAppConfig() {
     let clientKind = this.clientKindFromTab();
     if (clientKind === undefined || this.#setSearchParams === undefined) {
       return;
@@ -126,14 +123,15 @@ export class HomePageState {
     this.setLoadingState("none");
   }
 
+  // if the redirectPath is set, redirect to that path.
   maybeRedirect() {
-    if (this.redirectPath) {
+    if (this.#redirectPath) {
       //  if redirect query param set, navigate to the correct page:
-      let sidebarItem = findSideBarItemByPath(this.redirectPath);
-      console.log("wants to redirect to", this.redirectPath, sidebarItem);
+      let sidebarItem = findSideBarItemByPath(this.#redirectPath);
+      console.log("wants to redirect to", this.#redirectPath, sidebarItem);
       if (sidebarItem === null) {
         this.setError(
-          `Cannot redirect to ${this.redirectPath}. It is not a valid page.`
+          `Cannot redirect to ${this.#redirectPath}. It is not a valid page.`
         );
       } else {
         setActiveItem(sidebarItem!);
@@ -145,20 +143,23 @@ export class HomePageState {
         this.#navigate!(completeRedirectPath);
       }
 
-      this.redirectPath = undefined;
+      this.#redirectPath = undefined;
     }
   }
 
-  redirectPath: string | undefined = undefined;
+  #redirectPath: string | undefined = undefined;
   setRedirectPath = (path: string) => {
-    this.redirectPath = path;
+    this.#redirectPath = path;
   };
 
-  onHomePageLoad() {
+  // used on:
+  // - page load
+  // - when the url params change and the AppConfig changes as a result.
+  adjustUiToAppConfigInstance() {
     let configClientKind = AppConfig.instance.clientKind;
     if (
       configClientKind != undefined &&
-      !clientKindsEqual(configClientKind, clientWrapper()?.clientKindInCreation)
+      !clientKindsEqual(configClientKind, client()?.clientKindInCreation)
     ) {
       this.#setSearchParams!(AppConfig.instance.toParams());
       switch (configClientKind.tag) {
@@ -179,8 +180,7 @@ export class HomePageState {
   }
 }
 
-interface Props {}
-export const HomePage: Component<Props> = (props: Props) => {
+export const HomePage: Component = () => {
   let state = HomePageState.instance;
   const [_searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -189,7 +189,7 @@ export const HomePage: Component<Props> = (props: Props) => {
   let [isDraggingOnUpload, setIsDraggingOnUpload] =
     createSignal<boolean>(false);
 
-  state.onHomePageLoad();
+  state.adjustUiToAppConfigInstance();
 
   const urlTabContent = (
     <input
@@ -222,7 +222,7 @@ export const HomePage: Component<Props> = (props: Props) => {
           state.setFile(files[0]);
           state.setError(undefined);
           // directly generate new docs as soon as it it dragged in.
-          state.generateDocsAndUpdateAppConfig();
+          state.generateAndUpdateAppConfig();
         }
       }}
     ></FileUploadArea>
@@ -255,7 +255,6 @@ export const HomePage: Component<Props> = (props: Props) => {
     },
   ];
 
-  /// JSX
   return (
     <>
       <h1>Subxt Explorer</h1>
@@ -277,7 +276,7 @@ export const HomePage: Component<Props> = (props: Props) => {
           disabled={!state.generateButtonClickable()}
           onClick={() => {
             // assumption: Button is only clickable if homeScreenClientKind() is a valid value.
-            state.generateDocsAndUpdateAppConfig();
+            state.generateAndUpdateAppConfig();
           }}
         >
           {state.loadingState() === "loading" ? (
@@ -285,7 +284,7 @@ export const HomePage: Component<Props> = (props: Props) => {
           ) : (
             <span class="fa fa-play mr-4"></span>
           )}
-          Generate Docs{" "}
+          Generate Docs
         </button>
       </div>
       <SubxtExplanationSection />
