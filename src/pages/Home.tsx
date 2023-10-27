@@ -2,20 +2,16 @@ import {
   Accessor,
   Component,
   JSX,
-  Ref,
   Setter,
-  createEffect,
   createSignal,
-  onMount,
 } from "solid-js";
 import { DEFAULT_WS_URL } from "../constants";
-import { ClientKind, client, initAppState, setClient } from "../state/client";
+import { ClientKind, client, initAppState } from "../state/client";
 import { FileUploadArea } from "../components/FileUploadArea";
 import { TabLayout, TabWithContent } from "../components/TabLayout";
 import { useNavigate, useSearchParams } from "@solidjs/router";
 import { AppConfig, clientKindsEqual } from "../state/app_config";
 import {
-  findInSidebarItems,
   findSideBarItemByPath,
   itemKindToPath,
   setActiveItem,
@@ -53,19 +49,19 @@ export class HomePageState {
   }
 
   constructor() {
-    let [file, setFile] = createSignal<File | undefined>(undefined);
+    const [file, setFile] = createSignal<File | undefined>(undefined);
     this.file = file;
     this.setFile = setFile;
-    let [error, setError] = createSignal<string | undefined>(undefined);
+    const [error, setError] = createSignal<string | undefined>(undefined);
     this.error = error;
     this.setError = setError;
-    let [tab, setTab] = createSignal<"file" | "url">("url");
+    const [tab, setTab] = createSignal<"file" | "url">("url");
     this.tab = tab;
     this.setTab = setTab;
-    let [url, setUrl] = createSignal<string>(DEFAULT_WS_URL);
+    const [url, setUrl] = createSignal<string>(DEFAULT_WS_URL);
     this.url = url;
     this.setUrl = setUrl;
-    let [loadingState, setLoadingState] = createSignal<"none" | "loading">(
+    const [loadingState, setLoadingState] = createSignal<"none" | "loading">(
       "none"
     );
     this.loadingState = loadingState;
@@ -100,7 +96,7 @@ export class HomePageState {
   };
 
   async generateAndUpdateAppConfig() {
-    let clientKind = this.clientKindFromTab();
+    const clientKind = this.clientKindFromTab();
     if (clientKind === undefined || this.#setSearchParams === undefined) {
       return;
     }
@@ -127,7 +123,7 @@ export class HomePageState {
   maybeRedirect() {
     if (this.#redirectPath) {
       //  if redirect query param set, navigate to the correct page:
-      let sidebarItem = findSideBarItemByPath(this.#redirectPath);
+      const sidebarItem = findSideBarItemByPath(this.#redirectPath);
       console.log("wants to redirect to", this.#redirectPath, sidebarItem);
       if (sidebarItem === null) {
         this.setError(
@@ -135,10 +131,10 @@ export class HomePageState {
         );
       } else {
         setActiveItem(sidebarItem!);
-        let sanitizedRedirectPath = itemKindToPath(sidebarItem!.kind);
-        let paramsString = AppConfig.instance.toParamsString();
+        const sanitizedRedirectPath = itemKindToPath(sidebarItem!.kind);
+        const paramsString = AppConfig.instance.toParamsString();
         console.log("paramsString", paramsString);
-        let completeRedirectPath = `${sanitizedRedirectPath}?${paramsString}`;
+        const completeRedirectPath = `${sanitizedRedirectPath}?${paramsString}`;
         console.log("GENERATE REDIRECT: redirecting to", completeRedirectPath);
         this.#navigate!(completeRedirectPath);
       }
@@ -156,7 +152,7 @@ export class HomePageState {
   // - page load
   // - when the url params change and the AppConfig changes as a result.
   adjustUiToAppConfigInstance() {
-    let configClientKind = AppConfig.instance.clientKind;
+    const configClientKind = AppConfig.instance.clientKind;
     if (
       configClientKind != undefined &&
       !clientKindsEqual(configClientKind, client()?.clientKindInCreation)
@@ -181,12 +177,12 @@ export class HomePageState {
 }
 
 export const HomePage: Component = () => {
-  let state = HomePageState.instance;
+  const state = HomePageState.instance;
   const [_searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   state.infuseNavigationFns(setSearchParams, navigate);
 
-  let [isDraggingOnUpload, setIsDraggingOnUpload] =
+  const [isDraggingOnUpload, setIsDraggingOnUpload] =
     createSignal<boolean>(false);
 
   state.adjustUiToAppConfigInstance();

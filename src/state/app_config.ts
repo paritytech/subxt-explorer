@@ -1,6 +1,5 @@
-import { Accessor, Setter, createMemo, createSignal, from } from "solid-js";
+import { Accessor, Setter, createSignal } from "solid-js";
 import { ClientKind } from "./client";
-import { Location, useSearchParams } from "@solidjs/router";
 
 /**
  * A config object that is created at the start of the application lifecycle and can be updated at runtime.
@@ -8,7 +7,7 @@ import { Location, useSearchParams } from "@solidjs/router";
 export class AppConfig {
   clientKind: ClientKind | undefined;
 
-  // Signal
+  // Signal used mainly in href of links.
   #setAppConfigParamString: Setter<string>;
   appConfigParamString: Accessor<string>;
 
@@ -28,7 +27,7 @@ export class AppConfig {
 
   constructor(clientKind: ClientKind | undefined) {
     this.clientKind = clientKind;
-    let [appConfigParamString, setAppConfigParamString] = createSignal<string>(
+    const [appConfigParamString, setAppConfigParamString] = createSignal<string>(
       this.toParamsString()
     );
     this.appConfigParamString = appConfigParamString;
@@ -41,7 +40,7 @@ export class AppConfig {
   }
 
   toParams(): Record<string, string> {
-    let params: Record<string, string> = {};
+    const params: Record<string, string> = {};
 
     switch (this.clientKind?.tag) {
       case undefined:
@@ -62,7 +61,7 @@ export class AppConfig {
 
   static fromParams(params: Record<string, string>): AppConfig {
     let clientKind: ClientKind | undefined = undefined;
-    let url = params["url"];
+    const url = params["url"];
     if (url) {
       clientKind = {
         tag: "url",

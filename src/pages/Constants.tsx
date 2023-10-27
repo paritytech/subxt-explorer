@@ -1,18 +1,15 @@
-import { Navigate, useParams } from "@solidjs/router";
-import { MdBookWrapper } from "../components/MdBookWrapper";
-import { Client, CallContent, ConstantContent, client } from "../state/client";
+import { useParams } from "@solidjs/router";
+import { ConstantContent, client } from "../state/client";
 import { JSX } from "solid-js";
-import { marked } from "marked";
-import { Code } from "../components/Code";
 import { Docs } from "../components/Docs";
 import { CodeTabLayout } from "../components/CodeTabLayout";
 import { KeyValueTypesLayout } from "../components/KeyValueTypesLayout";
 import { AnchoredH2 } from "../components/AnchoredH2";
 import { RedirectToHome } from "../components/RedirectToHome";
 export const ConstantsPage = () => {
-  let props = () => {
-    let pallet = useParams<{ pallet: string }>().pallet;
-    let constants = client()?.palletConstants(pallet);
+  const props = () => {
+    const pallet = useParams<{ pallet: string }>().pallet;
+    const constants = client()?.palletConstants(pallet);
     return {
       pallet,
       constants,

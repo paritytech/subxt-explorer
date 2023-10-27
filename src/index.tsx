@@ -1,7 +1,6 @@
 import { render } from "solid-js/web";
 
 import App from "./App";
-import { Router, hashIntegration } from "@solidjs/router";
 
 const root = document.getElementById("body-container");
 

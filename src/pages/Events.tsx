@@ -1,19 +1,15 @@
-import { Navigate, useParams } from "@solidjs/router";
-import { MdBookWrapper } from "../components/MdBookWrapper";
-import { Client, CallContent, EventContent, client } from "../state/client";
+import { useParams } from "@solidjs/router";
+import { EventContent, client } from "../state/client";
 import { JSX } from "solid-js";
-import { marked } from "marked";
-import { Code } from "../components/Code";
 import { Docs } from "../components/Docs";
-import { CodeTabLayout } from "../components/CodeTabLayout";
 import { KeyValueTypesLayout } from "../components/KeyValueTypesLayout";
 import { AnchoredH2 } from "../components/AnchoredH2";
 import { RedirectToHome } from "../components/RedirectToHome";
 
 export const EventsPage = () => {
-  let props = () => {
-    let pallet = useParams<{ pallet: string }>().pallet;
-    let events = client()?.palletEvents(pallet);
+  const props = () => {
+    const pallet = useParams<{ pallet: string }>().pallet;
+    const events = client()?.palletEvents(pallet);
     return {
       pallet,
       events,

@@ -1,30 +1,13 @@
-import {
-  Switch,
-  type Component,
-  Match,
-  createResource,
-  Suspense,
-  Show,
-  createEffect,
-  useTransition,
-  useContext,
-  onCleanup,
-} from "solid-js";
+import { type Component, createEffect } from "solid-js";
 import { MdBookWrapper } from "./components/MdBookWrapper";
 import { HomePage, HomePageState } from "./pages/Home";
 import {
-  Navigate,
   Route,
   Router,
   Routes,
   hashIntegration,
-  memoryIntegration,
-  pathIntegration,
-  useBeforeLeave,
   useLocation,
   useNavigate,
-  useRouteData,
-  useSearchParams,
 } from "@solidjs/router";
 import { RuntimeApisPage } from "./pages/RuntimeApis";
 import { CustomValuesPage } from "./pages/CustomValues";
@@ -34,16 +17,9 @@ import { StoragePage } from "./pages/Storage";
 import { ConstantsPage } from "./pages/Constants";
 import { RuntimeApiMethodsPage } from "./pages/RuntimeApiMethods";
 import { EventsPage } from "./pages/Events";
-import { Sidebar } from "./components/Sidebar";
-import { ClientKind, initAppState } from "./state/client";
-import { wait } from "./utils";
-import { AppConfig, paramsToString } from "./state/app_config";
+import { AppConfig } from "./state/app_config";
 import { RedirectToHome } from "./components/RedirectToHome";
-import {
-  findInSidebarItems,
-  findSideBarItemByPath,
-  setActiveItem,
-} from "./state/sidebar";
+import { findSideBarItemByPath, setActiveItem } from "./state/sidebar";
 
 const App: Component = () => {
   return (
@@ -64,14 +40,14 @@ const AppInRouter: Component = () => {
   // listen to all client side solid router route change events:
   // If the url params indicate a different app config, reload the web app with that config.
   createEffect(() => {
-    let pathname = location.pathname;
+    const pathname = location.pathname;
 
-    let newItem = findSideBarItemByPath(pathname);
+    const newItem = findSideBarItemByPath(pathname);
     if (newItem) {
       setActiveItem(newItem);
     }
 
-    let configFromParams = AppConfig.fromParams(location.query);
+    const configFromParams = AppConfig.fromParams(location.query);
     if (!configFromParams.equals(AppConfig.instance)) {
       AppConfig.instance = configFromParams;
       if (pathname === "/" || pathname === "") {
@@ -79,9 +55,9 @@ const AppInRouter: Component = () => {
         HomePageState.instance.adjustUiToAppConfigInstance();
       } else {
         // otherwise navigate to homepage and set redirect hook:
-        let redirectUrl = `/?${configFromParams.toParamsString()}`;
+        const redirectUrl = `/?${configFromParams.toParamsString()}`;
         HomePageState.instance.setRedirectPath(pathname);
-        let navigate = useNavigate();
+        const navigate = useNavigate();
         navigate(redirectUrl, { replace: true });
       }
     }

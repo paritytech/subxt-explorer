@@ -15,8 +15,8 @@ export const ConfigAwareLink = (props: AnchorProps): JSX.Element => {
       activeClass=""
       href={AppConfig.instance.href(props.href)()}
       onClick={() => {
-        let splitPath = props.href.split("#")[0];
-        let found = findInSidebarItems((e) => e.path == splitPath);
+        const splitPath = props.href.split("#")[0];
+        const found = findInSidebarItems((e) => e.path == splitPath);
         if (found) {
           setActiveItem(found);
         }

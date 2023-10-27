@@ -1,9 +1,6 @@
-import { Navigate, useParams } from "@solidjs/router";
-import { MdBookWrapper } from "../components/MdBookWrapper";
+import { useParams } from "@solidjs/router";
 import { Client, StorageEntryContent, client } from "../state/client";
 import { JSX, Show, createSignal } from "solid-js";
-import { marked } from "marked";
-import { Code } from "../components/Code";
 import { Docs } from "../components/Docs";
 import { CodeTabLayout } from "../components/CodeTabLayout";
 import {
@@ -14,9 +11,9 @@ import { AnchoredH2 } from "../components/AnchoredH2";
 import { RedirectToHome } from "../components/RedirectToHome";
 
 export const StoragePage = () => {
-  let props = () => {
-    let pallet = useParams<{ pallet: string }>().pallet;
-    let entries = client()?.palletStorageEntries(pallet);
+  const props = () => {
+    const pallet = useParams<{ pallet: string }>().pallet;
+    const entries = client()?.palletStorageEntries(pallet);
     return {
       pallet,
       entries,
@@ -48,7 +45,7 @@ function storageEntryContent(
   state: Client,
   entry: StorageEntryContent
 ): JSX.Element {
-  let [storageValue, setStorageValue] = createSignal<StorageValueState>();
+  const [storageValue, setStorageValue] = createSignal<StorageValueState>();
 
   async function fetchStorageValue() {
     setStorageValue({ tag: "loading" });

@@ -1,13 +1,6 @@
-import { Accessor, createSignal } from "solid-js";
+import { createSignal } from "solid-js";
 import { Client as WASMClient } from "subxt_example_codegen";
-import {
-  HOME_ITEM,
-  SidebarItem,
-  ItemKind,
-  itemKindToPath,
-  newItem,
-  setSidebarItems,
-} from "./sidebar";
+import { SidebarItem, newItem, setSidebarItems } from "./sidebar";
 import { readFileAsBytes } from "../utils";
 
 export type ClientKind =
@@ -40,7 +33,7 @@ export class Client {
         client = await WASMClient.fromUrl(clientKind.url);
         break;
       case "file":
-        let bytes = await readFileAsBytes(clientKind.file);
+        const bytes = await readFileAsBytes(clientKind.file);
         client = WASMClient.fromBytes(clientKind.file.name, bytes);
         break;
     }
@@ -52,10 +45,10 @@ export class Client {
   }
 
   constructSidebarItems(): SidebarItem[] {
-    let items: SidebarItem[] = [newItem({ tag: "home" })];
+    const items: SidebarItem[] = [newItem({ tag: "home" })];
     // runtime apis
     if (this.content.runtime_apis.length != 0) {
-      let item = newItem({ tag: "runtime_apis" });
+      const item = newItem({ tag: "runtime_apis" });
       for (const runtimeAPI of this.content.runtime_apis) {
         item.children.push(
           newItem({ tag: "runtime_api", runtime_api: runtimeAPI.name })
@@ -69,7 +62,7 @@ export class Client {
     }
     // pallets
     for (const pallet of this.content.pallets) {
-      let item = newItem({
+      const item = newItem({
         tag: "pallet",
         pallet: pallet.name,
         index: pallet.index,
@@ -91,7 +84,7 @@ export class Client {
       items.push(item);
     }
     // go over items to set next and prev items (for navigation):
-    let flattened: SidebarItem[] = [];
+    const flattened: SidebarItem[] = [];
     function add_to_flattened(item: SidebarItem) {
       flattened.push(item);
       for (const child of item.children) {
@@ -135,7 +128,7 @@ export class Client {
     const items: CallContent[] = [];
 
     for (const callName of pallet.calls) {
-      let content = this.client.callContent(palletName, callName) as
+      const content = this.client.callContent(palletName, callName) as
         | CallContent
         | undefined;
       if (content !== undefined) {
@@ -157,7 +150,7 @@ export class Client {
     const items: StorageEntryContent[] = [];
 
     for (const entryName of pallet.storage_entries) {
-      let content = this.client.storageEntryContent(palletName, entryName) as
+      const content = this.client.storageEntryContent(palletName, entryName) as
         | StorageEntryContent
         | undefined;
       if (content !== undefined) {
@@ -179,7 +172,7 @@ export class Client {
     const items: ConstantContent[] = [];
 
     for (const entryName of pallet.constants) {
-      let content = this.client.constantContent(palletName, entryName) as
+      const content = this.client.constantContent(palletName, entryName) as
         | ConstantContent
         | undefined;
       if (content !== undefined) {
@@ -201,7 +194,7 @@ export class Client {
     const items: EventContent[] = [];
 
     for (const eventName of pallet.events) {
-      let content = this.client.eventContent(palletName, eventName) as
+      const content = this.client.eventContent(palletName, eventName) as
         | EventContent
         | undefined;
       if (content !== undefined) {
@@ -223,14 +216,14 @@ export class Client {
   runtimeApiMethods(
     runtimeApiTraitName: string
   ): RuntimeApiMethodContent[] | undefined {
-    let runtimeApi = this.runtimeApiTraitContent(runtimeApiTraitName);
+    const runtimeApi = this.runtimeApiTraitContent(runtimeApiTraitName);
     if (runtimeApi === undefined) {
       return undefined;
     }
-    let methodContents: RuntimeApiMethodContent[] = [];
+    const methodContents: RuntimeApiMethodContent[] = [];
 
     for (const methodName of runtimeApi.methods) {
-      let content = this.client.runtimeApiMethodContent(
+      const content = this.client.runtimeApiMethodContent(
         runtimeApiTraitName,
         methodName
       ) as RuntimeApiMethodContent | undefined;
@@ -256,7 +249,7 @@ export class Client {
     palletName: string,
     storageEntryName: string
   ): Promise<string | undefined> {
-    let valueString = await this.client.fetchKeylessStorageValue(
+    const valueString = await this.client.fetchKeylessStorageValue(
       palletName,
       storageEntryName
     );
@@ -267,8 +260,8 @@ export class Client {
 export async function initAppState(clientKind: ClientKind): Promise<void> {
   setClient(undefined);
   setSidebarItems([]);
-  let state = await Client.createSelfWithClient(clientKind);
-  let items = state.constructSidebarItems();
+  const state = await Client.createSelfWithClient(clientKind);
+  const items = state.constructSidebarItems();
   setSidebarItems(items);
   setClient(state);
 }

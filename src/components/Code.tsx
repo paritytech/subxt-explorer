@@ -8,7 +8,7 @@ hljs.registerLanguage("rust", rust);
 export const Code = ({ code }: { code: string }): JSX.Element => {
   const [showBoring, setShowBoring] = createSignal<boolean>(false);
 
-  let codeSegments = sliceCodeIntoBoringInterestingBoring(code);
+  const codeSegments = sliceCodeIntoBoringInterestingBoring(code);
 
   let highlightedWithBoring: string;
   let highlightedNoBoring: string;
@@ -22,7 +22,7 @@ export const Code = ({ code }: { code: string }): JSX.Element => {
     highlightedNoBoring = highlightedWithBoring;
   }
 
-  let highlightedCode = () =>
+  const highlightedCode = () =>
     showBoring() ? highlightedWithBoring : highlightedNoBoring;
 
   return (

@@ -1,19 +1,14 @@
-import { Component, For, JSX, createSignal } from "solid-js";
+import { Component, For, JSX } from "solid-js";
 import { ClientKind, client } from "../state/client";
-import { Link } from "@solidjs/router";
 import {
   HOME_ITEM,
   SidebarItem,
   activeItem,
-  newItem,
-  setActiveItem,
   sidebarItems,
 } from "../state/sidebar";
-import { AppConfig } from "../state/app_config";
 import { ConfigAwareLink } from "./ConfigAwareLink";
-interface Props {}
 
-export const Sidebar: Component<Props> = (props: Props) => {
+export const Sidebar: Component = () => {
   return (
     <nav id="sidebar" class="sidebar" aria-label="Table of contents">
       <div class="sidebar-scrollbox">
@@ -35,9 +30,7 @@ export const Sidebar: Component<Props> = (props: Props) => {
             </li>
           )}
 
-          <For each={sidebarItems()}>
-            {(item, i) => <SideBarItem {...item} />}
-          </For>
+          <For each={sidebarItems()}>{(item) => <SideBarItem {...item} />}</For>
         </ol>
       </div>
       <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
@@ -50,7 +43,7 @@ function SideBarItem(item: SidebarItem): JSX.Element {
     return;
   }
 
-  let topLevel =
+  const topLevel =
     item.kind.tag === "runtime_apis" ||
     item.kind.tag === "pallet" ||
     item.kind.tag === "custom_values";

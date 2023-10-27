@@ -1,5 +1,4 @@
 import { Component, JSX, Show, createSignal } from "solid-js";
-import { highlight } from "./Code";
 import { NameAndType, TypeDescription } from "../state/client";
 export interface Props {
   keyTypes?: KeyTypesSection;
@@ -25,11 +24,11 @@ interface ValueSection {
 }
 
 export const KeyValueTypesLayout: Component<Props> = (props: Props) => {
-  let [valueTypeMode, setValueTypeMode] = createSignal<"path" | "structure">(
+  const [valueTypeMode, setValueTypeMode] = createSignal<"path" | "structure">(
     "structure"
   );
 
-  let [keyTypeMode, setKeyTypeMode] = createSignal<"path" | "structure">(
+  const [keyTypeMode, setKeyTypeMode] = createSignal<"path" | "structure">(
     "structure"
   );
 
@@ -90,7 +89,7 @@ function TypeDisplay(props: {
     type_description: TypeDescription;
   }[];
 }) {
-  let [typeMode, setTypeMode] = createSignal<"path" | "structure">("structure");
+  const [typeMode, setTypeMode] = createSignal<"path" | "structure">("structure");
 
   return (
     <div>

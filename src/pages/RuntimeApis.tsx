@@ -1,10 +1,5 @@
-import { A, Navigate, useParams } from "@solidjs/router";
-import { MdBookWrapper } from "../components/MdBookWrapper";
-import { Client, client } from "../state/client";
-import { JSX } from "solid-js";
+import { client } from "../state/client";
 import { RedirectToHome } from "../components/RedirectToHome";
-import { HomePageState } from "./Home";
-import { AppConfig } from "../state/app_config";
 import { ConfigAwareLink } from "../components/ConfigAwareLink";
 
 export const RuntimeApisPage = () => {

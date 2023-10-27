@@ -6,7 +6,7 @@ export const HOME_ITEM: SidebarItem = newItem({ tag: "home" });
 export const [activeItem, setActiveItem] = createSignal<SidebarItem>(HOME_ITEM);
 
 export function findSideBarItemByPath(path: string): SidebarItem | null {
-  let itemKind = pathToItemKind(path);
+  const itemKind = pathToItemKind(path);
   if (itemKind === undefined) {
     return null;
   }
@@ -27,7 +27,7 @@ function recursiveFind(
     if (fn(e)) {
       return e;
     }
-    let childFound = recursiveFind(e.children, fn);
+    const childFound = recursiveFind(e.children, fn);
     if (childFound !== null) {
       return childFound;
     }
@@ -107,7 +107,7 @@ function itemKindEquals(a: ItemKind, b: ItemKind): boolean {
 // Note: currently not necessary
 
 export function pathToItemKind(path: string): ItemKind | undefined {
-  let segs = path.split("/").filter((e) => e.length > 0);
+  const segs = path.split("/").filter((e) => e.length > 0);
   if (segs.length == 0) {
     return { tag: "home" };
   }
@@ -121,7 +121,7 @@ export function pathToItemKind(path: string): ItemKind | undefined {
     case "custom_values":
       return { tag: "custom_values" };
     case "pallets":
-      let pallet = segs[1];
+      const pallet = segs[1];
       if (pallet) {
         switch (segs[2]) {
           case "calls":
@@ -210,7 +210,7 @@ export function toggleSidebar() {
 // Whenever the sidebar signal changes, we also want to adjust the class on the html.
 // This is some baggage from MdBook but we keep it for now.
 createEffect((prevSidebar: SidebarState) => {
-  let currentSidebar = sidebarVisibility();
+  const currentSidebar = sidebarVisibility();
   HTML.classList.remove(`sidebar-${prevSidebar}`);
   HTML.classList.add(`sidebar-${currentSidebar}`);
   return currentSidebar;

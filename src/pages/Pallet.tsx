@@ -1,21 +1,15 @@
-import { A, Link, Navigate, useParams } from "@solidjs/router";
-import { MdBookWrapper } from "../components/MdBookWrapper";
-import { Client, PalletContent, client } from "../state/client";
-import { For, JSX, createEffect, createSignal } from "solid-js";
-import {
-  activeItem,
-  findInSidebarItems,
-  setActiveItem,
-  sidebarItems,
-} from "../state/sidebar";
-import { HomePageState } from "./Home";
+import { useParams } from "@solidjs/router";
+import { client } from "../state/client";
+import { For, JSX } from "solid-js";
+
+
 import { RedirectToHome } from "../components/RedirectToHome";
 import { AppConfig } from "../state/app_config";
 import { ConfigAwareLink } from "../components/ConfigAwareLink";
 
 export const PalletPage = () => {
-  let props = () => {
-    let pallet = useParams<{ pallet: string }>().pallet;
+  const props = () => {
+    const pallet = useParams<{ pallet: string }>().pallet;
     return {
       docs: client()?.palletDocs(pallet),
       content: client()?.palletContent(pallet),
