@@ -27,9 +27,8 @@ export class AppConfig {
 
   constructor(clientKind: ClientKind | undefined) {
     this.clientKind = clientKind;
-    const [appConfigParamString, setAppConfigParamString] = createSignal<string>(
-      this.toParamsString()
-    );
+    const [appConfigParamString, setAppConfigParamString] =
+      createSignal<string>(this.toParamsString());
     this.appConfigParamString = appConfigParamString;
     this.#setAppConfigParamString = setAppConfigParamString;
   }
@@ -120,7 +119,7 @@ export function clientKindsEqual(
 
   switch (c1.tag) {
     case "url":
-      return c1.url === (c2 as any).url;
+      return c1.url === (c2 as { tag: "url"; url: string }).url;
     case "file":
       return true;
   }

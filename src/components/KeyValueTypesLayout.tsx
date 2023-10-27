@@ -24,14 +24,6 @@ interface ValueSection {
 }
 
 export const KeyValueTypesLayout: Component<Props> = (props: Props) => {
-  const [valueTypeMode, setValueTypeMode] = createSignal<"path" | "structure">(
-    "structure"
-  );
-
-  const [keyTypeMode, setKeyTypeMode] = createSignal<"path" | "structure">(
-    "structure"
-  );
-
   let keyTypes: {
     name?: string;
     type_description: TypeDescription;
@@ -89,7 +81,9 @@ function TypeDisplay(props: {
     type_description: TypeDescription;
   }[];
 }) {
-  const [typeMode, setTypeMode] = createSignal<"path" | "structure">("structure");
+  const [typeMode, setTypeMode] = createSignal<"path" | "structure">(
+    "structure"
+  );
 
   return (
     <div>

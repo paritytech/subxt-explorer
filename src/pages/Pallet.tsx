@@ -2,7 +2,6 @@ import { useParams } from "@solidjs/router";
 import { client } from "../state/client";
 import { For, JSX } from "solid-js";
 
-
 import { RedirectToHome } from "../components/RedirectToHome";
 import { AppConfig } from "../state/app_config";
 import { ConfigAwareLink } from "../components/ConfigAwareLink";

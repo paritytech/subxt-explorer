@@ -32,10 +32,11 @@ export class Client {
       case "url":
         client = await WASMClient.fromUrl(clientKind.url);
         break;
-      case "file":
+      case "file": {
         const bytes = await readFileAsBytes(clientKind.file);
         client = WASMClient.fromBytes(clientKind.file.name, bytes);
         break;
+      }
     }
     return new Client(client, clientKind);
   }

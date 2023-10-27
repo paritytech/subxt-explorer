@@ -1,7 +1,7 @@
 import { Component } from "solid-js";
 import { toggleSidebar } from "../state/sidebar";
-interface Props {}
-export const MenuBar: Component<Props> = (props: Props) => {
+
+export const MenuBar: Component = () => {
   return (
     <>
       <div id="menu-bar-hover-placeholder"></div>

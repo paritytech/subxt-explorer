@@ -120,7 +120,7 @@ export function pathToItemKind(path: string): ItemKind | undefined {
       }
     case "custom_values":
       return { tag: "custom_values" };
-    case "pallets":
+    case "pallets": {
       const pallet = segs[1];
       if (pallet) {
         switch (segs[2]) {
@@ -139,6 +139,7 @@ export function pathToItemKind(path: string): ItemKind | undefined {
       } else {
         return undefined;
       }
+    }
     default:
       return undefined;
   }

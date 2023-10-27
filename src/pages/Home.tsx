@@ -1,10 +1,4 @@
-import {
-  Accessor,
-  Component,
-  JSX,
-  Setter,
-  createSignal,
-} from "solid-js";
+import { Accessor, Component, JSX, Setter, createSignal } from "solid-js";
 import { DEFAULT_WS_URL } from "../constants";
 import { ClientKind, client, initAppState } from "../state/client";
 import { FileUploadArea } from "../components/FileUploadArea";
@@ -178,7 +172,7 @@ export class HomePageState {
 
 export const HomePage: Component = () => {
   const state = HomePageState.instance;
-  const [_searchParams, setSearchParams] = useSearchParams();
+  const setSearchParams = useSearchParams()[1];
   const navigate = useNavigate();
   state.infuseNavigationFns(setSearchParams, navigate);
 
