@@ -11,6 +11,7 @@ import { findInSidebarItems, setActiveItem } from "../state/sidebar";
 export const ConfigAwareLink = (props: AnchorProps): JSX.Element => {
   return (
     <Link
+      {...props}
       activeClass=""
       href={AppConfig.instance.href(props.href)()}
       onClick={() => {

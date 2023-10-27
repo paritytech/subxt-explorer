@@ -8,6 +8,7 @@ import {
   createEffect,
   useTransition,
   useContext,
+  onCleanup,
 } from "solid-js";
 import { MdBookWrapper } from "./components/MdBookWrapper";
 import { HomePage, HomePageState } from "./pages/Home";
@@ -38,6 +39,11 @@ import { ClientKind, initAppState } from "./state/client";
 import { wait } from "./utils";
 import { AppConfig, paramsToString } from "./state/app_config";
 import { RedirectToHome } from "./components/RedirectToHome";
+import {
+  findInSidebarItems,
+  findSideBarItemByPath,
+  setActiveItem,
+} from "./state/sidebar";
 
 const App: Component = () => {
   return (
@@ -59,6 +65,12 @@ const AppInRouter: Component = () => {
   // If the url params indicate a different app config, reload the web app with that config.
   createEffect(() => {
     let pathname = location.pathname;
+
+    let newItem = findSideBarItemByPath(pathname);
+    if (newItem) {
+      setActiveItem(newItem);
+    }
+
     let configFromParams = AppConfig.fromParams(location.query);
     if (!configFromParams.equals(AppConfig.instance)) {
       AppConfig.instance = configFromParams;

@@ -121,16 +121,20 @@ export function pathToItemKind(path: string): ItemKind | undefined {
     case "custom_values":
       return { tag: "custom_values" };
     case "pallets":
-      if (segs[1]) {
+      let pallet = segs[1];
+      if (pallet) {
         switch (segs[2]) {
           case "calls":
-            return { tag: "calls", pallet: segs[1] };
+            return { tag: "calls", pallet };
           case "storage_entries":
-            return { tag: "storage_entries", pallet: segs[1] };
+            return { tag: "storage_entries", pallet };
           case "constants":
-            return { tag: "constants", pallet: segs[1] };
+            return { tag: "constants", pallet };
+          case "events":
+            return { tag: "events", pallet };
           default:
-            return { tag: "pallet", pallet: segs[1], index: -1 };
+            // note: index can currently not be parsed from url
+            return { tag: "pallet", pallet, index: -1 };
         }
       } else {
         return undefined;

@@ -32,10 +32,15 @@ export const CallsPage = () => {
   );
 };
 
-function callContent(call: CallContent): JSX.Element {
+function callContent(call: CallContent, index: number): JSX.Element {
   return (
     <>
-      <AnchoredH2 title={call.name}></AnchoredH2>
+      <AnchoredH2 title={call.name}>
+        <span class="text-gray-500 text-xl float-right mt-5">
+          {" "}
+          index = {index}
+        </span>
+      </AnchoredH2>
       <Docs mdDocs={call.docs}></Docs>
       <KeyValueTypesLayout
         keyTypes={

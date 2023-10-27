@@ -52,7 +52,7 @@ export class Client {
   }
 
   constructSidebarItems(): SidebarItem[] {
-    let items: SidebarItem[] = [];
+    let items: SidebarItem[] = [newItem({ tag: "home" })];
     // runtime apis
     if (this.content.runtime_apis.length != 0) {
       let item = newItem({ tag: "runtime_apis" });

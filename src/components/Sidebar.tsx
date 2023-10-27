@@ -35,7 +35,9 @@ export const Sidebar: Component<Props> = (props: Props) => {
             </li>
           )}
 
-          <For each={sidebarItems()}>{(item, i) => sideBarItem(item)}</For>
+          <For each={sidebarItems()}>
+            {(item, i) => <SideBarItem {...item} />}
+          </For>
         </ol>
       </div>
       <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
@@ -43,8 +45,10 @@ export const Sidebar: Component<Props> = (props: Props) => {
   );
 };
 
-function sideBarItem(item: SidebarItem): JSX.Element {
-  // let params = useParams<{ path?: string }>();
+function SideBarItem(item: SidebarItem): JSX.Element {
+  if (item.kind.tag === "home") {
+    return;
+  }
 
   let topLevel =
     item.kind.tag === "runtime_apis" ||
@@ -77,7 +81,7 @@ function sideBarItem(item: SidebarItem): JSX.Element {
       {item.children.length != 0 && (
         <li>
           <ol class="section">
-            {item.children.map((subitem) => sideBarItem(subitem))}
+            {item.children.map((subitem) => SideBarItem(subitem))}
           </ol>
         </li>
       )}
