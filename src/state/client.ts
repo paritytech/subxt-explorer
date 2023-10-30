@@ -30,11 +30,11 @@ export class Client {
     let client: WASMClient;
     switch (clientKind.tag) {
       case "url":
-        client = await WASMClient.fromUrl(clientKind.url);
+        client = await WASMClient.newOnline(clientKind.url);
         break;
       case "file": {
         const bytes = await readFileAsBytes(clientKind.file);
-        client = WASMClient.fromBytes(clientKind.file.name, bytes);
+        client = WASMClient.newOffline(clientKind.file.name, bytes);
         break;
       }
     }

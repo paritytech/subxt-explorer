@@ -1,15 +1,19 @@
 //! Interface callable from JavaScript
 
-use std::{borrow::Cow, convert::Infallible, fmt::Debug, ops::FromResidual};
+use std::{borrow::Cow, convert::Infallible, fmt::Debug, ops::FromResidual, sync::Arc};
 
 use anyhow::anyhow;
 
+mod client_object;
+
 use serde::Serialize;
 use subxt::{
+    client::{LightClient, LightClientBuilder, OfflineClientT, OnlineClientT},
     ext::{codec::Decode, scale_value},
     OfflineClient, OnlineClient, SubstrateConfig,
 };
 use subxt_metadata::{Metadata, PalletMetadata, RuntimeApiMetadata};
+use syn::Meta;
 use wasm_bindgen::{convert::IntoWasmAbi, prelude::*};
 
 use crate::{
@@ -17,6 +21,8 @@ use crate::{
     format_scale_value_string, format_type, storage_entry_key_ty_ids, ExampleGenerator,
     PruneTypePath,
 };
+
+use self::client_object::{OfflineClientObject, OnlineClientObject};
 
 #[macro_export]
 macro_rules! console_log {
@@ -34,9 +40,13 @@ extern "C" {
 
 }
 
+type ConfigUsed = SubstrateConfig;
+
 #[wasm_bindgen]
 pub struct Client {
     kind: ClientKind,
+    offline_client: Arc<dyn OfflineClientObject<ConfigUsed>>,
+    online_client: Option<Arc<dyn OnlineClientObject<ConfigUsed>>>,
     example_gen_dynamic: ExampleGenerator<'static>,
     example_gen_static: ExampleGenerator<'static>,
 }
@@ -44,11 +54,15 @@ pub struct Client {
 pub enum ClientKind {
     Offline {
         metadata_file_name: String,
-        client: OfflineClient<SubstrateConfig>,
+        client: OfflineClient<ConfigUsed>,
     },
     Online {
         url: String,
-        client: OnlineClient<SubstrateConfig>,
+        client: OnlineClient<ConfigUsed>,
+    },
+    LightClient {
+        chain_spec_json: String,
+        client: LightClient<ConfigUsed>,
     },
 }
 
@@ -59,61 +73,49 @@ impl ClientKind {
                 metadata_file_name, ..
             } => ExampleContext::from_file(metadata_file_name, dynamic),
             ClientKind::Online { url, .. } => ExampleContext::from_url(url, dynamic),
-        }
-    }
-
-    fn metadata(&self) -> subxt::Metadata {
-        match &self {
-            ClientKind::Offline { client, .. } => client.metadata(),
-            ClientKind::Online { client, .. } => client.metadata(),
-        }
-    }
-
-    fn online_client(&self) -> Option<&OnlineClient<SubstrateConfig>> {
-        match &self {
-            ClientKind::Offline { .. } => None,
-            ClientKind::Online { client, .. } => Some(client),
+            ClientKind::LightClient { .. } => ExampleContext::from_file("metadata.scale", dynamic),
         }
     }
 }
 
 impl Client {
-    fn metadata(&self) -> subxt::Metadata {
-        self.kind.metadata()
-    }
-
     // dynamic lookup of constant value
-    fn constant_at(
-        &self,
-        pallet_name: &str,
-        constant_name: &str,
-    ) -> anyhow::Result<scale_value::Value<u32>> {
-        let address = subxt::constants::dynamic(pallet_name, constant_name);
-        let decoded_value_thunk = match &self.kind {
-            ClientKind::Offline { client, .. } => {
-                let constants_client = client.constants();
-                constants_client.at(&address)?
-            }
-            ClientKind::Online { client, .. } => {
-                let constants_client = client.constants();
-                constants_client.at(&address)?
-            }
-        };
-        let scale_value = decoded_value_thunk.to_value()?;
-        Ok(scale_value)
-    }
 
     fn new(kind: ClientKind) -> Self {
-        let metadata = kind.metadata();
+        let offline_client: Arc<dyn OfflineClientObject<ConfigUsed>>;
+        let online_client: Option<Arc<dyn OnlineClientObject<ConfigUsed>>>;
+
+        (offline_client, online_client) = match &kind {
+            ClientKind::Offline { client, .. } => (
+                Arc::new(client.clone()) as Arc<dyn OfflineClientObject<ConfigUsed>>,
+                None,
+            ),
+            ClientKind::Online { client, .. } => (
+                Arc::new(client.clone()) as Arc<dyn OfflineClientObject<ConfigUsed>>,
+                Some(Arc::new(client.clone()) as Arc<dyn OnlineClientObject<ConfigUsed>>),
+            ),
+            ClientKind::LightClient { client, .. } => (
+                Arc::new(client.clone()) as Arc<dyn OfflineClientObject<ConfigUsed>>,
+                Some(Arc::new(client.clone()) as Arc<dyn OnlineClientObject<ConfigUsed>>),
+            ),
+        };
+
+        let metadata = offline_client.metadata();
         let example_gen_dynamic =
             ExampleGenerator::new(metadata.clone(), Cow::Owned(kind.example_context(true)));
         let example_gen_static =
             ExampleGenerator::new(metadata, Cow::Owned(kind.example_context(false)));
         Self {
             kind,
+            offline_client,
+            online_client,
             example_gen_dynamic,
             example_gen_static,
         }
+    }
+
+    fn metadata(&self) -> subxt::Metadata {
+        self.offline_client.metadata()
     }
 
     /// resolves the provided type id and returns the type path as a string.
@@ -143,8 +145,8 @@ impl Client {
     /// Creates an offline client from the metadata bytes and the name of the metadata file.
     ///
     /// genesis_hash and runtime_version are set to some unimportant default values and hopefully not used.
-    #[wasm_bindgen(js_name = "fromBytes")]
-    pub fn from_bytes(
+    #[wasm_bindgen(js_name = "newOffline")]
+    pub fn new_offline(
         metadata_file_name: &str,
         bytes: js_sys::Uint8Array,
     ) -> Result<Client, String> {
@@ -153,7 +155,7 @@ impl Client {
         let bytes = bytes.to_vec();
         let metadata: Metadata = Metadata::decode(&mut &bytes[..]).map_err(|e| format!("{e}"))?;
 
-        let client = OfflineClient::<SubstrateConfig>::new(
+        let client = OfflineClient::<ConfigUsed>::new(
             // should not matter much:
             Default::default(),
             // should not matter much:
@@ -171,15 +173,34 @@ impl Client {
     }
 
     /// Creates an OnlineClient from a given url
-    #[wasm_bindgen(js_name = "fromUrl")]
-    pub async fn from_url(url: &str) -> Result<Client, String> {
+    #[wasm_bindgen(js_name = "newOnline")]
+    pub async fn new_online(url: &str) -> Result<Client, String> {
         console_error_panic_hook::set_once();
         console_log!("create client from url {url}");
-        let client = subxt::OnlineClient::<SubstrateConfig>::from_url(url)
+        let client = subxt::OnlineClient::<ConfigUsed>::from_url(url)
             .await
             .map_err(|e| e.to_string())?;
         Ok(Client::new(ClientKind::Online {
             url: url.into(),
+            client,
+        }))
+    }
+
+    /// Creates an LightClient from a given chain spec string.
+    #[wasm_bindgen(js_name = "newLightClient")]
+    pub async fn new_light_client(url: &str) -> Result<Client, String> {
+        console_error_panic_hook::set_once();
+        console_log!("create light client from a chain spec");
+        let client = LightClient::<ConfigUsed>::builder()
+            .bootnodes([
+                "/ip4/127.0.0.1/tcp/30333/p2p/12D3KooWEyoppNCUx8Yx66oV9fJnriXwCcXwDDUA2kj6vnc6iDEp",
+            ])
+            .build_from_url("ws://127.0.0.1:9944")
+            .await
+            .map_err(|e| e.to_string())?;
+
+        Ok(Client::new(ClientKind::LightClient {
+            chain_spec_json: "todo!()".into(),
             client,
         }))
     }
@@ -309,7 +330,9 @@ impl Client {
             .example_gen_dynamic
             .constant_example_wrapped(pallet_name, constant_name)?;
 
-        let value = self.constant_at(pallet_name, constant_name)?;
+        let value = self
+            .offline_client
+            .constant_at(pallet_name, constant_name)?;
         let value_str = format_scale_value_string(&value.to_string());
         let value_type = self.type_description(constant.ty())?;
 
@@ -441,8 +464,8 @@ impl Client {
         pallet_name: &str,
         entry_name: &str,
     ) -> MyJsValue {
-        let online_client = self.kind.online_client()?;
-        let metadata = self.metadata();
+        let online_client = self.online_client.as_ref()?;
+        let metadata = online_client.metadata();
         let pallet_metadata = metadata.pallet_by_name(pallet_name)?;
         let storage = pallet_metadata.storage()?;
         let entry = storage.entry_by_name(entry_name)?;
@@ -450,11 +473,9 @@ impl Client {
         if entry.entry_type().key_ty().is_some() {
             return JsValue::UNDEFINED.into();
         }
-
-        let storage_client = online_client.storage().at_latest().await?;
-        let storage_address = subxt::storage::dynamic::<()>(pallet_name, entry_name, vec![]);
-        let value: scale_value::Value<u32> =
-            storage_client.fetch(&storage_address).await??.to_value()?;
+        let value = online_client
+            .key_less_storage_at(pallet_name, entry_name)
+            .await?;
         let value_str = format_scale_value_string(&value.to_string());
         JsValue::from_str(&value_str).into()
     }
