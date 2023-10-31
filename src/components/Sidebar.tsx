@@ -98,6 +98,8 @@ function metadataSourceSpan(ck: ClientKind): JSX.Element {
           <span class="text-pink-500">{ck.file.name}</span>
         </span>
       );
+    case "lightclient":
+      return <span>{"Connected to LightClient"}</span>;
   }
 }
 

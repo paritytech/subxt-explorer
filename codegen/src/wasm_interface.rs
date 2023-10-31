@@ -10,7 +10,7 @@ use serde::Serialize;
 use subxt::{
     client::{LightClient, LightClientBuilder, OfflineClientT, OnlineClientT},
     ext::{codec::Decode, scale_value},
-    OfflineClient, OnlineClient, SubstrateConfig,
+    OfflineClient, OnlineClient, PolkadotConfig, SubstrateConfig,
 };
 use subxt_metadata::{Metadata, PalletMetadata, RuntimeApiMetadata};
 use syn::Meta;
@@ -40,7 +40,7 @@ extern "C" {
 
 }
 
-type ConfigUsed = SubstrateConfig;
+type ConfigUsed = PolkadotConfig;
 
 #[wasm_bindgen]
 pub struct Client {
@@ -191,14 +191,13 @@ impl Client {
     pub async fn new_light_client(url: &str) -> Result<Client, String> {
         console_error_panic_hook::set_once();
         console_log!("create light client from a chain spec");
-        let client = LightClient::<ConfigUsed>::builder()
-            .bootnodes([
-                "/ip4/127.0.0.1/tcp/30333/p2p/12D3KooWEyoppNCUx8Yx66oV9fJnriXwCcXwDDUA2kj6vnc6iDEp",
-            ])
-            .build_from_url("ws://127.0.0.1:9944")
-            .await
-            .map_err(|e| e.to_string())?;
-
+        let client = LightClientBuilder::<ConfigUsed>::new()
+        .bootnodes(
+            ["/dns/polkadot-connect-0.parity.io/tcp/443/wss/p2p/12D3KooWEPmjoRpDSUuiTjvyNDd8fejZ9eNWH5bE965nyBMDrB4o"]
+        )
+        .build_from_url("wss://rpc.polkadot.io:443")
+        .await.map_err(|e| e.to_string())?;
+        console_log!("light client creation successful");
         Ok(Client::new(ClientKind::LightClient {
             chain_spec_json: "todo!()".into(),
             client,

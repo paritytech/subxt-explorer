@@ -103,5 +103,7 @@ export function clientKindsEqual(
       return c1.url === (c2 as { tag: "url"; url: string }).url;
     case "file":
       return true;
+    case "lightclient":
+      return true;
   }
 }

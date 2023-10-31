@@ -11,6 +11,7 @@ import {
   setActiveItem,
   setSidebarVisibility,
 } from "../state/sidebar";
+import { ChainSpecService } from "../services/chain_spec_service";
 
 /**
  * A singleton class for the HomePage State.
@@ -23,10 +24,12 @@ export class HomePageState {
   setFile: Setter<File | undefined>;
   error: Accessor<string | undefined>;
   setError: Setter<string | undefined>;
-  tab: Accessor<"file" | "url">;
-  setTab: Setter<"file" | "url">;
+  tab: Accessor<ClientKind["tag"]>;
+  setTab: Setter<ClientKind["tag"]>;
   url: Accessor<string>;
   setUrl: Setter<string>;
+  lightClientChainSpecFile: Accessor<File | undefined>;
+  setLightClientChainSpecFile: Setter<File | undefined>;
   loadingState: Accessor<"none" | "loading">;
   setLoadingState: Setter<"none" | "loading">;
 
@@ -49,12 +52,16 @@ export class HomePageState {
     const [error, setError] = createSignal<string | undefined>(undefined);
     this.error = error;
     this.setError = setError;
-    const [tab, setTab] = createSignal<"file" | "url">("url");
+    const [tab, setTab] = createSignal<ClientKind["tag"]>("url");
     this.tab = tab;
     this.setTab = setTab;
     const [url, setUrl] = createSignal<string>(DEFAULT_WS_URL);
     this.url = url;
     this.setUrl = setUrl;
+    const [lightClientChainSpecFile, setLightClientChainSpecFile] =
+      createSignal<File | undefined>(undefined);
+    this.lightClientChainSpecFile = lightClientChainSpecFile;
+    this.setLightClientChainSpecFile = setLightClientChainSpecFile;
     const [loadingState, setLoadingState] = createSignal<"none" | "loading">(
       "none"
     );
@@ -81,12 +88,24 @@ export class HomePageState {
     if (this.error() !== undefined) {
       return undefined;
     }
-    if (this.tab() === "file" && this.file() !== undefined) {
-      return { tag: "file", file: this.file()! };
-    } else if (this.tab() === "url" && this.url()) {
-      return { tag: "url", url: this.url() };
+
+    switch (this.tab()) {
+      case "url": {
+        const url = this.url();
+        if (url === undefined) {
+          return undefined;
+        }
+        return { tag: "url", url };
+      }
+      case "file": {
+        const file = this.file();
+        return file && { tag: "file", file };
+      }
+      case "lightclient": {
+        const chain_spec = this.lightClientChainSpecFile();
+        return chain_spec && { tag: "lightclient", chain_spec };
+      }
     }
-    return undefined;
   };
 
   // a signal that is true if the generate button is clickable.
@@ -174,8 +193,9 @@ export class HomePageState {
           this.setTab("file");
           this.#generate(configClientKind);
           break;
-        default:
-          break;
+        case "lightclient":
+          this.setLightClientChainSpecFile(configClientKind.chain_spec);
+          this.setTab("lightclient");
       }
     }
   }
@@ -229,6 +249,27 @@ export const HomePage: Component = () => {
     ></FileUploadArea>
   );
 
+  const lightClientFromFileTabContent = (
+    <FileUploadArea
+      isDragging={isDraggingOnUpload()}
+      setDragging={setIsDraggingOnUpload}
+      fileName={state.file()?.name}
+      description={`Drag ChainSpec File here, or click "Upload"`}
+      onDropOrUpload={(files) => {
+        if (files === undefined) {
+          state.setError("Something went wrong with the file upload.");
+        } else if (files.length !== 1) {
+          state.setError("Please only select a single file.");
+        } else {
+          state.setLightClientChainSpecFile(files[0]);
+          state.setError(undefined);
+          // directly generate new docs as soon as it it dragged in.
+          state.generateAndUpdateAppConfig();
+        }
+      }}
+    ></FileUploadArea>
+  );
+
   const tabsWithContent: TabWithContent[] = [
     {
       tab: {
@@ -254,10 +295,30 @@ export const HomePage: Component = () => {
       },
       content: fileTabContent,
     },
+    {
+      tab: {
+        title: "Light Client",
+        active: () => state.tab() == "lightclient",
+        onClick: () => {
+          state.setTab("lightclient");
+          state.setError(undefined);
+        },
+        icon: "fa-bolt",
+      },
+      content: lightClientFromFileTabContent,
+    },
   ];
 
   return (
     <>
+      <button
+        onClick={async () => {
+          const specs = await ChainSpecService.fetchChainSpecs();
+          console.log("specs", specs);
+        }}
+      >
+        fetch chainspecs
+      </button>
       <h1>Subxt Explorer</h1>
       Ever wondered how to interact with a custom substrate node using Subxt?
       Upload a scale encoded metadata file or input a substrate node url to get

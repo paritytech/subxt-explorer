@@ -11,6 +11,10 @@ export type ClientKind =
   | {
       tag: "file";
       file: File;
+    }
+  | {
+      tag: "lightclient";
+      chain_spec: File;
     };
 
 export const [client, setClient] = createSignal<Client | undefined>(undefined);
@@ -35,6 +39,11 @@ export class Client {
       case "file": {
         const bytes = await readFileAsBytes(clientKind.file);
         client = WASMClient.newOffline(clientKind.file.name, bytes);
+        break;
+      }
+      case "lightclient": {
+        // const chain_spec_text = await clientKind.chain_spec.text();
+        client = await WASMClient.newLightClient("todo!()");
         break;
       }
     }
