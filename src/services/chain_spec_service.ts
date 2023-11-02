@@ -1,3 +1,5 @@
+import { Accessor, Setter, createSignal } from "solid-js";
+
 const SUBSTRATE_CONNECT_CHAIN_SPECS_GITHUB_URL =
   "https://api.github.com/repos/paritytech/substrate-connect/contents/packages/connect/src/connector/specs";
 
@@ -7,20 +9,102 @@ export type ChainSpec = {
   id: string;
 } & Record<string, unknown>;
 
-export class ChainSpecService {
-  static async fetchChainSpecs(): Promise<ChainSpec[]> {
-    const res = await fetch(SUBSTRATE_CONNECT_CHAIN_SPECS_GITHUB_URL);
-    const json: any = await res.json();
+type ChainSpecsFetchingState =
+  | { tag: "success"; specs: ChainSpec[] }
+  | { tag: "loading" }
+  | { tag: "error"; error: string };
 
-    const specs: ChainSpec[] = [];
-    for (const fileEntry of json) {
-      if (!fileEntry.name.endsWith(".json")) {
-        continue;
-      }
-      const res = await fetch(fileEntry.download_url);
-      const spec: unknown = await res.json();
-      specs.push(spec as ChainSpec);
+export class ChainSpecService {
+  chainSpecs: Accessor<ChainSpecsFetchingState>;
+  #setChainSpecs: Setter<ChainSpecsFetchingState>;
+
+  static #instance: ChainSpecService;
+  static get instance(): ChainSpecService {
+    if (ChainSpecService.#instance === undefined) {
+      ChainSpecService.#instance = new ChainSpecService();
     }
-    return specs;
+    return ChainSpecService.#instance;
+  }
+
+  constructor() {
+    const [chainSpecs, setChainSpecs] = createSignal<ChainSpecsFetchingState>({
+      tag: "loading",
+    });
+    this.chainSpecs = chainSpecs;
+    this.#setChainSpecs = setChainSpecs;
+  }
+
+  async fetchAndCacheChainSpecs(): Promise<void> {
+    this.#setChainSpecs({ tag: "loading" });
+    try {
+      const res = await fetch(SUBSTRATE_CONNECT_CHAIN_SPECS_GITHUB_URL);
+      const json: any = await res.json();
+
+      const specs: ChainSpec[] = [];
+      for (const fileEntry of json) {
+        if (!fileEntry.name.endsWith(".json")) {
+          continue;
+        }
+        const res = await fetch(fileEntry.download_url);
+        const spec: unknown = await res.json();
+        specs.push(spec as ChainSpec);
+      }
+
+      this.#handleOnLoadCallbacks(specs);
+      this.#setChainSpecs({ tag: "success", specs });
+    } catch (ex: any) {
+      this.#setChainSpecs({
+        tag: "error",
+        error: ex.toString(),
+      });
+    }
+  }
+
+  #on_load_call_backs: ChainSpecResolver[] = [];
+  #handleOnLoadCallbacks(specs: ChainSpec[]) {
+    for (const [chain_name, resolve, reject] of this.#on_load_call_backs) {
+      const spec = specs.find((spec) => spec.name === chain_name);
+      if (spec) {
+        resolve(spec);
+      } else {
+        reject(
+          new Error(
+            `Chain spec with name ${chain_name} not found in loaded presets`
+          )
+        );
+      }
+    }
+    this.#on_load_call_backs = [];
+  }
+
+  loadChainSpecForChainName(chain_name: string): Promise<ChainSpec> {
+    const chainSpecs = this.chainSpecs();
+    switch (chainSpecs.tag) {
+      case "success": {
+        const spec = chainSpecs.specs.find((spec) => spec.name === chain_name);
+        if (spec) {
+          return Promise.resolve(spec);
+        } else {
+          return Promise.reject(
+            new Error(
+              `Chain spec with name ${chain_name} not found in loaded presets`
+            )
+          );
+        }
+      }
+      case "loading": {
+        return new Promise((resolve, reject) => {
+          this.#on_load_call_backs.push([chain_name, resolve, reject]);
+        });
+      }
+      case "error":
+        return Promise.reject(new Error(chainSpecs.error));
+    }
   }
 }
+
+type ChainSpecResolver = [
+  string,
+  (value: ChainSpec | PromiseLike<ChainSpec>) => void,
+  (reason?: any) => void
+];

@@ -2,56 +2,49 @@ import { createSignal } from "solid-js";
 import { Client as WASMClient } from "subxt_example_codegen";
 import { SidebarItem, newItem, setSidebarItems } from "./sidebar";
 import { readFileAsBytes } from "../utils";
-
-export type ClientKind =
-  | {
-      tag: "url";
-      url: string;
-    }
-  | {
-      tag: "file";
-      file: File;
-    }
-  | {
-      tag: "lightclient";
-      chain_spec: File;
-    };
+import { ClientCreationData } from "./models/client_creation_data";
 
 export const [client, setClient] = createSignal<Client | undefined>(undefined);
 
 export class Client {
   client: WASMClient;
-  clientKindInCreation: ClientKind;
+  creationData: ClientCreationData;
   content: MetadataContent;
 
-  constructor(client: WASMClient, clientKindInCreation: ClientKind) {
+  constructor(client: WASMClient, creationData: ClientCreationData) {
     this.client = client;
-    this.clientKindInCreation = clientKindInCreation;
+    this.creationData = creationData;
     this.content = client.metadataContent() as MetadataContent;
   }
 
-  static async createSelfWithClient(clientKind: ClientKind): Promise<Client> {
+  static async create(creationData: ClientCreationData): Promise<Client> {
     let client: WASMClient;
-    switch (clientKind.tag) {
+    const clientData = creationData.deref;
+    switch (clientData.tag) {
       case "url":
-        client = await WASMClient.newOnline(clientKind.url);
+        client = await WASMClient.newOnline(clientData.url);
         break;
       case "file": {
-        const bytes = await readFileAsBytes(clientKind.file);
-        client = WASMClient.newOffline(clientKind.file.name, bytes);
+        const bytes = await readFileAsBytes(clientData.file);
+        client = WASMClient.newOffline(clientData.file.name, bytes);
         break;
       }
       case "lightclient": {
         // const chain_spec_text = await clientKind.chain_spec.text();
-        client = await WASMClient.newLightClient("todo!()");
+        // needle
+        client = await WASMClient.newLightClient("todo!()"); // todo!();
         break;
       }
     }
-    return new Client(client, clientKind);
+
+    return new Client(client, creationData);
   }
 
   hasOnlineCapabilities(): boolean {
-    return this.clientKindInCreation.tag === "url";
+    return (
+      this.creationData.deref.tag === "url" ||
+      this.creationData.deref.tag === "lightclient"
+    );
   }
 
   constructSidebarItems(): SidebarItem[] {
@@ -267,10 +260,12 @@ export class Client {
   }
 }
 
-export async function initAppState(clientKind: ClientKind): Promise<void> {
+export async function createClient(
+  clientConfig: ClientCreationData
+): Promise<void> {
   setClient(undefined);
   setSidebarItems([]);
-  const state = await Client.createSelfWithClient(clientKind);
+  const state = await Client.create(clientConfig);
   const items = state.constructSidebarItems();
   setSidebarItems(items);
   setClient(state);

@@ -1,6 +1,6 @@
 import { Navigate, useLocation } from "@solidjs/router";
 import {
-  clientKindFromParams,
+  clientCreationConfigFromParams,
   clientKindToParams,
   paramsToString,
 } from "../state/app_config";
@@ -9,7 +9,7 @@ import { HomePageState } from "../pages/Home";
 
 export function RedirectToHome(): JSX.Element {
   const location = useLocation();
-  const clientKind = clientKindFromParams(location.query);
+  const clientKind = clientCreationConfigFromParams(location.query);
   const params = clientKindToParams(clientKind);
   const redirectUrl = `/?${paramsToString(params)}`;
   HomePageState.instance.setRedirectPath(location.pathname);

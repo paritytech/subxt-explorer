@@ -61,7 +61,7 @@ pub enum ClientKind {
         client: OnlineClient<ConfigUsed>,
     },
     LightClient {
-        chain_spec_json: String,
+        chain_spec: String,
         client: LightClient<ConfigUsed>,
     },
 }
@@ -199,7 +199,7 @@ impl Client {
         .await.map_err(|e| e.to_string())?;
         console_log!("light client creation successful");
         Ok(Client::new(ClientKind::LightClient {
-            chain_spec_json: "todo!()".into(),
+            chain_spec: "todo!()".into(),
             client,
         }))
     }

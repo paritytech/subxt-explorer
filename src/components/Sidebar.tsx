@@ -26,7 +26,7 @@ export const Sidebar: Component = () => {
           </li>
           {client() && (
             <li class="part-title leading-6 pt-6 pb-3">
-              {metadataSourceSpan(client()!.clientKindInCreation!)}
+              {metadataSourceSpan(client()!.creationData!)}
             </li>
           )}
 
