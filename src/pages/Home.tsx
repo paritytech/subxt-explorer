@@ -104,7 +104,7 @@ export class HomePageState {
     return this.loadingState() === "loading";
   }
 
-  // takes the state of the ui elements and translates that into a clientKind that can be used to create a client.
+  // takes the state of the ui elements and translates that into `ClientCreationData` that can be used to create a client.
   clientCreationDataFromTab = (): ClientCreationData | undefined => {
     if (this.error() !== undefined) {
       return undefined;
@@ -131,10 +131,6 @@ export class HomePageState {
           tag: "lightclient",
           chain_spec: spec,
         });
-        // const lightclient = this.lightClientChainSpec();
-        // // let chain_spec = this.lightClientChainSpec();
-        // throw "todo!()";
-        // return chain_spec && { tag: "lightclient", chain_spec };
       }
     }
   };
@@ -375,7 +371,6 @@ export const HomePage: Component = () => {
           class={`btn ${generateButtonClickable() ? "" : "disabled"}`}
           disabled={!generateButtonClickable()}
           onClick={() => {
-            // assumption: Button is only clickable if homeScreenClientKind() is a valid value.
             state.generateAndUpdateAppConfig();
           }}
         >

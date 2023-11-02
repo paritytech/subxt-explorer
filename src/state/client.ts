@@ -37,7 +37,7 @@ export class Client {
         } else {
           // convert the JS Object into a json string:
           jsonText = JSON.stringify(clientData.chain_spec);
-        } // todo!();
+        }
         client = await WASMClient.newLightClient(jsonText);
         break;
       }

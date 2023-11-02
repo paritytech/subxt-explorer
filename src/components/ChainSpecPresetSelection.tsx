@@ -21,13 +21,11 @@ export const ChainSpecPresetSelection = (props: {
             (e) => (
               <div class="flex align-middle">
                 <input
-                  //   class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
                   class={`appearance-none w-7 h-7 rounded-full cursor-pointer border-solid border-2 ${
                     props.selectedSpecName() == e.name
                       ? "bg-pink-500 border-white"
                       : "bg-zinc-dark border-gray-500"
                   }`}
-                  //   style={{ border: "2px solid #F472B6" }}
                   type="radio"
                   id={e.name}
                   name="chainspec_preset"
@@ -51,7 +49,8 @@ export const ChainSpecPresetSelection = (props: {
       </Match>
       <Match when={chainSpecs().tag === "error"}>
         <div class="text-center w-full text-red-400 mb-4">
-          Error: {(chainSpecs() as { tag: "error"; error: string }).error}
+          Error while loading chain spec presets:{" "}
+          {(chainSpecs() as { tag: "error"; error: string }).error}
         </div>
       </Match>
     </Switch>
