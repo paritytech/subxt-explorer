@@ -1,7 +1,5 @@
 import { Accessor, Setter, createSignal } from "solid-js";
-
-const SUBSTRATE_CONNECT_CHAIN_SPECS_GITHUB_URL =
-  "https://api.github.com/repos/paritytech/substrate-connect/contents/packages/connect/src/connector/specs";
+import { SUBSTRATE_CONNECT_CHAIN_SPECS_GITHUB_URL } from "../constants";
 
 export type ChainSpec = {
   bootNodes: string[];
@@ -9,7 +7,7 @@ export type ChainSpec = {
   id: string;
 } & Record<string, unknown>;
 
-type ChainSpecsFetchingState =
+export type ChainSpecsFetchingState =
   | { tag: "success"; specs: ChainSpec[] }
   | { tag: "loading" }
   | { tag: "error"; error: string };
@@ -35,6 +33,7 @@ export class ChainSpecService {
   }
 
   async fetchAndCacheChainSpecs(): Promise<void> {
+    console.log("ChainSpecService: start fetching chain specs...");
     this.#setChainSpecs({ tag: "loading" });
     try {
       const res = await fetch(SUBSTRATE_CONNECT_CHAIN_SPECS_GITHUB_URL);
@@ -50,9 +49,11 @@ export class ChainSpecService {
         specs.push(spec as ChainSpec);
       }
 
+      console.log("ChainSpecService: fetching success ");
       this.#handleOnLoadCallbacks(specs);
       this.#setChainSpecs({ tag: "success", specs });
     } catch (ex: any) {
+      console.error("ChainSpecService: error: ", ex);
       this.#setChainSpecs({
         tag: "error",
         error: ex.toString(),

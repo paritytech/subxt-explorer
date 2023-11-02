@@ -1,5 +1,5 @@
 import { Accessor, Component, JSX, Setter, createSignal } from "solid-js";
-import { DEFAULT_WS_URL } from "../constants";
+import { DEFAULT_HOME_PAGE_TAB, DEFAULT_WS_URL } from "../constants";
 import { createClient } from "../state/client";
 import { FileUploadArea } from "../components/FileUploadArea";
 import { TabLayout, TabWithContent } from "../components/TabLayout";
@@ -11,12 +11,13 @@ import {
   setActiveItem,
   setSidebarVisibility,
 } from "../state/sidebar";
-import { ChainSpecService } from "../services/chain_spec_service";
+import { ChainSpec } from "../services/chain_spec_service";
 import {
   ClientCreationData,
   ClientCreationDataTag,
 } from "../state/models/client_creation_data";
 import { ClientCreationConfig } from "../state/models/client_creation_config";
+import { ChainSpecPresetSelection } from "../components/ChainSpecPresetSelection";
 
 /**
  * A singleton class for the HomePage State.
@@ -34,8 +35,10 @@ export class HomePageState {
   url: Accessor<string>;
   setUrl: Setter<string>;
   // File, if a file is uploaded. string if a chain name is selected from presets. The string should match the presets chain specs chain_name in that case.
-  lightClientChainSpec: Accessor<File | string | undefined>;
-  setLightClientChainSpec: Setter<File | string | undefined>;
+  lightClientChainSpec: Accessor<File | ChainSpec | undefined>;
+  setLightClientChainSpec: Setter<File | ChainSpec | undefined>;
+  selectedLightClientPresetChainName: Accessor<string | undefined>;
+  setSelectedLightClientPresetChainName: Setter<string | undefined>;
   loadingState: Accessor<"none" | "loading">;
   setLoadingState: Setter<"none" | "loading">;
 
@@ -59,14 +62,16 @@ export class HomePageState {
     const [error, setError] = createSignal<string | undefined>(undefined);
     this.error = error;
     this.setError = setError;
-    const [tab, setTab] = createSignal<ClientCreationDataTag>("url");
+    const [tab, setTab] = createSignal<ClientCreationDataTag>(
+      DEFAULT_HOME_PAGE_TAB
+    );
     this.tab = tab;
     this.setTab = setTab;
     const [url, setUrl] = createSignal<string>(DEFAULT_WS_URL);
     this.url = url;
     this.setUrl = setUrl;
     const [lightClientChainSpec, setLightClientChainSpec] = createSignal<
-      File | string | undefined
+      File | ChainSpec | undefined
     >(undefined);
     this.lightClientChainSpec = lightClientChainSpec;
     this.setLightClientChainSpec = setLightClientChainSpec;
@@ -75,6 +80,15 @@ export class HomePageState {
     );
     this.loadingState = loadingState;
     this.setLoadingState = setLoadingState;
+
+    const [
+      selectedLightClientPresetChainName,
+      setSelectedLightClientPresetChainName,
+    ] = createSignal<string | undefined>(undefined);
+    this.selectedLightClientPresetChainName =
+      selectedLightClientPresetChainName;
+    this.setSelectedLightClientPresetChainName =
+      setSelectedLightClientPresetChainName;
   }
 
   // singleton pattern
@@ -109,16 +123,20 @@ export class HomePageState {
         return file && new ClientCreationData({ tag: "file", file });
       }
       case "lightclient": {
-        // let chain_spec = this.lightClientChainSpec();
-        throw "todo!()";
+        const spec = this.lightClientChainSpec();
+        if (spec === undefined) {
+          return undefined;
+        }
+        return new ClientCreationData({
+          tag: "lightclient",
+          chain_spec: spec,
+        });
+        // const lightclient = this.lightClientChainSpec();
+        // // let chain_spec = this.lightClientChainSpec();
+        // throw "todo!()";
         // return chain_spec && { tag: "lightclient", chain_spec };
       }
     }
-  };
-
-  // a signal that is true if the generate button is clickable.
-  generateButtonClickable = (): boolean => {
-    return this.loadingState() === "none" && !!this.clientCreationDataFromTab();
   };
 
   async generateAndUpdateAppConfig() {
@@ -186,6 +204,7 @@ export class HomePageState {
   // - when the url params change and the AppConfig changes as a result.
   async adjustUiToAppConfigInstance() {
     const creationConfig = AppConfig.instance.clientCreationConfig;
+    console.log("adjustUiToAppConfigInstance with", creationConfig);
     if (
       creationConfig != undefined &&
       !ClientCreationConfig.equals(
@@ -195,14 +214,18 @@ export class HomePageState {
     ) {
       this.#setSearchParams!(AppConfig.instance.toParams());
       const creationData = await creationConfig.intoClientCreationData();
-      switch (creationConfig.deref.tag) {
+      console.log(creationData);
+      switch (creationData.deref.tag) {
         case "url":
-          this.setUrl(creationConfig.deref.url);
+          this.setUrl(creationData.deref.url);
           this.setTab("url");
           this.#generate(creationData);
           break;
         case "lightclient":
-          this.setLightClientChainSpec(creationConfig.deref.chain_name);
+          this.setSelectedLightClientPresetChainName(
+            creationData.deref.chain_spec.name
+          );
+          this.setLightClientChainSpec(creationData.deref.chain_spec);
           this.setTab("lightclient");
           this.#generate(creationData);
       }
@@ -215,13 +238,17 @@ export const HomePage: Component = () => {
   const setSearchParams = useSearchParams()[1];
   const navigate = useNavigate();
   state.infuseNavigationFns(setSearchParams, navigate);
-
-  const [isDraggingOnUpload, setIsDraggingOnUpload] =
-    createSignal<boolean>(false);
-
   state.adjustUiToAppConfigInstance();
 
-  const urlTabContent = (
+  // a signal that is true if the generate button is clickable.
+  const generateButtonClickable = (): boolean => {
+    return (
+      HomePageState.instance.loadingState() === "none" &&
+      !!HomePageState.instance.clientCreationDataFromTab()
+    );
+  };
+
+  const UrlTabContent = () => (
     <input
       class="w-full bg-zinc-dark p-2 rounded-md border-2 outline-none focus:border-teal-400 border-solid  border-gray-500 "
       type="text"
@@ -237,10 +264,8 @@ export const HomePage: Component = () => {
     />
   );
 
-  const fileTabContent = (
+  const FileTabContent = () => (
     <FileUploadArea
-      isDragging={isDraggingOnUpload()}
-      setDragging={setIsDraggingOnUpload}
       fileName={state.file()?.name}
       description={`Drag Metadata (.scale) file here, or click "Upload"`}
       onDropOrUpload={(files) => {
@@ -255,15 +280,17 @@ export const HomePage: Component = () => {
           state.generateAndUpdateAppConfig();
         }
       }}
-    ></FileUploadArea>
+    />
   );
 
-  const lightClientFromFileTabContent = (
+  const LightClientTabContent = () => (
     <>
       <FileUploadArea
-        isDragging={isDraggingOnUpload()}
-        setDragging={setIsDraggingOnUpload}
-        fileName={state.file()?.name}
+        fileName={
+          state.lightClientChainSpec() instanceof File
+            ? state.lightClientChainSpec()?.name
+            : undefined
+        }
         description={`Drag ChainSpec (.json) file here, or click "Upload"`}
         onDropOrUpload={async (files) => {
           if (files === undefined) {
@@ -271,18 +298,22 @@ export const HomePage: Component = () => {
           } else if (files.length !== 1) {
             state.setError("Please only select a single file.");
           } else {
-            console.log("todo!()");
-            // const filed_content = await files[0].text();
-            // const chain_spec: ChainSpec = JSON.parse(
-            //   filed_content
-            // ) as ChainSpec;
-            // state.setLightClientChainSpecFile(files[0]);
-            // state.setError(undefined);
-            // // directly generate new docs as soon as it it dragged in.
-            // state.generateAndUpdateAppConfig();
+            state.setLightClientChainSpec(files[0]);
+            state.setError(undefined);
+            // directly generate try to connect to light client when some file gets dragged in.
+            state.generateAndUpdateAppConfig();
           }
         }}
-      ></FileUploadArea>
+      />
+      <div class="my-6">Or select a chain spec from the presets:</div>
+      <ChainSpecPresetSelection
+        selectedSpecName={state.selectedLightClientPresetChainName}
+        onChainSpecPresetSelected={(chainSpec) => {
+          state.setSelectedLightClientPresetChainName(chainSpec.name);
+          state.setLightClientChainSpec(chainSpec);
+          state.setError(undefined);
+        }}
+      ></ChainSpecPresetSelection>
     </>
   );
 
@@ -297,7 +328,7 @@ export const HomePage: Component = () => {
         },
         icon: "fa-link",
       },
-      content: urlTabContent,
+      component: UrlTabContent,
     },
     {
       tab: {
@@ -309,7 +340,7 @@ export const HomePage: Component = () => {
         },
         icon: "fa-file",
       },
-      content: fileTabContent,
+      component: FileTabContent,
     },
     {
       tab: {
@@ -321,23 +352,12 @@ export const HomePage: Component = () => {
         },
         icon: "fa-bolt",
       },
-      content: lightClientFromFileTabContent,
+      component: LightClientTabContent,
     },
   ];
 
   return (
     <>
-      <button
-        onClick={async () => {
-          const chain_spec =
-            await ChainSpecService.instance.loadChainSpecForChainName(
-              "Polkadot"
-            );
-          console.log("chain_spec for polkadot", chain_spec);
-        }}
-      >
-        fetch chainspecs
-      </button>
       <h1>Subxt Explorer</h1>
       Ever wondered how to interact with a custom substrate node using Subxt?
       Upload a scale encoded metadata file or input a substrate node url to get
@@ -353,8 +373,8 @@ export const HomePage: Component = () => {
       )}
       <div>
         <button
-          class={`btn ${state.generateButtonClickable() ? "" : "disabled"}`}
-          disabled={!state.generateButtonClickable()}
+          class={`btn ${generateButtonClickable() ? "" : "disabled"}`}
+          disabled={!generateButtonClickable()}
           onClick={() => {
             // assumption: Button is only clickable if homeScreenClientKind() is a valid value.
             state.generateAndUpdateAppConfig();

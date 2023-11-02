@@ -30,9 +30,15 @@ export class Client {
         break;
       }
       case "lightclient": {
-        // const chain_spec_text = await clientKind.chain_spec.text();
-        // needle
-        client = await WASMClient.newLightClient("todo!()"); // todo!();
+        let jsonText: string;
+        if (clientData.chain_spec instanceof File) {
+          // read the file as text:
+          jsonText = await clientData.chain_spec.text();
+        } else {
+          // convert the JS Object into a json string:
+          jsonText = JSON.stringify(clientData.chain_spec);
+        } // todo!();
+        client = await WASMClient.newLightClient(jsonText);
         break;
       }
     }

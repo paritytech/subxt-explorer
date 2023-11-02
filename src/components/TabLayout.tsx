@@ -3,7 +3,7 @@ import { Tab, Props as TabProps } from "./Tab";
 
 export interface TabWithContent {
   tab: TabProps;
-  content: JSX.Element;
+  component: () => JSX.Element;
 }
 
 export interface Props {
@@ -21,7 +21,7 @@ export const TabLayout = (props: Props): JSX.Element => {
         ))}
       </div>
       <div class={props.contentContainerClass}>
-        {props.tabs.map((c) => c.tab.active() && c.content)}
+        {props.tabs.map((c) => c.tab.active() && c.component())}
       </div>
     </>
   );

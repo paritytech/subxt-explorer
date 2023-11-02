@@ -49,6 +49,11 @@ export class AppConfig {
 
   updateWithParams(params: Record<string, string>) {
     this.clientCreationConfig = ClientCreationConfig.tryFromParams(params);
+    console.log(
+      "AppConfig: updated with params: ",
+      params,
+      this.clientCreationConfig
+    );
   }
 
   equals(other: AppConfig): boolean {

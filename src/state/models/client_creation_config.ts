@@ -22,6 +22,13 @@ export class ClientCreationConfig {
         url: decodeURI(url),
       });
     }
+    const lightclient = params["lightclient"];
+    if (lightclient) {
+      return new ClientCreationConfig({
+        tag: "lightclient",
+        chain_name: decodeURI(lightclient),
+      });
+    }
     return undefined;
   }
 
@@ -51,7 +58,6 @@ export class ClientCreationConfig {
           );
         return new ClientCreationData({
           tag: "lightclient",
-          is_preset: true,
           chain_spec,
         });
       }

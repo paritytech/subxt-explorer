@@ -16,7 +16,7 @@ export const CodeTabLayout: Component<Props> = (props: Props) => {
         icon: "fa-cube",
         onClick: () => setTab("static"),
       },
-      content: <Code code={props.staticCode}></Code>,
+      component: () => <Code code={props.staticCode}></Code>,
     },
     {
       tab: {
@@ -25,7 +25,7 @@ export const CodeTabLayout: Component<Props> = (props: Props) => {
         icon: "fa-bomb",
         onClick: () => setTab("dynamic"),
       },
-      content: <Code code={props.dynamicCode}></Code>,
+      component: () => <Code code={props.dynamicCode}></Code>,
     },
   ];
 

@@ -187,21 +187,18 @@ impl Client {
     }
 
     /// Creates an LightClient from a given chain spec string.
+    ///
+    /// `chain_spec` is expected to be a JSON string that contains the bootnodes and other information.
     #[wasm_bindgen(js_name = "newLightClient")]
-    pub async fn new_light_client(url: &str) -> Result<Client, String> {
+    pub async fn new_light_client(chain_spec: String) -> Result<Client, String> {
         console_error_panic_hook::set_once();
         console_log!("create light client from a chain spec");
         let client = LightClientBuilder::<ConfigUsed>::new()
-        .bootnodes(
-            ["/dns/polkadot-connect-0.parity.io/tcp/443/wss/p2p/12D3KooWEPmjoRpDSUuiTjvyNDd8fejZ9eNWH5bE965nyBMDrB4o"]
-        )
-        .build_from_url("wss://rpc.polkadot.io:443")
-        .await.map_err(|e| e.to_string())?;
+            .build(&chain_spec)
+            .await
+            .map_err(|e| e.to_string())?;
         console_log!("light client creation successful");
-        Ok(Client::new(ClientKind::LightClient {
-            chain_spec: "todo!()".into(),
-            client,
-        }))
+        Ok(Client::new(ClientKind::LightClient { chain_spec, client }))
     }
 
     #[wasm_bindgen(js_name = "metadataContent")]

@@ -24,13 +24,13 @@ export class ClientCreationData {
         return undefined;
       case "lightclient":
         // can only make a lightclient into a config if it is a preset (fetchable from github).
-        if (this.#inner.is_preset) {
+        if (this.#inner.chain_spec instanceof File) {
+          return undefined;
+        } else {
           return new ClientCreationConfig({
             tag: "lightclient",
             chain_name: this.#inner.chain_spec.name,
           });
-        } else {
-          return undefined;
         }
     }
   }
@@ -55,6 +55,5 @@ export type OfflineClientCreationData = {
 
 export type LightClientCreationData = {
   tag: "lightclient";
-  is_preset: boolean;
-  chain_spec: ChainSpec;
+  chain_spec: ChainSpec | File;
 };

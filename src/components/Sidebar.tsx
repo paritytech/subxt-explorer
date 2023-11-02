@@ -1,5 +1,5 @@
 import { Component, For, JSX } from "solid-js";
-import { ClientKind, client } from "../state/client";
+import { client } from "../state/client";
 import {
   HOME_ITEM,
   SidebarItem,
@@ -7,6 +7,7 @@ import {
   sidebarItems,
 } from "../state/sidebar";
 import { ConfigAwareLink } from "./ConfigAwareLink";
+import { ClientCreationData } from "../state/models/client_creation_data";
 
 export const Sidebar: Component = () => {
   return (
@@ -26,7 +27,7 @@ export const Sidebar: Component = () => {
           </li>
           {client() && (
             <li class="part-title leading-6 pt-6 pb-3">
-              {metadataSourceSpan(client()!.creationData!)}
+              {clientConnectionSpan(client()!.creationData)}
             </li>
           )}
 
@@ -82,20 +83,24 @@ function SideBarItem(item: SidebarItem): JSX.Element {
   );
 }
 
-function metadataSourceSpan(ck: ClientKind): JSX.Element {
-  switch (ck.tag) {
+function clientConnectionSpan(
+  clientCreationData: ClientCreationData
+): JSX.Element {
+  switch (clientCreationData.deref.tag) {
     case "url":
       return (
         <span>
           {"Connected to: "}
-          <span class="text-pink-500">{ck.url}</span>
+          <span class="text-pink-500">{clientCreationData.deref.url}</span>
         </span>
       );
     case "file":
       return (
         <span>
           {"Metadata from: "}
-          <span class="text-pink-500">{ck.file.name}</span>
+          <span class="text-pink-500">
+            {clientCreationData.deref.file.name}
+          </span>
         </span>
       );
     case "lightclient":
