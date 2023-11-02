@@ -9,7 +9,11 @@ export const ChainSpecPresetSelection = (props: {
   return (
     <Switch>
       <Match when={chainSpecs().tag === "loading"}>
-        <div class="text-center w-full mb-4">Loading...</div>
+        <div class="text-center w-full mb-4">
+          {" "}
+          <i class="fa fa-spinner animate-spin"></i> Loading chain spec
+          presets...
+        </div>
       </Match>
       <Match when={chainSpecs().tag === "success"}>
         <div class="flex align-middle w-full justify-around">

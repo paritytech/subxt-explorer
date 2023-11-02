@@ -266,7 +266,7 @@ export const HomePage: Component = () => {
   const FileTabContent = () => (
     <FileUploadArea
       fileName={state.file()?.name}
-      description={`Drag Metadata (.scale) file here, or click "Upload"`}
+      description={`Drag metadata file (.scale) here, or click "Upload"`}
       onDropOrUpload={(files) => {
         if (files === undefined) {
           state.setError("Something went wrong with the file upload.");
@@ -290,7 +290,7 @@ export const HomePage: Component = () => {
             ? state.lightClientChainSpec()?.name
             : undefined
         }
-        description={`Drag ChainSpec (.json) file here, or click "Upload"`}
+        description={`Drag chain spec file (.json) here, or click "Upload"`}
         onDropOrUpload={async (files) => {
           if (files === undefined) {
             state.setError("Something went wrong with the file upload.");
