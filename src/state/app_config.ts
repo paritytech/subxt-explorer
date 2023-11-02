@@ -23,7 +23,8 @@ export class AppConfig {
 
   updateWith(clientCreationConfig: ClientCreationConfig | undefined) {
     this.clientCreationConfig = clientCreationConfig;
-    this.#setAppConfigParamString(this.toParamsString());
+    const paramsString = this.toParamsString();
+    this.#setAppConfigParamString(paramsString);
   }
 
   constructor(clientCreationConfig: ClientCreationConfig | undefined) {
@@ -45,15 +46,6 @@ export class AppConfig {
 
   toParamsString(): string {
     return paramsToString(this.toParams());
-  }
-
-  updateWithParams(params: Record<string, string>) {
-    this.clientCreationConfig = ClientCreationConfig.tryFromParams(params);
-    console.log(
-      "AppConfig: updated with params: ",
-      params,
-      this.clientCreationConfig
-    );
   }
 
   equals(other: AppConfig): boolean {

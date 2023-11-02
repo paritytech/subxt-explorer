@@ -49,11 +49,11 @@ export class ChainSpecService {
         specs.push(spec as ChainSpec);
       }
 
-      console.log("ChainSpecService: fetching success ");
+      console.log("ChainSpecService: fetching successful!", specs);
       this.#handleOnLoadCallbacks(specs);
       this.#setChainSpecs({ tag: "success", specs });
     } catch (ex: any) {
-      console.error("ChainSpecService: error: ", ex);
+      console.error("ChainSpecService: fetching error!", ex);
       this.#setChainSpecs({
         tag: "error",
         error: ex.toString(),

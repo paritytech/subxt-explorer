@@ -202,9 +202,8 @@ export class HomePageState {
   // used on:
   // - page load
   // - when the url params change and the AppConfig changes as a result.
-  async adjustUiToAppConfigInstance() {
+  async setupUiToMatchAppConfig() {
     const creationConfig = AppConfig.instance.clientCreationConfig;
-    console.log("adjustUiToAppConfigInstance with", creationConfig);
     if (
       creationConfig != undefined &&
       !ClientCreationConfig.equals(
@@ -238,7 +237,7 @@ export const HomePage: Component = () => {
   const setSearchParams = useSearchParams()[1];
   const navigate = useNavigate();
   state.infuseNavigationFns(setSearchParams, navigate);
-  state.adjustUiToAppConfigInstance();
+  state.setupUiToMatchAppConfig();
 
   // a signal that is true if the generate button is clickable.
   const generateButtonClickable = (): boolean => {

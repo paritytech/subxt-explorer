@@ -37,7 +37,10 @@ const AppInRouter: Component = () => {
   // On page load, create a new AppConfig from the URL params.
   // Note: This code is only called ONCE at the start of the application lifecycle.
   const location = useLocation();
-  AppConfig.instance.updateWithParams(location.query);
+  const clientCreationConfig = ClientCreationConfig.tryFromParams(
+    location.query
+  );
+  AppConfig.instance.updateWith(clientCreationConfig);
   ChainSpecService.instance.fetchAndCacheChainSpecs();
 
   // listen to all client side solid router route change events:
@@ -68,7 +71,7 @@ const AppInRouter: Component = () => {
       AppConfig.instance.updateWith(configFromParams);
       if (pathname === "/" || pathname === "") {
         // if already on homepage adjust its UI to the new config:
-        HomePageState.instance.adjustUiToAppConfigInstance();
+        HomePageState.instance.setupUiToMatchAppConfig();
       } else {
         // otherwise navigate to homepage and set redirect hook:
         const redirectUrl = `/?${AppConfig.instance.toParamsString()}`;
