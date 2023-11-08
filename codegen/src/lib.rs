@@ -1,5 +1,4 @@
 #![feature(try_trait_v2)]
-// #![feature(async_fn_in_trait)]
 
 //! This crate exposes a struct [ExampleGenerator] that is capable of generating code examples for calls, constants and storage entries from static metadata.
 //! The generated code can look like this:

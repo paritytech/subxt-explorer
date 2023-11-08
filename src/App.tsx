@@ -20,7 +20,6 @@ import { EventsPage } from "./pages/Events";
 import { AppConfig } from "./state/app_config";
 import { RedirectToHome } from "./components/RedirectToHome";
 import { findSideBarItemByPath, setActiveItem } from "./state/sidebar";
-import { ChainSpecService } from "./services/chain_spec_service";
 import { ClientCreationConfig } from "./state/models/client_creation_config";
 
 const App: Component = () => {
@@ -41,7 +40,6 @@ const AppInRouter: Component = () => {
     location.query
   );
   AppConfig.instance.updateWith(clientCreationConfig);
-  ChainSpecService.instance.fetchAndCacheChainSpecs();
 
   // listen to all client side solid router route change events:
   // If the url params indicate a different app config, reload the web app with that config.

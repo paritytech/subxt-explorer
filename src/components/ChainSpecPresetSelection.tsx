@@ -1,11 +1,28 @@
-import { Accessor, JSX, Match, Switch } from "solid-js";
+import { Accessor, JSX, Match, Switch, createSignal, onMount } from "solid-js";
 import { ChainSpec, ChainSpecService } from "../services/chain_spec_service";
+
+type ChainSpecsFetchingState =
+  | { tag: "success"; specs: ChainSpec[] }
+  | { tag: "loading" }
+  | { tag: "error"; error: string };
 
 export const ChainSpecPresetSelection = (props: {
   onChainSpecPresetSelected: (chainSpec: ChainSpec) => void;
   selectedSpecName: Accessor<string | undefined>;
 }): JSX.Element => {
-  const chainSpecs = ChainSpecService.instance.chainSpecs;
+  const [chainSpecs, setChainSpecs] = createSignal<ChainSpecsFetchingState>({
+    tag: "loading",
+  });
+
+  onMount(async () => {
+    try {
+      const specs = await ChainSpecService.instance.fetchChainSpecs();
+      setChainSpecs({ tag: "success", specs });
+    } catch (ex: any) {
+      setChainSpecs({ tag: "error", error: ex.toString() });
+    }
+  });
+
   return (
     <Switch>
       <Match when={chainSpecs().tag === "loading"}>

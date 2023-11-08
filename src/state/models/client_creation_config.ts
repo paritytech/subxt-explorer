@@ -53,9 +53,12 @@ export class ClientCreationConfig {
         return new ClientCreationData({ tag: "url", url: this.#inner.url });
       case "lightclient": {
         const chain_spec =
-          await ChainSpecService.instance.loadChainSpecForChainName(
+          await ChainSpecService.instance.fetchChainSpecForChainName(
             this.#inner.chain_name
           );
+        if (chain_spec == undefined) {
+          throw `Could not load chain spec for chain ${this.#inner.chain_name}`;
+        }
         return new ClientCreationData({
           tag: "lightclient",
           chain_spec,
