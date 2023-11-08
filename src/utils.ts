@@ -22,3 +22,7 @@ export async function readFileAsBytes(file: File): Promise<Uint8Array> {
 }
 
 export const wait = (ms: number) => new Promise((res) => setTimeout(res, ms));
+
+export function paramsToString(params: Record<string, string>): string {
+  return new URLSearchParams(Object.entries(params)).toString();
+}

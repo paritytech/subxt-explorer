@@ -2,47 +2,55 @@ import { createSignal } from "solid-js";
 import { Client as WASMClient } from "subxt_example_codegen";
 import { SidebarItem, newItem, setSidebarItems } from "./sidebar";
 import { readFileAsBytes } from "../utils";
-
-export type ClientKind =
-  | {
-      tag: "url";
-      url: string;
-    }
-  | {
-      tag: "file";
-      file: File;
-    };
+import { ClientCreationData } from "./models/client_creation_data";
 
 export const [client, setClient] = createSignal<Client | undefined>(undefined);
 
 export class Client {
   client: WASMClient;
-  clientKindInCreation: ClientKind;
+  creationData: ClientCreationData;
   content: MetadataContent;
 
-  constructor(client: WASMClient, clientKindInCreation: ClientKind) {
+  constructor(client: WASMClient, creationData: ClientCreationData) {
     this.client = client;
-    this.clientKindInCreation = clientKindInCreation;
+    this.creationData = creationData;
     this.content = client.metadataContent() as MetadataContent;
   }
 
-  static async createSelfWithClient(clientKind: ClientKind): Promise<Client> {
+  static async create(creationData: ClientCreationData): Promise<Client> {
     let client: WASMClient;
-    switch (clientKind.tag) {
+    const clientData = creationData.deref;
+    switch (clientData.tag) {
       case "url":
-        client = await WASMClient.fromUrl(clientKind.url);
+        client = await WASMClient.newOnline(clientData.url);
         break;
       case "file": {
-        const bytes = await readFileAsBytes(clientKind.file);
-        client = WASMClient.fromBytes(clientKind.file.name, bytes);
+        const bytes = await readFileAsBytes(clientData.file);
+        client = WASMClient.newOffline(clientData.file.name, bytes);
+        break;
+      }
+      case "lightclient": {
+        let jsonText: string;
+        if (clientData.chain_spec instanceof File) {
+          // read the file as text:
+          jsonText = await clientData.chain_spec.text();
+        } else {
+          // convert the JS Object into a json string:
+          jsonText = JSON.stringify(clientData.chain_spec);
+        }
+        client = await WASMClient.newLightClient(jsonText);
         break;
       }
     }
-    return new Client(client, clientKind);
+
+    return new Client(client, creationData);
   }
 
   hasOnlineCapabilities(): boolean {
-    return this.clientKindInCreation.tag === "url";
+    return (
+      this.creationData.deref.tag === "url" ||
+      this.creationData.deref.tag === "lightclient"
+    );
   }
 
   constructSidebarItems(): SidebarItem[] {
@@ -258,10 +266,12 @@ export class Client {
   }
 }
 
-export async function initAppState(clientKind: ClientKind): Promise<void> {
+export async function createClient(
+  clientConfig: ClientCreationData
+): Promise<void> {
   setClient(undefined);
   setSidebarItems([]);
-  const state = await Client.createSelfWithClient(clientKind);
+  const state = await Client.create(clientConfig);
   const items = state.constructSidebarItems();
   setSidebarItems(items);
   setClient(state);

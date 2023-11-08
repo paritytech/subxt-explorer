@@ -1,16 +1,23 @@
 import { Accessor, Component, JSX, Setter, createSignal } from "solid-js";
-import { DEFAULT_WS_URL } from "../constants";
-import { ClientKind, client, initAppState } from "../state/client";
+import { DEFAULT_HOME_PAGE_TAB, DEFAULT_WS_URL } from "../constants";
+import { createClient } from "../state/client";
 import { FileUploadArea } from "../components/FileUploadArea";
 import { TabLayout, TabWithContent } from "../components/TabLayout";
 import { useNavigate, useSearchParams } from "@solidjs/router";
-import { AppConfig, clientKindsEqual } from "../state/app_config";
+import { AppConfig } from "../state/app_config";
 import {
   findSideBarItemByPath,
   itemKindToPath,
   setActiveItem,
   setSidebarVisibility,
 } from "../state/sidebar";
+import { ChainSpec } from "../services/chain_spec_service";
+import {
+  ClientCreationData,
+  ClientCreationDataTag,
+} from "../state/models/client_creation_data";
+import { ClientCreationConfig } from "../state/models/client_creation_config";
+import { ChainSpecPresetSelection } from "../components/ChainSpecPresetSelection";
 
 /**
  * A singleton class for the HomePage State.
@@ -23,10 +30,15 @@ export class HomePageState {
   setFile: Setter<File | undefined>;
   error: Accessor<string | undefined>;
   setError: Setter<string | undefined>;
-  tab: Accessor<"file" | "url">;
-  setTab: Setter<"file" | "url">;
+  tab: Accessor<ClientCreationDataTag>;
+  setTab: Setter<ClientCreationDataTag>;
   url: Accessor<string>;
   setUrl: Setter<string>;
+  // File, if a file is uploaded. string if a chain name is selected from presets. The string should match the presets chain specs chain_name in that case.
+  lightClientChainSpec: Accessor<File | ChainSpec | undefined>;
+  setLightClientChainSpec: Setter<File | ChainSpec | undefined>;
+  selectedLightClientPresetChainName: Accessor<string | undefined>;
+  setSelectedLightClientPresetChainName: Setter<string | undefined>;
   loadingState: Accessor<"none" | "loading">;
   setLoadingState: Setter<"none" | "loading">;
 
@@ -43,23 +55,40 @@ export class HomePageState {
   }
 
   constructor() {
+    // set up all the signals that make up the state of the Home page
     const [file, setFile] = createSignal<File | undefined>(undefined);
     this.file = file;
     this.setFile = setFile;
     const [error, setError] = createSignal<string | undefined>(undefined);
     this.error = error;
     this.setError = setError;
-    const [tab, setTab] = createSignal<"file" | "url">("url");
+    const [tab, setTab] = createSignal<ClientCreationDataTag>(
+      DEFAULT_HOME_PAGE_TAB
+    );
     this.tab = tab;
     this.setTab = setTab;
     const [url, setUrl] = createSignal<string>(DEFAULT_WS_URL);
     this.url = url;
     this.setUrl = setUrl;
+    const [lightClientChainSpec, setLightClientChainSpec] = createSignal<
+      File | ChainSpec | undefined
+    >(undefined);
+    this.lightClientChainSpec = lightClientChainSpec;
+    this.setLightClientChainSpec = setLightClientChainSpec;
     const [loadingState, setLoadingState] = createSignal<"none" | "loading">(
       "none"
     );
     this.loadingState = loadingState;
     this.setLoadingState = setLoadingState;
+
+    const [
+      selectedLightClientPresetChainName,
+      setSelectedLightClientPresetChainName,
+    ] = createSignal<string | undefined>(undefined);
+    this.selectedLightClientPresetChainName =
+      selectedLightClientPresetChainName;
+    this.setSelectedLightClientPresetChainName =
+      setSelectedLightClientPresetChainName;
   }
 
   // singleton pattern
@@ -71,41 +100,52 @@ export class HomePageState {
     return HomePageState.#instance;
   }
 
-  #generating = false;
-  get generating() {
-    return this.#generating;
+  get is_loading() {
+    return this.loadingState() === "loading";
   }
 
-  // takes the state of the ui elements and translates that into a clientKind that can be used to create a client.
-  clientKindFromTab = (): ClientKind | undefined => {
+  // takes the state of the ui elements and translates that into `ClientCreationData` that can be used to create a client.
+  clientCreationDataFromTab = (): ClientCreationData | undefined => {
     if (this.error() !== undefined) {
       return undefined;
     }
-    if (this.tab() === "file" && this.file() !== undefined) {
-      return { tag: "file", file: this.file()! };
-    } else if (this.tab() === "url" && this.url()) {
-      return { tag: "url", url: this.url() };
-    }
-    return undefined;
-  };
 
-  // a signal that is true if the generate button is clickable.
-  generateButtonClickable = (): boolean => {
-    return this.loadingState() === "none" && !!this.clientKindFromTab();
+    switch (this.tab()) {
+      case "url": {
+        const url = this.url();
+        if (url === undefined) {
+          return undefined;
+        }
+        return new ClientCreationData({ tag: "url", url });
+      }
+      case "file": {
+        const file = this.file();
+        return file && new ClientCreationData({ tag: "file", file });
+      }
+      case "lightclient": {
+        const spec = this.lightClientChainSpec();
+        if (spec === undefined) {
+          return undefined;
+        }
+        return new ClientCreationData({
+          tag: "lightclient",
+          chain_spec: spec,
+        });
+      }
+    }
   };
 
   async generateAndUpdateAppConfig() {
-    const clientKind = this.clientKindFromTab();
-    if (clientKind === undefined || this.#setSearchParams === undefined) {
+    const creationData = this.clientCreationDataFromTab();
+    if (creationData === undefined || this.#setSearchParams === undefined) {
       return;
     }
-    AppConfig.instance.updateWith(clientKind);
+    AppConfig.instance.updateWith(creationData.tryIntoConfig());
     this.#setSearchParams!(AppConfig.instance.toParams());
-    await this.#generate(clientKind);
+    await this.#generate(creationData);
   }
 
-  async #generate(clientKind: ClientKind) {
-    this.#generating = true;
+  async #generate(data: ClientCreationData) {
     this.setError(undefined);
     console.log(
       "Kick off Generate Client for the current AppConfig:",
@@ -113,14 +153,16 @@ export class HomePageState {
     );
     this.setLoadingState("loading");
     try {
-      await initAppState(clientKind);
+      await createClient(data);
+      AppConfig.instance.lastSuccessFullClientCreationConfig =
+        data.tryIntoConfig();
       setSidebarVisibility("visible");
       this.maybeRedirect();
     } catch (ex: any) {
       this.setError(ex.toString());
+      AppConfig.instance.lastSuccessFullClientCreationConfig = undefined;
     }
     this.setLoadingState("none");
-    this.#generating = false;
   }
 
   // if the redirectPath is set, redirect to that path.
@@ -156,26 +198,31 @@ export class HomePageState {
   // used on:
   // - page load
   // - when the url params change and the AppConfig changes as a result.
-  adjustUiToAppConfigInstance() {
-    const configClientKind = AppConfig.instance.clientKind;
+  async setupUiToMatchAppConfig() {
+    const creationConfig = AppConfig.instance.clientCreationConfig;
     if (
-      configClientKind != undefined &&
-      !clientKindsEqual(configClientKind, client()?.clientKindInCreation)
+      creationConfig != undefined &&
+      !ClientCreationConfig.equals(
+        creationConfig,
+        AppConfig.instance.lastSuccessFullClientCreationConfig
+      )
     ) {
       this.#setSearchParams!(AppConfig.instance.toParams());
-      switch (configClientKind.tag) {
+      const creationData = await creationConfig.intoClientCreationData();
+      console.log(creationData);
+      switch (creationData.deref.tag) {
         case "url":
-          this.setUrl(configClientKind.url);
+          this.setUrl(creationData.deref.url);
           this.setTab("url");
-          this.#generate(configClientKind);
+          this.#generate(creationData);
           break;
-        case "file":
-          this.setFile(configClientKind.file);
-          this.setTab("file");
-          this.#generate(configClientKind);
-          break;
-        default:
-          break;
+        case "lightclient":
+          this.setSelectedLightClientPresetChainName(
+            creationData.deref.chain_spec.name
+          );
+          this.setLightClientChainSpec(creationData.deref.chain_spec);
+          this.setTab("lightclient");
+          this.#generate(creationData);
       }
     }
   }
@@ -186,13 +233,17 @@ export const HomePage: Component = () => {
   const setSearchParams = useSearchParams()[1];
   const navigate = useNavigate();
   state.infuseNavigationFns(setSearchParams, navigate);
+  state.setupUiToMatchAppConfig();
 
-  const [isDraggingOnUpload, setIsDraggingOnUpload] =
-    createSignal<boolean>(false);
+  // a signal that is true if the generate button is clickable.
+  const generateButtonClickable = (): boolean => {
+    return (
+      HomePageState.instance.loadingState() === "none" &&
+      !!HomePageState.instance.clientCreationDataFromTab()
+    );
+  };
 
-  state.adjustUiToAppConfigInstance();
-
-  const urlTabContent = (
+  const UrlTabContent = () => (
     <input
       class="w-full bg-zinc-dark p-2 rounded-md border-2 outline-none focus:border-teal-400 border-solid  border-gray-500 "
       type="text"
@@ -208,12 +259,10 @@ export const HomePage: Component = () => {
     />
   );
 
-  const fileTabContent = (
+  const FileTabContent = () => (
     <FileUploadArea
-      isDragging={isDraggingOnUpload()}
-      setDragging={setIsDraggingOnUpload}
       fileName={state.file()?.name}
-      description={`Drag Metadata File here, or click "Upload"`}
+      description={`Drag metadata file (.scale) here, or click "Upload"`}
       onDropOrUpload={(files) => {
         if (files === undefined) {
           state.setError("Something went wrong with the file upload.");
@@ -226,7 +275,41 @@ export const HomePage: Component = () => {
           state.generateAndUpdateAppConfig();
         }
       }}
-    ></FileUploadArea>
+    />
+  );
+
+  const LightClientTabContent = () => (
+    <>
+      <FileUploadArea
+        fileName={
+          state.lightClientChainSpec() instanceof File
+            ? state.lightClientChainSpec()?.name
+            : undefined
+        }
+        description={`Drag chain spec file (.json) here, or click "Upload"`}
+        onDropOrUpload={async (files) => {
+          if (files === undefined) {
+            state.setError("Something went wrong with the file upload.");
+          } else if (files.length !== 1) {
+            state.setError("Please only select a single file.");
+          } else {
+            state.setLightClientChainSpec(files[0]);
+            state.setError(undefined);
+            // directly generate try to connect to light client when some file gets dragged in.
+            state.generateAndUpdateAppConfig();
+          }
+        }}
+      />
+      <div class="my-6">Or select a chain spec from the presets:</div>
+      <ChainSpecPresetSelection
+        selectedSpecName={state.selectedLightClientPresetChainName}
+        onChainSpecPresetSelected={(chainSpec) => {
+          state.setSelectedLightClientPresetChainName(chainSpec.name);
+          state.setLightClientChainSpec(chainSpec);
+          state.setError(undefined);
+        }}
+      ></ChainSpecPresetSelection>
+    </>
   );
 
   const tabsWithContent: TabWithContent[] = [
@@ -240,7 +323,7 @@ export const HomePage: Component = () => {
         },
         icon: "fa-link",
       },
-      content: urlTabContent,
+      component: UrlTabContent,
     },
     {
       tab: {
@@ -252,7 +335,19 @@ export const HomePage: Component = () => {
         },
         icon: "fa-file",
       },
-      content: fileTabContent,
+      component: FileTabContent,
+    },
+    {
+      tab: {
+        title: "Light Client",
+        active: () => state.tab() == "lightclient",
+        onClick: () => {
+          state.setTab("lightclient");
+          state.setError(undefined);
+        },
+        icon: "fa-bolt",
+      },
+      component: LightClientTabContent,
     },
   ];
 
@@ -273,10 +368,9 @@ export const HomePage: Component = () => {
       )}
       <div>
         <button
-          class={`btn ${state.generateButtonClickable() ? "" : "disabled"}`}
-          disabled={!state.generateButtonClickable()}
+          class={`btn ${generateButtonClickable() ? "" : "disabled"}`}
+          disabled={!generateButtonClickable()}
           onClick={() => {
-            // assumption: Button is only clickable if homeScreenClientKind() is a valid value.
             state.generateAndUpdateAppConfig();
           }}
         >

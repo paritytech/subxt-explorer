@@ -1,31 +1,31 @@
-import { Component } from "solid-js";
+import { Component, createSignal } from "solid-js";
 interface Props {
   description: string;
-  isDragging: boolean;
   fileName: string | undefined;
-  setDragging: (dragging: boolean) => void;
   onDropOrUpload: (fileList: FileList | undefined) => void;
 }
 export const FileUploadArea: Component<Props> = (props: Props) => {
+  const [isDragging, setDragging] = createSignal<boolean>(false);
+
   let fileInputRef: HTMLInputElement | undefined;
 
   return (
     <div
       class={`w-full h-60 border-dashed border-2 rounded-md border-gray-500 flex justify-center bg-zinc-dark ${
-        props.isDragging ? "neon-inner-shadow" : ""
+        isDragging() ? "neon-inner-shadow" : ""
       }`}
       onDragEnter={(e) => {
-        props.setDragging(true);
+        setDragging(true);
         e.preventDefault();
         e.stopPropagation();
       }}
       onDragLeave={(e) => {
-        props.setDragging(false);
+        setDragging(false);
         e.preventDefault();
         e.stopPropagation();
       }}
       onDragExit={(e) => {
-        props.setDragging(false);
+        setDragging(false);
         e.preventDefault();
         e.stopPropagation();
       }}
@@ -34,7 +34,7 @@ export const FileUploadArea: Component<Props> = (props: Props) => {
         e.stopPropagation();
       }}
       onDrop={(e) => {
-        props.setDragging(false);
+        setDragging(false);
         e.preventDefault();
         e.stopPropagation();
         const files = e.dataTransfer?.files;
