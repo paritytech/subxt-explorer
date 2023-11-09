@@ -103,12 +103,12 @@ export type TClientCreationConfig =
   | OnlineClientCreationConfig
   | LightClientCreationConfig;
 
-type OnlineClientCreationConfig = {
+export type OnlineClientCreationConfig = {
   tag: "url";
   url: string;
 };
 
-type LightClientCreationConfig = {
+export type LightClientCreationConfig = {
   tag: "lightclient";
   chain_name: string;
 };

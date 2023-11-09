@@ -13,6 +13,8 @@ export class AppConfig {
   #setAppConfigParamString: Setter<string>;
   appConfigParamString: Accessor<string>;
 
+  clientCreationConfigSignal: Accessor<ClientCreationConfig | undefined>;
+  #setClientCreationConfigSignal: Setter<ClientCreationConfig | undefined>;
   static #instance: AppConfig;
   static get instance(): AppConfig {
     if (AppConfig.#instance === undefined) {
@@ -25,6 +27,7 @@ export class AppConfig {
     this.clientCreationConfig = clientCreationConfig;
     const paramsString = this.toParamsString();
     this.#setAppConfigParamString(paramsString);
+    this.#setClientCreationConfigSignal(clientCreationConfig);
   }
 
   constructor(clientCreationConfig: ClientCreationConfig | undefined) {
@@ -33,6 +36,11 @@ export class AppConfig {
       createSignal<string>(this.toParamsString());
     this.appConfigParamString = appConfigParamString;
     this.#setAppConfigParamString = setAppConfigParamString;
+
+    const [clientCreationConfigSignal, setClientCreationConfigSignal] =
+      createSignal<ClientCreationConfig | undefined>(this.clientCreationConfig);
+    this.clientCreationConfigSignal = clientCreationConfigSignal;
+    this.#setClientCreationConfigSignal = setClientCreationConfigSignal;
   }
 
   /// Returns a signal that contains an href to a local path with the current app config as a query string.

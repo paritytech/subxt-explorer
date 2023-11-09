@@ -69,7 +69,7 @@ const AppInRouter: Component = () => {
       AppConfig.instance.updateWith(configFromParams);
       if (pathname === "/" || pathname === "") {
         // if already on homepage adjust its UI to the new config:
-        HomePageState.instance.setupUiToMatchAppConfig();
+        HomePageState.instance.reconfigureUiForNewAppConfig();
       } else {
         // otherwise navigate to homepage and set redirect hook:
         const redirectUrl = `/?${AppConfig.instance.toParamsString()}`;

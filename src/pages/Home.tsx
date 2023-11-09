@@ -1,4 +1,4 @@
-import { Accessor, Component, JSX, Setter, createSignal } from "solid-js";
+import { Accessor, Component, JSX, Setter, Show, createSignal } from "solid-js";
 import { DEFAULT_HOME_PAGE_TAB, DEFAULT_WS_URL } from "../constants";
 import { createClient } from "../state/client";
 import { FileUploadArea } from "../components/FileUploadArea";
@@ -16,8 +16,19 @@ import {
   ClientCreationData,
   ClientCreationDataTag,
 } from "../state/models/client_creation_data";
-import { ClientCreationConfig } from "../state/models/client_creation_config";
+import {
+  ClientCreationConfig,
+  LightClientCreationConfig,
+  OnlineClientCreationConfig,
+} from "../state/models/client_creation_config";
 import { ChainSpecPresetSelection } from "../components/ChainSpecPresetSelection";
+
+/**
+ * The loading state of the home page. We distinguish between loading on the first page load and loading after the generate button was clicked.
+ * "ui-interaction-load": Just show a spinner on the generate button.
+ * "page-load": Show a big spinner instead of the general ui.
+ */
+type LoadingState = "ui-interaction-load" | "page-load" | undefined;
 
 /**
  * A singleton class for the HomePage State.
@@ -39,8 +50,8 @@ export class HomePageState {
   setLightClientChainSpec: Setter<File | ChainSpec | undefined>;
   selectedLightClientPresetChainName: Accessor<string | undefined>;
   setSelectedLightClientPresetChainName: Setter<string | undefined>;
-  loadingState: Accessor<"none" | "loading">;
-  setLoadingState: Setter<"none" | "loading">;
+  loading: Accessor<LoadingState>;
+  setLoading: Setter<LoadingState>;
 
   // infused by a scope that has access to the router.
   #setSearchParams?: (params: Record<string, string>) => void;
@@ -75,11 +86,9 @@ export class HomePageState {
     >(undefined);
     this.lightClientChainSpec = lightClientChainSpec;
     this.setLightClientChainSpec = setLightClientChainSpec;
-    const [loadingState, setLoadingState] = createSignal<"none" | "loading">(
-      "none"
-    );
-    this.loadingState = loadingState;
-    this.setLoadingState = setLoadingState;
+    const [loading, setLoading] = createSignal<LoadingState>(undefined);
+    this.loading = loading;
+    this.setLoading = setLoading;
 
     const [
       selectedLightClientPresetChainName,
@@ -101,7 +110,7 @@ export class HomePageState {
   }
 
   get is_loading() {
-    return this.loadingState() === "loading";
+    return this.loading() !== undefined;
   }
 
   // takes the state of the ui elements and translates that into `ClientCreationData` that can be used to create a client.
@@ -135,6 +144,9 @@ export class HomePageState {
     }
   };
 
+  /**
+   * Called from UI events, like the generate button click.
+   */
   async generateAndUpdateAppConfig() {
     const creationData = this.clientCreationDataFromTab();
     if (creationData === undefined || this.#setSearchParams === undefined) {
@@ -142,16 +154,16 @@ export class HomePageState {
     }
     AppConfig.instance.updateWith(creationData.tryIntoConfig());
     this.#setSearchParams!(AppConfig.instance.toParams());
-    await this.#generate(creationData);
+    await this.#generate(creationData, "ui-interaction-load");
   }
 
-  async #generate(data: ClientCreationData) {
+  async #generate(data: ClientCreationData, withLoadingState: LoadingState) {
     this.setError(undefined);
     console.log(
       "Kick off Generate Client for the current AppConfig:",
       AppConfig.instance
     );
-    this.setLoadingState("loading");
+    this.setLoading(withLoadingState);
     try {
       await createClient(data);
       AppConfig.instance.lastSuccessFullClientCreationConfig =
@@ -162,7 +174,7 @@ export class HomePageState {
       this.setError(ex.toString());
       AppConfig.instance.lastSuccessFullClientCreationConfig = undefined;
     }
-    this.setLoadingState("none");
+    this.setLoading(undefined);
   }
 
   // if the redirectPath is set, redirect to that path.
@@ -198,7 +210,7 @@ export class HomePageState {
   // used on:
   // - page load
   // - when the url params change and the AppConfig changes as a result.
-  async setupUiToMatchAppConfig() {
+  async reconfigureUiForNewAppConfig() {
     const creationConfig = AppConfig.instance.clientCreationConfig;
     if (
       creationConfig != undefined &&
@@ -214,7 +226,7 @@ export class HomePageState {
         case "url":
           this.setUrl(creationData.deref.url);
           this.setTab("url");
-          this.#generate(creationData);
+          this.#generate(creationData, "page-load");
           break;
         case "lightclient":
           this.setSelectedLightClientPresetChainName(
@@ -222,7 +234,7 @@ export class HomePageState {
           );
           this.setLightClientChainSpec(creationData.deref.chain_spec);
           this.setTab("lightclient");
-          this.#generate(creationData);
+          this.#generate(creationData, "page-load");
       }
     }
   }
@@ -233,12 +245,12 @@ export const HomePage: Component = () => {
   const setSearchParams = useSearchParams()[1];
   const navigate = useNavigate();
   state.infuseNavigationFns(setSearchParams, navigate);
-  state.setupUiToMatchAppConfig();
+  state.reconfigureUiForNewAppConfig();
 
   // a signal that is true if the generate button is clickable.
   const generateButtonClickable = (): boolean => {
     return (
-      HomePageState.instance.loadingState() === "none" &&
+      !HomePageState.instance.is_loading &&
       !!HomePageState.instance.clientCreationDataFromTab()
     );
   };
@@ -358,30 +370,37 @@ export const HomePage: Component = () => {
       Upload a scale encoded metadata file or input a substrate node url to get
       started:
       <div></div>
-      <TabLayout
-        tabs={tabsWithContent}
-        tabsContainerClass="mt-5"
-        contentContainerClass="py-5 my-5"
-      ></TabLayout>
-      {state.error() && (
-        <div class="text-center w-full text-red-400 mb-4">{state.error()}</div>
-      )}
-      <div>
-        <button
-          class={`btn ${generateButtonClickable() ? "" : "disabled"}`}
-          disabled={!generateButtonClickable()}
-          onClick={() => {
-            state.generateAndUpdateAppConfig();
-          }}
-        >
-          {state.loadingState() === "loading" ? (
-            <span class="fa fa-spinner mr-3 animate-spin"></span>
-          ) : (
+      <Show
+        when={HomePageState.instance.loading() != "page-load"} //
+      >
+        <TabLayout
+          tabs={tabsWithContent}
+          tabsContainerClass="mt-5"
+          contentContainerClass="py-5 my-5"
+        ></TabLayout>
+        {state.error() && (
+          <div class="text-center w-full text-red-400 mb-4">
+            {state.error()}
+          </div>
+        )}
+      </Show>
+      <Show
+        when={!HomePageState.instance.loading()}
+        fallback={<BigLoadingIndicator></BigLoadingIndicator>}
+      >
+        <div>
+          <button
+            class={`btn ${generateButtonClickable() ? "" : "disabled"}`}
+            disabled={!generateButtonClickable()}
+            onClick={() => {
+              state.generateAndUpdateAppConfig();
+            }}
+          >
             <span class="fa fa-play mr-4"></span>
-          )}
-          Generate Docs
-        </button>
-      </div>
+            Generate Docs
+          </button>
+        </div>
+      </Show>
       <SubxtExplanationSection />
     </>
   );
@@ -390,7 +409,7 @@ export const HomePage: Component = () => {
 function SubxtExplanationSection(): JSX.Element {
   return (
     <div>
-      <h2>Subxt - Interact with Substrate-based Blockchains</h2>
+      <h2 class="mt-20">Subxt - Interact with Substrate-based Blockchains</h2>
       Subxt is a library to <strong class="text-pink-500">sub</strong>mit{" "}
       <strong class="text-pink-500">ex</strong>trinsics to a substrate node via
       RPC. You can find more info about Subxt on Github:
@@ -399,6 +418,57 @@ function SubxtExplanationSection(): JSX.Element {
           <span class="fa fa-github mr-3"></span>Subxt on Github
         </a>
       </div>
+    </div>
+  );
+}
+
+function BigLoadingIndicator(): JSX.Element {
+  let loadingText: JSX.Element = `Loading...`;
+
+  const config = AppConfig.instance.clientCreationConfigSignal;
+  if (config() !== undefined) {
+    switch (config()!.deref.tag) {
+      case "lightclient":
+        loadingText = (
+          <>
+            Connecting to the{" "}
+            <strong class="text-pink-500">
+              {(config()!.deref as LightClientCreationConfig).chain_name}
+            </strong>{" "}
+            chain via <strong class="text-pink-500">Light Client</strong>...
+            <br />
+            <div class="mt-4 text-gray-500">
+              This might take up to 30 seconds...
+            </div>
+          </>
+        );
+        break;
+      case "url":
+        loadingText = (
+          <>
+            Connecting to{" "}
+            <strong class="text-pink-500">
+              {(config()!.deref as OnlineClientCreationConfig).url}
+            </strong>{" "}
+            via RPC...
+          </>
+        );
+        break;
+    }
+  }
+
+  return (
+    <div class="text-center mt-12">
+      <div style={{ "font-size": "100px" }}>
+        <span
+          class="fa fa-spinner mr-3 w-2 h-8 animate-spin text-pink-500"
+          style={{
+            width: "100px",
+            height: "100px",
+          }}
+        ></span>
+      </div>
+      <div class="mt-6">{loadingText}</div>
     </div>
   );
 }
