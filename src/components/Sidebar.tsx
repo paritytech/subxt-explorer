@@ -90,7 +90,7 @@ function clientConnectionSpan(
     case "url":
       return (
         <span>
-          {"Connected to: "}
+          {"Connected via RPC: "}
           <span class="text-pink-500">{clientCreationData.deref.url}</span>
         </span>
       );
@@ -104,7 +104,12 @@ function clientConnectionSpan(
         </span>
       );
     case "lightclient":
-      return <span>{"Connected to LightClient"}</span>;
+      {
+        ("Connected via Light Client: ");
+      }
+      <span class="text-pink-500">
+        {clientCreationData.deref.chain_spec.name}
+      </span>;
   }
 }
 
