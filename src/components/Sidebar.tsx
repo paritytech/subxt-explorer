@@ -104,12 +104,14 @@ function clientConnectionSpan(
         </span>
       );
     case "lightclient":
-      {
-        ("Connected via Light Client: ");
-      }
-      <span class="text-pink-500">
-        {clientCreationData.deref.chain_spec.name}
-      </span>;
+      return (
+        <span>
+          {"Connected via Light Client: "}
+          <span class="text-pink-500">
+            {clientCreationData.deref.chain_spec.name}
+          </span>
+        </span>
+      );
   }
 }
 

@@ -15,36 +15,58 @@ export class ClientCreationConfig {
   static tryFromParams(
     params: Record<string, string>
   ): ClientCreationConfig | undefined {
-    const url = params["url"];
-    if (url) {
-      return new ClientCreationConfig({
-        tag: "url",
-        url: decodeURI(url),
-      });
+    const config = params["config"];
+    if (config == undefined) {
+      return undefined;
     }
-    const lightclient = params["lightclient"];
-    if (lightclient) {
-      return new ClientCreationConfig({
-        tag: "lightclient",
-        chain_name: decodeURI(lightclient),
-      });
-    }
-    return undefined;
+
+    const d = ClientCreationConfig.tryDecodeFromString(config);
+
+    console.log("d", d);
+    return d;
   }
 
-  intoParams(): Record<string, string> {
-    const params: Record<string, string> = {};
-
-    switch (this.#inner?.tag) {
+  static tryDecodeFromString(string: string): ClientCreationConfig | undefined {
+    if (string.length < 4) {
+      return undefined;
+    }
+    const tag = string.substring(0, 3);
+    const data = string.substring(4);
+    console.log("tag", tag);
+    console.log("data", data);
+    switch (tag) {
       case "url":
-        params["url"] = this.#inner.url;
+        return new ClientCreationConfig({
+          tag: "url",
+          url: data,
+        });
+      case "lcl": {
+        return new ClientCreationConfig({
+          tag: "lightclient",
+          chain_name: data,
+        });
+      }
+    }
+  }
+
+  encodeToString(): string {
+    let tag: string;
+    let data: string;
+
+    switch (this.#inner.tag) {
+      case "url": {
+        tag = "url";
+        data = this.#inner.url;
         break;
-      case "lightclient":
-        params["lightclient"] = this.#inner.chain_name;
+      }
+      case "lightclient": {
+        tag = "lcl";
+        data = this.#inner.chain_name;
         break;
+      }
     }
 
-    return params;
+    return `${tag}_${data}`;
   }
 
   async intoClientCreationData(): Promise<ClientCreationData> {

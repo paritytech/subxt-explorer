@@ -149,6 +149,7 @@ export class HomePageState {
    */
   async generateAndUpdateAppConfig() {
     const creationData = this.clientCreationDataFromTab();
+    console.log(creationData);
     if (creationData === undefined || this.#setSearchParams === undefined) {
       return;
     }

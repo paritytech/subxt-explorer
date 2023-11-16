@@ -9,7 +9,9 @@ export function RedirectToHome(): JSX.Element {
   const clientCreationConfig = ClientCreationConfig.tryFromParams(
     location.query
   );
-  const params = clientCreationConfig?.intoParams() ?? {};
+  const params = {
+    config: clientCreationConfig?.encodeToString() ?? "",
+  };
   const redirectUrl = `/?${paramsToString(params)}`;
   HomePageState.instance.setRedirectPath(location.pathname);
   return <Navigate href={redirectUrl} />;

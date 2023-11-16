@@ -49,7 +49,10 @@ export class AppConfig {
   }
 
   toParams(): Record<string, string> {
-    return this.clientCreationConfig?.intoParams() ?? {};
+    const config = this.clientCreationConfig?.encodeToString() ?? "";
+    return {
+      config,
+    };
   }
 
   toParamsString(): string {

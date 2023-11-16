@@ -45,11 +45,13 @@ const AppInRouter: Component = () => {
   // If the url params indicate a different app config, reload the web app with that config.
   createEffect(() => {
     const pathname = location.pathname;
-
     if (pathname == "/" && HomePageState.instance.is_loading) {
       // we do not want anything here to trigger if the home page is currently generating some client connection.
       return;
     }
+
+    console.log(HomePageState.instance.is_loading);
+    console.log("EFF");
 
     // set the active sidebar item according to the location:
     const newItem = findSideBarItemByPath(pathname);
