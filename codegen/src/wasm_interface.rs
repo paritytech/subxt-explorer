@@ -6,20 +6,20 @@ use anyhow::anyhow;
 
 mod client_object;
 
+use scale_typegen_description::type_description;
 use serde::Serialize;
 use subxt::{
-    client::{LightClient, LightClientBuilder, OfflineClientT, OnlineClientT},
-    ext::{codec::Decode, scale_value},
-    OfflineClient, OnlineClient, PolkadotConfig, SubstrateConfig,
+    client::{LightClient, LightClientBuilder},
+    ext::codec::Decode,
+    OfflineClient, OnlineClient, PolkadotConfig,
 };
 use subxt_metadata::{Metadata, PalletMetadata, RuntimeApiMetadata};
-use syn::Meta;
+
 use wasm_bindgen::{convert::IntoWasmAbi, prelude::*};
 
 use crate::{
-    context::ExampleContext, descriptions::type_description_formatted, format_code,
-    format_scale_value_string, format_type, storage_entry_key_ty_ids, ExampleGenerator,
-    PruneTypePath,
+    context::ExampleContext, format_code, format_scale_value_string, format_type,
+    storage_entry_key_ty_ids, ExampleGenerator, PruneTypePath,
 };
 
 use self::client_object::{OfflineClientObject, OnlineClientObject};
@@ -44,7 +44,7 @@ type ConfigUsed = PolkadotConfig;
 
 #[wasm_bindgen]
 pub struct Client {
-    kind: ClientKind,
+    _kind: ClientKind,
     offline_client: Arc<dyn OfflineClientObject<ConfigUsed>>,
     online_client: Option<Arc<dyn OnlineClientObject<ConfigUsed>>>,
     example_gen_dynamic: ExampleGenerator<'static>,
@@ -106,7 +106,7 @@ impl Client {
         let example_gen_static =
             ExampleGenerator::new(metadata, Cow::Owned(kind.example_context(false)));
         Self {
-            kind,
+            _kind: kind,
             offline_client,
             online_client,
             example_gen_dynamic,
@@ -121,8 +121,11 @@ impl Client {
     /// resolves the provided type id and returns the type path as a string.
     fn resolve_type_path(&self, type_id: u32) -> Option<String> {
         let type_gen = self.example_gen_static.type_gen();
-        type_gen.types().resolve(type_id)?;
-        let type_path_string = type_gen.resolve_type_path(type_id).prune().to_string();
+        let type_path_string = type_gen
+            .resolve_type_path(type_id)
+            .expect("typed should be present")
+            .prune()
+            .to_string();
         let type_path_string = format_type(&type_path_string);
         Some(type_path_string)
     }
@@ -131,7 +134,7 @@ impl Client {
         let type_path = self
             .resolve_type_path(type_id)
             .ok_or_else(|| anyhow!("type with id {type_id} not found."))?;
-        let type_structure = type_description_formatted(type_id, &self.metadata())?;
+        let type_structure = type_description(type_id, self.metadata().types(), true)?;
 
         Ok(TypeDescription {
             type_path,
@@ -244,7 +247,7 @@ impl Client {
                 let type_description = self.type_description(field.ty.id)?;
 
                 Ok(NameAndType {
-                    name: Cow::Borrowed(&name),
+                    name: Cow::Borrowed(name),
                     type_description,
                 })
             })
@@ -535,7 +538,7 @@ impl<'a> MetadataContent<'a> {
             .collect();
 
         // sort all pallets by name, not by index
-        pallets.sort_by(|a, b| a.name.cmp(&b.name));
+        pallets.sort_by(|a, b| a.name.cmp(b.name));
 
         let runtime_apis: Vec<RuntimeApiTraitContent> = metadata
             .runtime_api_traits()
