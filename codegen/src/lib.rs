@@ -1,4 +1,5 @@
 #![feature(try_trait_v2)]
+#![feature(try_blocks)]
 
 //! This crate exposes a struct [ExampleGenerator] that is capable of generating code examples for calls, constants and storage entries from static metadata.
 //! The generated code can look like this:
@@ -34,21 +35,19 @@ use heck::ToSnakeCase;
 use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote, ToTokens};
 use scale_info::{form::PortableForm, TypeDef, Variant};
+use scale_typegen_description::scale_typegen::TypeGenerator;
 use subxt::ext::codec::Decode;
-use subxt_codegen::{DerivesRegistry, TypeGenerator, TypeSubstitutes};
 use subxt_metadata::{
     PalletMetadata, RuntimeApiMetadata, RuntimeApiMethodMetadata, StorageEntryMetadata,
     StorageEntryType,
 };
 
 pub mod context;
-pub mod descriptions;
-/// empty mod, copy paste stuff in here to validate code quickly
-mod generated;
-pub mod values;
+mod utils;
 
 #[cfg(feature = "web")]
 pub mod wasm_interface;
+use utils::{rust_value_type_example, scale_value_type_example};
 #[cfg(feature = "web")]
 pub use wasm_interface::*;
 
@@ -242,7 +241,10 @@ impl<'a> ExampleGenerator<'a> {
             quote!(DecodedValueThunk)
         } else {
             let value_type = entry.entry_type().value_ty();
-            let value_type_path = type_gen.resolve_type_path(value_type).prune();
+            let value_type_path = type_gen
+                .resolve_type_path(value_type)
+                .map_err(|e| anyhow!("{e}"))?
+                .prune();
             quote!(#value_type_path)
         };
 
@@ -286,7 +288,10 @@ impl<'a> ExampleGenerator<'a> {
         } else {
             let pallet_name = format_ident!("{}", pallet.name().to_snake_case());
             let constant_name = format_ident!("{}", constant.name().to_snake_case());
-            let constant_type_path = type_gen.resolve_type_path(constant.ty()).prune();
+            let constant_type_path = type_gen
+                .resolve_type_path(constant.ty())
+                .map_err(|e| anyhow!("{e}"))?
+                .prune();
             quote!(
                 let constant_query = runtime::constants().#pallet_name().#constant_name();
                 let api = OnlineClient::<PolkadotConfig>::new().await?;
@@ -304,7 +309,10 @@ impl<'a> ExampleGenerator<'a> {
             .get(name)
             .ok_or_else(|| anyhow!("custom value {name} not found."))?;
 
-        let custom_value_type = type_gen.resolve_type_path(custom_value.type_id()).prune();
+        let custom_value_type = type_gen
+            .resolve_type_path(custom_value.type_id())
+            .map_err(|e| anyhow!("{e}"))?
+            .prune();
         let interface_name = &self.context.inter_face_ident;
 
         let address_expr = if self.context.dynamic {
@@ -343,7 +351,10 @@ impl<'a> ExampleGenerator<'a> {
         let output_type_path = if self.context.dynamic {
             quote!(DecodedValueThunk)
         } else {
-            let value_type_path = type_gen.resolve_type_path(method.output_ty()).prune();
+            let value_type_path = type_gen
+                .resolve_type_path(method.output_ty())
+                .map_err(|e| anyhow!("{e}"))?
+                .prune();
             quote!(#value_type_path)
         };
 
@@ -383,6 +394,7 @@ impl<'a> ExampleGenerator<'a> {
                 .expect("only named fields should be call arguments");
             let type_path = type_gen
                 .resolve_field_type_path(field.ty.id, &[], field.type_name.as_deref())
+                .expect("type not found")
                 .prune();
             (name, field.ty.id, type_path)
         });
@@ -425,7 +437,10 @@ impl<'a> ExampleGenerator<'a> {
             .enumerate()
             .map(|(i, type_id)| {
                 let variable_name = format!("key_{i}");
-                let type_path = type_gen.resolve_type_path(type_id).prune();
+                let type_path = type_gen
+                    .resolve_type_path(type_id)
+                    .expect("field not found")
+                    .prune();
                 (variable_name, type_id, type_path)
             });
         let (variable_names, variable_declarations) =
@@ -464,7 +479,10 @@ impl<'a> ExampleGenerator<'a> {
         method: &RuntimeApiMethodMetadata,
     ) -> anyhow::Result<TokenStream> {
         let variable_iter = method.inputs().map(|param| {
-            let type_path = type_gen.resolve_type_path(param.ty).prune();
+            let type_path = type_gen
+                .resolve_type_path(param.ty)
+                .expect("type not found")
+                .prune();
             (param.name.as_str(), param.ty, type_path)
         });
         let (variable_names, variable_declarations) =
@@ -495,14 +513,7 @@ impl<'a> ExampleGenerator<'a> {
     //////////////////////////////////////////////
 
     fn type_gen(&self) -> TypeGenerator {
-        TypeGenerator::new(
-            self.metadata.types(),
-            "runtime_types",
-            TypeSubstitutes::with_default_substitutes(&Default::default()),
-            DerivesRegistry::with_default_derives(&Default::default()),
-            Default::default(),
-            true,
-        )
+        TypeGenerator::new(self.metadata.types(), &self.context.typegen_settings)
     }
 
     fn wrap_in_wrapper_fn(&self, code: TokenStream) -> TokenStream {
@@ -590,7 +601,11 @@ pub fn storage_entry_key_ty_ids(
     match entry.entry_type() {
         StorageEntryType::Plain(_) => vec![],
         StorageEntryType::Map { key_ty, .. } => {
-            match &type_gen.resolve_type(*key_ty).type_def {
+            match &type_gen
+                .resolve_type(*key_ty)
+                .expect("type not found")
+                .type_def
+            {
                 // An N-map; return each of the keys separately.
                 TypeDef::Tuple(tuple) => tuple.fields.iter().map(|ty| ty.id).collect::<Vec<_>>(),
                 // A map with a single key; return the single key.
@@ -608,13 +623,12 @@ fn variable_names_and_declarations(
 ) -> anyhow::Result<(Vec<Ident>, Vec<TokenStream>)> {
     let mut variable_names: Vec<Ident> = vec![];
     let mut variable_declarations: Vec<TokenStream> = vec![];
-
     for (variable_name, type_id, type_path) in variables {
         let variable_name = format_ident!("{variable_name}");
         let type_example = if context.dynamic {
-            values::dynamic_values::type_example(type_id, type_gen.types())?
+            scale_value_type_example(type_id, type_gen.types())?
         } else {
-            values::static_values::type_example(type_id, type_gen)?
+            rust_value_type_example(type_id, type_gen)?
         };
 
         let type_path = if context.dynamic {
