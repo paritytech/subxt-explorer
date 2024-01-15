@@ -264,6 +264,22 @@ export class Client {
     );
     return valueString as string | undefined;
   }
+
+  /**
+   * Returns the scale value string of a storage entry
+   * @param apiName
+   * @param apiMethodName
+   */
+  async fetchKeylessRuntimeApiValue(
+    apiName: string,
+    apiMethodName: string
+  ): Promise<string | undefined> {
+    const valueString = await this.client.fetchKeylessRuntimeApiValue(
+      apiName,
+      apiMethodName
+    );
+    return valueString as string | undefined;
+  }
 }
 
 export async function createClient(
@@ -327,7 +343,7 @@ export interface PalletItemConent {
 }
 
 export interface RuntimeApiMethodContent {
-  runtime_api_trait_name: string;
+  api_name: string;
   method_name: string;
   docs: string[];
   code_example_static: string;

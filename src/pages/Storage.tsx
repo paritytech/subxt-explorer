@@ -1,14 +1,16 @@
 import { useParams } from "@solidjs/router";
 import { Client, StorageEntryContent, client } from "../state/client";
-import { JSX, Show, createSignal } from "solid-js";
+import { JSX, Show } from "solid-js";
 import { Docs } from "../components/Docs";
 import { CodeTabLayout } from "../components/CodeTabLayout";
-import {
-  KeyValueTypesLayout,
-  sectionHeading,
-} from "../components/KeyValueTypesLayout";
+import { KeyValueTypesLayout } from "../components/KeyValueTypesLayout";
 import { AnchoredH2 } from "../components/AnchoredH2";
 import { RedirectToHome } from "../components/RedirectToHome";
+import {
+  FetchError,
+  FetchableValue,
+  ValueFetched,
+} from "../components/FetchableValue";
 
 export const StoragePage = () => {
   const props = () => {
@@ -34,35 +36,24 @@ export const StoragePage = () => {
   }
 };
 
-// undefined for storage entries that require keys to be fetched.
-type StorageValueState =
-  | undefined
-  | { tag: "loading" }
-  | { tag: "error" }
-  | { tag: "value"; value: string };
-
 function storageEntryContent(
-  state: Client,
+  client: Client,
   entry: StorageEntryContent
 ): JSX.Element {
-  const [storageValue, setStorageValue] = createSignal<StorageValueState>();
-
-  async function fetchStorageValue() {
-    setStorageValue({ tag: "loading" });
-    const result = await state.fetchKeylessStorageValue(
+  async function fetchStorageValue(): Promise<ValueFetched | FetchError> {
+    const value = await client.fetchKeylessStorageValue(
       entry.pallet_name,
       entry.name
     );
-    if (result !== undefined) {
-      setStorageValue({ tag: "value", value: result });
+    if (value !== undefined) {
+      return { tag: "value", value };
     } else {
-      setStorageValue({ tag: "error" });
+      return { tag: "error", error: "Error fetching storage value" };
     }
   }
   // fetch the value in storage when the component is loaded
-  if (entry.key_types.length === 0 && client()?.hasOnlineCapabilities()) {
-    fetchStorageValue();
-  }
+  const shouldFetchValue =
+    entry.key_types.length === 0 && client.hasOnlineCapabilities();
 
   return (
     <>
@@ -87,49 +78,12 @@ function storageEntryContent(
             type_description: entry.value_type,
           }}
         ></KeyValueTypesLayout>
-        <Show
-          when={entry.key_types.length === 0 && storageValue() !== undefined}
-        >
-          <div class="flex justify-between">
-            {sectionHeading("Value")}
-            <button
-              onClick={fetchStorageValue}
-              class={`btn py-0  ${
-                storageValue()?.tag === "loading" && "disabled"
-              }`}
-            >
-              <span class={`fa fa-repeat mr-2`}></span> Reload Value
-            </button>
-          </div>
-
-          <table class="mx-0 my-8 w-full">
-            <tbody>
-              <tr class="w-full">
-                <td>
-                  <div>
-                    <Show when={storageValue()?.tag === "loading"}>
-                      <i class="fa fa-spinner animate-spin"></i> Loading...
-                    </Show>
-                    <Show when={storageValue()?.tag === "error"}>
-                      <div class="font-mono whitespace-pre-wrap h-min">
-                        <code class="p-0">None</code>
-                      </div>
-                    </Show>
-                    <Show when={storageValue()?.tag === "value"}>
-                      <div class="text-pink-500 hljs-class font-mono whitespace-pre-wrap h-min max-h-code overflow-scroll">
-                        <code class="p-0">
-                          {
-                            (storageValue() as { tag: "value"; value: string })
-                              .value
-                          }
-                        </code>
-                      </div>
-                    </Show>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        <Show when={shouldFetchValue}>
+          <FetchableValue
+            title="Value"
+            fetch={fetchStorageValue}
+            fetch_on_init={true}
+          ></FetchableValue>
         </Show>
       </div>
       <div class="mt-5">

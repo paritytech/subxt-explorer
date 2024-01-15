@@ -388,18 +388,18 @@ impl Client {
     }
 
     #[wasm_bindgen(js_name = "runtimeApiTraitDocs")]
-    pub fn runtime_api_trait_docs(&self, runtime_api_trait_name: &str) -> MyJsValue {
+    pub fn runtime_api_trait_docs(&self, api_name: &str) -> MyJsValue {
         let metadata = self.metadata();
-        let runtime_api = metadata.runtime_api_trait_by_name(runtime_api_trait_name)?;
+        let runtime_api = metadata.runtime_api_trait_by_name(api_name)?;
         serde_wasm_bindgen::to_value(runtime_api.docs())
             .expect("should always work")
             .into()
     }
 
     #[wasm_bindgen(js_name = "runtimeApiTraitContent")]
-    pub fn runtime_api_trait_content(&self, runtime_api_trait_name: &str) -> MyJsValue {
+    pub fn runtime_api_trait_content(&self, api_name: &str) -> MyJsValue {
         let metadata = self.metadata();
-        let runtime_api = metadata.runtime_api_trait_by_name(runtime_api_trait_name)?;
+        let runtime_api = metadata.runtime_api_trait_by_name(api_name)?;
 
         let content = RuntimeApiTraitContent::from_metadata(runtime_api);
         serde_wasm_bindgen::to_value(&content)
@@ -408,13 +408,9 @@ impl Client {
     }
 
     #[wasm_bindgen(js_name = "runtimeApiMethodContent")]
-    pub fn runtime_api_method_content(
-        &self,
-        runtime_api_trait_name: &str,
-        method_name: &str,
-    ) -> MyJsValue {
+    pub fn runtime_api_method_content(&self, api_name: &str, method_name: &str) -> MyJsValue {
         let metadata = self.metadata();
-        let runtime_api = metadata.runtime_api_trait_by_name(runtime_api_trait_name)?;
+        let runtime_api = metadata.runtime_api_trait_by_name(api_name)?;
         let method = runtime_api.method_by_name(method_name)?;
 
         let input_types = method
@@ -433,15 +429,15 @@ impl Client {
         // static code example
         let code_example_static = self
             .example_gen_static
-            .runtime_api_example_wrapped(runtime_api_trait_name, method_name)?;
+            .runtime_api_example_wrapped(api_name, method_name)?;
 
         // dynamic code example
         let code_example_dynamic = self
             .example_gen_dynamic
-            .runtime_api_example_wrapped(runtime_api_trait_name, method_name)?;
+            .runtime_api_example_wrapped(api_name, method_name)?;
 
         let content = RuntimeApiMethodContent {
-            runtime_api_trait_name,
+            api_name,
             method_name,
             docs: method.docs(),
             code_example_static: &format_code(&code_example_static.to_string()),
@@ -473,8 +469,32 @@ impl Client {
             return JsValue::UNDEFINED.into();
         }
         let value = online_client
-            .key_less_storage_at(pallet_name, entry_name)
+            .keyless_storage_at(pallet_name, entry_name)
             .await?;
+        let value_str = format_scale_value_string(&value.to_string());
+        JsValue::from_str(&value_str).into()
+    }
+
+    /// Dynamically fetches the value of a keyless storage entry.
+    /// Only works if this is an online client.
+    #[wasm_bindgen(js_name = "fetchKeylessRuntimeApiValue")]
+    pub async fn fetch_keyless_runtime_api_value(
+        &self,
+        api_name: &str,
+        method_name: &str,
+    ) -> MyJsValue {
+        let online_client = self.online_client.as_ref()?;
+        let metadata = online_client.metadata();
+        let api_metadata = metadata.runtime_api_trait_by_name_err(api_name)?;
+        let method = api_metadata.method_by_name(method_name)?;
+
+        if method.inputs().len() != 0 {
+            return JsValue::UNDEFINED.into();
+        }
+        let value = online_client
+            .call_inputless_runtime_api_method(api_name, method_name)
+            .await?;
+
         let value_str = format_scale_value_string(&value.to_string());
         JsValue::from_str(&value_str).into()
     }
@@ -661,7 +681,7 @@ pub struct EventContent<'a> {
 
 #[derive(Serialize)]
 pub struct RuntimeApiMethodContent<'a> {
-    pub runtime_api_trait_name: &'a str,
+    pub api_name: &'a str,
     pub method_name: &'a str,
     pub docs: &'a [String],
     pub code_example_static: &'a str,

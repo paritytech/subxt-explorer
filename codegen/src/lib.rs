@@ -179,10 +179,10 @@ impl<'a> ExampleGenerator<'a> {
 
     pub fn runtime_api_example_wrapped(
         &self,
-        runtime_api_trait_name: &str,
+        api_name: &str,
         method_name: &str,
     ) -> anyhow::Result<TokenStream> {
-        let runtime_api_example = self.runtime_api_example(runtime_api_trait_name, method_name)?;
+        let runtime_api_example = self.runtime_api_example(api_name, method_name)?;
         let wrapped = self.wrap_in_main(runtime_api_example);
         Ok(wrapped)
     }
@@ -335,14 +335,16 @@ impl<'a> ExampleGenerator<'a> {
 
     fn runtime_api_example(
         &self,
-        runtime_api_trait_name: &str,
+        api_name: &str,
         method_name: &str,
     ) -> anyhow::Result<TokenStream> {
         let type_gen = self.type_gen();
-        let runtime_api_trait = self
-            .metadata
-            .runtime_api_trait_by_name_err(runtime_api_trait_name)?;
-        let method = runtime_api_trait.method_by_name(method_name).ok_or_else(|| anyhow!("Method {method_name} not found for runtime API trait {runtime_api_trait_name}."))?;
+        let runtime_api_trait = self.metadata.runtime_api_trait_by_name_err(api_name)?;
+        let method = runtime_api_trait
+            .method_by_name(method_name)
+            .ok_or_else(|| {
+                anyhow!("Method {method_name} not found for runtime API trait {api_name}.")
+            })?;
 
         // defines: `let runtime_api_call = ...`
         let runtime_api_call_code =
@@ -489,15 +491,14 @@ impl<'a> ExampleGenerator<'a> {
             variable_names_and_declarations(type_gen, variable_iter, &self.context)?;
 
         let call_expr = if self.context.dynamic {
-            let runtime_api_trait_name = runtime_api_trait.name();
+            let api_name = runtime_api_trait.name();
             let method_name = method.name();
             let key_vec = variable_names_to_scale_value_vec(variable_names);
-            quote!(subxt::dynamic::runtime_api_call(#runtime_api_trait_name, #method_name, #key_vec))
+            quote!(subxt::dynamic::runtime_api_call(#api_name, #method_name, #key_vec))
         } else {
-            let runtime_api_trait_name =
-                format_ident!("{}", runtime_api_trait.name().to_snake_case());
+            let api_name = format_ident!("{}", runtime_api_trait.name().to_snake_case());
             let method_name = format_ident!("{}", method.name().to_snake_case());
-            quote!(runtime::apis().#runtime_api_trait_name().#method_name( #(#variable_names),*))
+            quote!(runtime::apis().#api_name().#method_name( #(#variable_names),*))
         };
 
         let code = quote!(

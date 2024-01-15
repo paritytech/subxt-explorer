@@ -17,9 +17,9 @@ web = ["subxt/web", "js-sys", "wasm-bindgen", "wasm-bindgen-futures", "serde-was
 
 subxt = { version = "0.32.1", default-features = false, features = ["jsonrpsee", "unstable-light-client"], target_arch = "wasm32" }
 subxt-metadata = { version = "0.32.1" }
-subxt-codegen = { git = "https://github.com/paritytech/subxt", branch = "tadeohepperle/implement-scale-typegen-for-type-generation", default-features = false }
+subxt-codegen = { git = "https://github.com/paritytech/subxt", branch = "master", default-features = false }
 subxt-signer = { version = "0.32.1", features = ["subxt"] }
-scale-typegen-description = { git = "https://github.com/paritytech/scale-typegen", branch = "recursive-derives" }
+scale-typegen-description = "0.1.0"
 
 syn = "2.0.29"
 quote = "1.0.33"

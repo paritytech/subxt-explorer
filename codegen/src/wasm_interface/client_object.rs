@@ -72,16 +72,22 @@ impl<T: Config> OfflineClientObject<T> for LightClient<T> {
 
 #[async_trait]
 pub trait OnlineClientObject<T: Config>: OfflineClientObject<T> {
-    async fn key_less_storage_at(
+    async fn keyless_storage_at(
         &self,
         pallet_name: &str,
         entry_name: &str,
+    ) -> anyhow::Result<scale_value::Value<u32>>;
+
+    async fn call_inputless_runtime_api_method(
+        &self,
+        api_name: &str,
+        method_name: &str,
     ) -> anyhow::Result<scale_value::Value<u32>>;
 }
 
 #[async_trait]
 impl<T: Config> OnlineClientObject<T> for OnlineClient<T> {
-    async fn key_less_storage_at(
+    async fn keyless_storage_at(
         &self,
         pallet_name: &str,
         entry_name: &str,
@@ -95,11 +101,29 @@ impl<T: Config> OnlineClientObject<T> for OnlineClient<T> {
             .to_value()?;
         Ok(value)
     }
+
+    async fn call_inputless_runtime_api_method(
+        &self,
+        api_name: &str,
+        method_name: &str,
+    ) -> anyhow::Result<scale_value::Value<u32>> {
+        let api_client = self.runtime_api().at_latest().await?;
+        let value = api_client
+            .call(subxt::runtime_api::dynamic(
+                api_name,
+                method_name,
+                scale_value::Composite::Unnamed(vec![]),
+            ))
+            .await
+            .map_err(|_| anyhow!("Runtime Api Call failed"))?
+            .to_value()?;
+        Ok(value)
+    }
 }
 
 #[async_trait]
 impl<T: Config> OnlineClientObject<T> for LightClient<T> {
-    async fn key_less_storage_at(
+    async fn keyless_storage_at(
         &self,
         pallet_name: &str,
         entry_name: &str,
@@ -110,6 +134,24 @@ impl<T: Config> OnlineClientObject<T> for LightClient<T> {
             .fetch(&storage_address)
             .await?
             .ok_or_else(|| anyhow!("No storage value found"))?
+            .to_value()?;
+        Ok(value)
+    }
+
+    async fn call_inputless_runtime_api_method(
+        &self,
+        api_name: &str,
+        method_name: &str,
+    ) -> anyhow::Result<scale_value::Value<u32>> {
+        let api_client = self.runtime_api().at_latest().await?;
+        let value = api_client
+            .call(subxt::runtime_api::dynamic(
+                api_name,
+                method_name,
+                scale_value::Composite::Unnamed(vec![]),
+            ))
+            .await
+            .map_err(|_| anyhow!("Runtime Api Call failed"))?
             .to_value()?;
         Ok(value)
     }
