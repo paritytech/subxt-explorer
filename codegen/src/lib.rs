@@ -653,7 +653,6 @@ pub trait PruneTypePath {
 
 impl<T: ToTokens> PruneTypePath for T {
     fn prune(&self) -> TokenStream {
-        let _e: subxt::utils::AccountId32 = subxt_signer::ecdsa::dev::bob().public_key().into();
 
         //
         // WARNING: HACKY CUSTOM LOGIC
