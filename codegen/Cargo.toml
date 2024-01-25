@@ -15,7 +15,6 @@ web = ["subxt/web", "js-sys", "wasm-bindgen", "wasm-bindgen-futures", "serde-was
 subxt = { version = "0.34.0", default-features = false, features = ["jsonrpsee", "unstable-light-client"], target_arch = "wasm32" }
 subxt-metadata = { version = "0.34.0" }
 subxt-codegen = { version = "0.34.0", default-features = false, features = ["web"] }
-subxt-signer = { version = "0.34.0", features = ["subxt"] }
 scale-typegen-description = { version = "0.1.0" }
 
 syn = "2.0.29"
