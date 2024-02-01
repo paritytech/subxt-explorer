@@ -116,3 +116,15 @@ pub fn rust_value_type_example(
     )?;
     Ok(result)
 }
+
+#[cfg(test)]
+mod test {
+    use super::replace_bits_with_bit_macros;
+    use wasm_bindgen_test::*;
+    #[wasm_bindgen_test]
+    fn replace_bits() {
+        let input = "<01011>";
+        let output = replace_bits_with_bit_macros(input);
+        assert_eq!(output, "bits![0,1,0,1,1]");
+    }
+}
