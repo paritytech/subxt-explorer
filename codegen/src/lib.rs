@@ -1,4 +1,5 @@
 #![feature(try_trait_v2)]
+#![feature(try_blocks)]
 
 //! This crate exposes a struct [ExampleGenerator] that is capable of generating code examples for calls, constants and storage entries from static metadata.
 //! The generated code can look like this:
@@ -34,21 +35,19 @@ use heck::ToSnakeCase;
 use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote, ToTokens};
 use scale_info::{form::PortableForm, TypeDef, Variant};
+use scale_typegen_description::scale_typegen::TypeGenerator;
 use subxt::ext::codec::Decode;
-use subxt_codegen::{DerivesRegistry, TypeGenerator, TypeSubstitutes};
 use subxt_metadata::{
     PalletMetadata, RuntimeApiMetadata, RuntimeApiMethodMetadata, StorageEntryMetadata,
     StorageEntryType,
 };
 
 pub mod context;
-pub mod descriptions;
-/// empty mod, copy paste stuff in here to validate code quickly
-mod generated;
-pub mod values;
+mod utils;
 
 #[cfg(feature = "web")]
 pub mod wasm_interface;
+use utils::{rust_value_type_example, scale_value_type_example};
 #[cfg(feature = "web")]
 pub use wasm_interface::*;
 
@@ -180,10 +179,10 @@ impl<'a> ExampleGenerator<'a> {
 
     pub fn runtime_api_example_wrapped(
         &self,
-        runtime_api_trait_name: &str,
+        api_name: &str,
         method_name: &str,
     ) -> anyhow::Result<TokenStream> {
-        let runtime_api_example = self.runtime_api_example(runtime_api_trait_name, method_name)?;
+        let runtime_api_example = self.runtime_api_example(api_name, method_name)?;
         let wrapped = self.wrap_in_main(runtime_api_example);
         Ok(wrapped)
     }
@@ -242,7 +241,10 @@ impl<'a> ExampleGenerator<'a> {
             quote!(DecodedValueThunk)
         } else {
             let value_type = entry.entry_type().value_ty();
-            let value_type_path = type_gen.resolve_type_path(value_type).prune();
+            let value_type_path = type_gen
+                .resolve_type_path(value_type)
+                .map_err(|e| anyhow!("{e}"))?
+                .prune();
             quote!(#value_type_path)
         };
 
@@ -286,7 +288,10 @@ impl<'a> ExampleGenerator<'a> {
         } else {
             let pallet_name = format_ident!("{}", pallet.name().to_snake_case());
             let constant_name = format_ident!("{}", constant.name().to_snake_case());
-            let constant_type_path = type_gen.resolve_type_path(constant.ty()).prune();
+            let constant_type_path = type_gen
+                .resolve_type_path(constant.ty())
+                .map_err(|e| anyhow!("{e}"))?
+                .prune();
             quote!(
                 let constant_query = runtime::constants().#pallet_name().#constant_name();
                 let api = OnlineClient::<PolkadotConfig>::new().await?;
@@ -304,7 +309,10 @@ impl<'a> ExampleGenerator<'a> {
             .get(name)
             .ok_or_else(|| anyhow!("custom value {name} not found."))?;
 
-        let custom_value_type = type_gen.resolve_type_path(custom_value.type_id()).prune();
+        let custom_value_type = type_gen
+            .resolve_type_path(custom_value.type_id())
+            .map_err(|e| anyhow!("{e}"))?
+            .prune();
         let interface_name = &self.context.inter_face_ident;
 
         let address_expr = if self.context.dynamic {
@@ -327,14 +335,16 @@ impl<'a> ExampleGenerator<'a> {
 
     fn runtime_api_example(
         &self,
-        runtime_api_trait_name: &str,
+        api_name: &str,
         method_name: &str,
     ) -> anyhow::Result<TokenStream> {
         let type_gen = self.type_gen();
-        let runtime_api_trait = self
-            .metadata
-            .runtime_api_trait_by_name_err(runtime_api_trait_name)?;
-        let method = runtime_api_trait.method_by_name(method_name).ok_or_else(|| anyhow!("Method {method_name} not found for runtime API trait {runtime_api_trait_name}."))?;
+        let runtime_api_trait = self.metadata.runtime_api_trait_by_name_err(api_name)?;
+        let method = runtime_api_trait
+            .method_by_name(method_name)
+            .ok_or_else(|| {
+                anyhow!("Method {method_name} not found for runtime API trait {api_name}.")
+            })?;
 
         // defines: `let runtime_api_call = ...`
         let runtime_api_call_code =
@@ -343,7 +353,10 @@ impl<'a> ExampleGenerator<'a> {
         let output_type_path = if self.context.dynamic {
             quote!(DecodedValueThunk)
         } else {
-            let value_type_path = type_gen.resolve_type_path(method.output_ty()).prune();
+            let value_type_path = type_gen
+                .resolve_type_path(method.output_ty())
+                .map_err(|e| anyhow!("{e}"))?
+                .prune();
             quote!(#value_type_path)
         };
 
@@ -383,6 +396,7 @@ impl<'a> ExampleGenerator<'a> {
                 .expect("only named fields should be call arguments");
             let type_path = type_gen
                 .resolve_field_type_path(field.ty.id, &[], field.type_name.as_deref())
+                .expect("type not found")
                 .prune();
             (name, field.ty.id, type_path)
         });
@@ -420,16 +434,21 @@ impl<'a> ExampleGenerator<'a> {
         pallet: &PalletMetadata,
         entry: &StorageEntryMetadata,
     ) -> anyhow::Result<TokenStream> {
-        let variables_iter = storage_entry_key_ty_ids(type_gen, entry)
+        let mut variables: Vec<(String, u32, TokenStream)> = vec![];
+        for (i, type_id) in storage_entry_key_ty_ids(type_gen, entry)
             .into_iter()
             .enumerate()
-            .map(|(i, type_id)| {
-                let variable_name = format!("key_{i}");
-                let type_path = type_gen.resolve_type_path(type_id).prune();
-                (variable_name, type_id, type_path)
-            });
+        {
+            let variable_name = format!("key_{i}");
+            let type_path = type_gen
+                .resolve_type_path(type_id)
+                .map_err(|e| anyhow!("{e}"))?
+                .prune();
+            variables.push((variable_name, type_id, type_path));
+        }
+
         let (variable_names, variable_declarations) =
-            variable_names_and_declarations(type_gen, variables_iter, &self.context)?;
+            variable_names_and_declarations(type_gen, variables.into_iter(), &self.context)?;
 
         let query_expr = if self.context.dynamic {
             let pallet_name = pallet.name();
@@ -464,22 +483,24 @@ impl<'a> ExampleGenerator<'a> {
         method: &RuntimeApiMethodMetadata,
     ) -> anyhow::Result<TokenStream> {
         let variable_iter = method.inputs().map(|param| {
-            let type_path = type_gen.resolve_type_path(param.ty).prune();
+            let type_path = type_gen
+                .resolve_type_path(param.ty)
+                .expect("type not found")
+                .prune();
             (param.name.as_str(), param.ty, type_path)
         });
         let (variable_names, variable_declarations) =
             variable_names_and_declarations(type_gen, variable_iter, &self.context)?;
 
         let call_expr = if self.context.dynamic {
-            let runtime_api_trait_name = runtime_api_trait.name();
+            let api_name = runtime_api_trait.name();
             let method_name = method.name();
             let key_vec = variable_names_to_scale_value_vec(variable_names);
-            quote!(subxt::dynamic::runtime_api_call(#runtime_api_trait_name, #method_name, #key_vec))
+            quote!(subxt::dynamic::runtime_api_call(#api_name, #method_name, #key_vec))
         } else {
-            let runtime_api_trait_name =
-                format_ident!("{}", runtime_api_trait.name().to_snake_case());
+            let api_name = format_ident!("{}", runtime_api_trait.name().to_snake_case());
             let method_name = format_ident!("{}", method.name().to_snake_case());
-            quote!(runtime::apis().#runtime_api_trait_name().#method_name( #(#variable_names),*))
+            quote!(runtime::apis().#api_name().#method_name( #(#variable_names),*))
         };
 
         let code = quote!(
@@ -495,14 +516,7 @@ impl<'a> ExampleGenerator<'a> {
     //////////////////////////////////////////////
 
     fn type_gen(&self) -> TypeGenerator {
-        TypeGenerator::new(
-            self.metadata.types(),
-            "runtime_types",
-            TypeSubstitutes::with_default_substitutes(&Default::default()),
-            DerivesRegistry::with_default_derives(&Default::default()),
-            Default::default(),
-            true,
-        )
+        TypeGenerator::new(self.metadata.types(), &self.context.typegen_settings)
     }
 
     fn wrap_in_wrapper_fn(&self, code: TokenStream) -> TokenStream {
@@ -590,7 +604,11 @@ pub fn storage_entry_key_ty_ids(
     match entry.entry_type() {
         StorageEntryType::Plain(_) => vec![],
         StorageEntryType::Map { key_ty, .. } => {
-            match &type_gen.resolve_type(*key_ty).type_def {
+            match &type_gen
+                .resolve_type(*key_ty)
+                .expect("type not found")
+                .type_def
+            {
                 // An N-map; return each of the keys separately.
                 TypeDef::Tuple(tuple) => tuple.fields.iter().map(|ty| ty.id).collect::<Vec<_>>(),
                 // A map with a single key; return the single key.
@@ -608,13 +626,12 @@ fn variable_names_and_declarations(
 ) -> anyhow::Result<(Vec<Ident>, Vec<TokenStream>)> {
     let mut variable_names: Vec<Ident> = vec![];
     let mut variable_declarations: Vec<TokenStream> = vec![];
-
     for (variable_name, type_id, type_path) in variables {
         let variable_name = format_ident!("{variable_name}");
         let type_example = if context.dynamic {
-            values::dynamic_values::type_example(type_id, type_gen.types())?
+            scale_value_type_example(type_id, type_gen.types())?
         } else {
-            values::static_values::type_example(type_id, type_gen)?
+            rust_value_type_example(type_id, type_gen)?
         };
 
         let type_path = if context.dynamic {
@@ -638,8 +655,6 @@ pub trait PruneTypePath {
 
 impl<T: ToTokens> PruneTypePath for T {
     fn prune(&self) -> TokenStream {
-        let _e: subxt::utils::AccountId32 = subxt_signer::ecdsa::dev::bob().public_key().into();
-
         //
         // WARNING: HACKY CUSTOM LOGIC
         //

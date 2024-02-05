@@ -6,20 +6,20 @@ use anyhow::anyhow;
 
 mod client_object;
 
+use scale_typegen_description::type_description;
 use serde::Serialize;
 use subxt::{
-    client::{LightClient, LightClientBuilder, OfflineClientT, OnlineClientT},
-    ext::{codec::Decode, scale_value},
-    OfflineClient, OnlineClient, PolkadotConfig, SubstrateConfig,
+    client::{LightClient, LightClientBuilder},
+    ext::codec::Decode,
+    OfflineClient, OnlineClient, PolkadotConfig,
 };
 use subxt_metadata::{Metadata, PalletMetadata, RuntimeApiMetadata};
-use syn::Meta;
+
 use wasm_bindgen::{convert::IntoWasmAbi, prelude::*};
 
 use crate::{
-    context::ExampleContext, descriptions::type_description_formatted, format_code,
-    format_scale_value_string, format_type, storage_entry_key_ty_ids, ExampleGenerator,
-    PruneTypePath,
+    context::ExampleContext, format_code, format_scale_value_string, format_type,
+    storage_entry_key_ty_ids, ExampleGenerator, PruneTypePath,
 };
 
 use self::client_object::{OfflineClientObject, OnlineClientObject};
@@ -44,14 +44,13 @@ type ConfigUsed = PolkadotConfig;
 
 #[wasm_bindgen]
 pub struct Client {
-    kind: ClientKind,
     offline_client: Arc<dyn OfflineClientObject<ConfigUsed>>,
     online_client: Option<Arc<dyn OnlineClientObject<ConfigUsed>>>,
     example_gen_dynamic: ExampleGenerator<'static>,
     example_gen_static: ExampleGenerator<'static>,
 }
 
-pub enum ClientKind {
+pub enum ClientConfig {
     Offline {
         metadata_file_name: String,
         client: OfflineClient<ConfigUsed>,
@@ -66,35 +65,35 @@ pub enum ClientKind {
     },
 }
 
-impl ClientKind {
+impl ClientConfig {
     fn example_context(&self, dynamic: bool) -> ExampleContext {
         match &self {
-            ClientKind::Offline {
+            ClientConfig::Offline {
                 metadata_file_name, ..
             } => ExampleContext::from_file(metadata_file_name, dynamic),
-            ClientKind::Online { url, .. } => ExampleContext::from_url(url, dynamic),
-            ClientKind::LightClient { .. } => ExampleContext::from_file("metadata.scale", dynamic),
+            ClientConfig::Online { url, .. } => ExampleContext::from_url(url, dynamic),
+            ClientConfig::LightClient { .. } => {
+                ExampleContext::from_file("metadata.scale", dynamic)
+            }
         }
     }
 }
 
 impl Client {
-    // dynamic lookup of constant value
-
-    fn new(kind: ClientKind) -> Self {
+    fn new(config: ClientConfig) -> Self {
         let offline_client: Arc<dyn OfflineClientObject<ConfigUsed>>;
         let online_client: Option<Arc<dyn OnlineClientObject<ConfigUsed>>>;
 
-        (offline_client, online_client) = match &kind {
-            ClientKind::Offline { client, .. } => (
+        (offline_client, online_client) = match &config {
+            ClientConfig::Offline { client, .. } => (
                 Arc::new(client.clone()) as Arc<dyn OfflineClientObject<ConfigUsed>>,
                 None,
             ),
-            ClientKind::Online { client, .. } => (
+            ClientConfig::Online { client, .. } => (
                 Arc::new(client.clone()) as Arc<dyn OfflineClientObject<ConfigUsed>>,
                 Some(Arc::new(client.clone()) as Arc<dyn OnlineClientObject<ConfigUsed>>),
             ),
-            ClientKind::LightClient { client, .. } => (
+            ClientConfig::LightClient { client, .. } => (
                 Arc::new(client.clone()) as Arc<dyn OfflineClientObject<ConfigUsed>>,
                 Some(Arc::new(client.clone()) as Arc<dyn OnlineClientObject<ConfigUsed>>),
             ),
@@ -102,11 +101,10 @@ impl Client {
 
         let metadata = offline_client.metadata();
         let example_gen_dynamic =
-            ExampleGenerator::new(metadata.clone(), Cow::Owned(kind.example_context(true)));
+            ExampleGenerator::new(metadata.clone(), Cow::Owned(config.example_context(true)));
         let example_gen_static =
-            ExampleGenerator::new(metadata, Cow::Owned(kind.example_context(false)));
+            ExampleGenerator::new(metadata, Cow::Owned(config.example_context(false)));
         Self {
-            kind,
             offline_client,
             online_client,
             example_gen_dynamic,
@@ -121,8 +119,11 @@ impl Client {
     /// resolves the provided type id and returns the type path as a string.
     fn resolve_type_path(&self, type_id: u32) -> Option<String> {
         let type_gen = self.example_gen_static.type_gen();
-        type_gen.types().resolve(type_id)?;
-        let type_path_string = type_gen.resolve_type_path(type_id).prune().to_string();
+        let type_path_string = type_gen
+            .resolve_type_path(type_id)
+            .expect("typed should be present")
+            .prune()
+            .to_string();
         let type_path_string = format_type(&type_path_string);
         Some(type_path_string)
     }
@@ -131,7 +132,7 @@ impl Client {
         let type_path = self
             .resolve_type_path(type_id)
             .ok_or_else(|| anyhow!("type with id {type_id} not found."))?;
-        let type_structure = type_description_formatted(type_id, &self.metadata())?;
+        let type_structure = type_description(type_id, self.metadata().types(), true)?;
 
         Ok(TypeDescription {
             type_path,
@@ -166,7 +167,7 @@ impl Client {
             metadata,
         );
 
-        Ok(Client::new(ClientKind::Offline {
+        Ok(Client::new(ClientConfig::Offline {
             metadata_file_name: metadata_file_name.into(),
             client,
         }))
@@ -180,7 +181,7 @@ impl Client {
         let client = subxt::OnlineClient::<ConfigUsed>::from_url(url)
             .await
             .map_err(|e| e.to_string())?;
-        Ok(Client::new(ClientKind::Online {
+        Ok(Client::new(ClientConfig::Online {
             url: url.into(),
             client,
         }))
@@ -198,7 +199,10 @@ impl Client {
             .await
             .map_err(|e| e.to_string())?;
         console_log!("light client creation successful");
-        Ok(Client::new(ClientKind::LightClient { chain_spec, client }))
+        Ok(Client::new(ClientConfig::LightClient {
+            chain_spec,
+            client,
+        }))
     }
 
     #[wasm_bindgen(js_name = "metadataContent")]
@@ -244,7 +248,7 @@ impl Client {
                 let type_description = self.type_description(field.ty.id)?;
 
                 Ok(NameAndType {
-                    name: Cow::Borrowed(&name),
+                    name: Cow::Borrowed(name),
                     type_description,
                 })
             })
@@ -385,18 +389,18 @@ impl Client {
     }
 
     #[wasm_bindgen(js_name = "runtimeApiTraitDocs")]
-    pub fn runtime_api_trait_docs(&self, runtime_api_trait_name: &str) -> MyJsValue {
+    pub fn runtime_api_trait_docs(&self, api_name: &str) -> MyJsValue {
         let metadata = self.metadata();
-        let runtime_api = metadata.runtime_api_trait_by_name(runtime_api_trait_name)?;
+        let runtime_api = metadata.runtime_api_trait_by_name(api_name)?;
         serde_wasm_bindgen::to_value(runtime_api.docs())
             .expect("should always work")
             .into()
     }
 
     #[wasm_bindgen(js_name = "runtimeApiTraitContent")]
-    pub fn runtime_api_trait_content(&self, runtime_api_trait_name: &str) -> MyJsValue {
+    pub fn runtime_api_trait_content(&self, api_name: &str) -> MyJsValue {
         let metadata = self.metadata();
-        let runtime_api = metadata.runtime_api_trait_by_name(runtime_api_trait_name)?;
+        let runtime_api = metadata.runtime_api_trait_by_name(api_name)?;
 
         let content = RuntimeApiTraitContent::from_metadata(runtime_api);
         serde_wasm_bindgen::to_value(&content)
@@ -405,13 +409,9 @@ impl Client {
     }
 
     #[wasm_bindgen(js_name = "runtimeApiMethodContent")]
-    pub fn runtime_api_method_content(
-        &self,
-        runtime_api_trait_name: &str,
-        method_name: &str,
-    ) -> MyJsValue {
+    pub fn runtime_api_method_content(&self, api_name: &str, method_name: &str) -> MyJsValue {
         let metadata = self.metadata();
-        let runtime_api = metadata.runtime_api_trait_by_name(runtime_api_trait_name)?;
+        let runtime_api = metadata.runtime_api_trait_by_name(api_name)?;
         let method = runtime_api.method_by_name(method_name)?;
 
         let input_types = method
@@ -430,15 +430,15 @@ impl Client {
         // static code example
         let code_example_static = self
             .example_gen_static
-            .runtime_api_example_wrapped(runtime_api_trait_name, method_name)?;
+            .runtime_api_example_wrapped(api_name, method_name)?;
 
         // dynamic code example
         let code_example_dynamic = self
             .example_gen_dynamic
-            .runtime_api_example_wrapped(runtime_api_trait_name, method_name)?;
+            .runtime_api_example_wrapped(api_name, method_name)?;
 
         let content = RuntimeApiMethodContent {
-            runtime_api_trait_name,
+            api_name,
             method_name,
             docs: method.docs(),
             code_example_static: &format_code(&code_example_static.to_string()),
@@ -470,8 +470,32 @@ impl Client {
             return JsValue::UNDEFINED.into();
         }
         let value = online_client
-            .key_less_storage_at(pallet_name, entry_name)
+            .keyless_storage_at(pallet_name, entry_name)
             .await?;
+        let value_str = format_scale_value_string(&value.to_string());
+        JsValue::from_str(&value_str).into()
+    }
+
+    /// Dynamically fetches the value of a keyless storage entry.
+    /// Only works if this is an online client.
+    #[wasm_bindgen(js_name = "fetchKeylessRuntimeApiValue")]
+    pub async fn fetch_keyless_runtime_api_value(
+        &self,
+        api_name: &str,
+        method_name: &str,
+    ) -> MyJsValue {
+        let online_client = self.online_client.as_ref()?;
+        let metadata = online_client.metadata();
+        let api_metadata = metadata.runtime_api_trait_by_name_err(api_name)?;
+        let method = api_metadata.method_by_name(method_name)?;
+
+        if method.inputs().len() != 0 {
+            return JsValue::UNDEFINED.into();
+        }
+        let value = online_client
+            .call_inputless_runtime_api_method(api_name, method_name)
+            .await?;
+
         let value_str = format_scale_value_string(&value.to_string());
         JsValue::from_str(&value_str).into()
     }
@@ -535,7 +559,7 @@ impl<'a> MetadataContent<'a> {
             .collect();
 
         // sort all pallets by name, not by index
-        pallets.sort_by(|a, b| a.name.cmp(&b.name));
+        pallets.sort_by(|a, b| a.name.cmp(b.name));
 
         let runtime_apis: Vec<RuntimeApiTraitContent> = metadata
             .runtime_api_traits()
@@ -658,7 +682,7 @@ pub struct EventContent<'a> {
 
 #[derive(Serialize)]
 pub struct RuntimeApiMethodContent<'a> {
-    pub runtime_api_trait_name: &'a str,
+    pub api_name: &'a str,
     pub method_name: &'a str,
     pub docs: &'a [String],
     pub code_example_static: &'a str,

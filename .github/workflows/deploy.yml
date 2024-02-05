@@ -35,6 +35,11 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v3
 
+      - name: Test the WASM module with Node's WASM executer
+        run: |
+          cd ./codegen
+          wasm-pack test --node --no-default-features --features web
+
       - name: Install dependencies
         uses: bahmutov/npm-install@v1
 

@@ -1,10 +1,12 @@
 use quote::format_ident;
+use scale_typegen_description::scale_typegen::TypeGeneratorSettings;
 
 #[derive(Debug, Clone)]
 pub struct ExampleContext {
     pub dynamic: bool,
     pub inter_face_ident: syn::Ident,
     pub file_or_url: FileOrUrl,
+    pub typegen_settings: TypeGeneratorSettings,
 }
 
 impl ExampleContext {
@@ -13,6 +15,7 @@ impl ExampleContext {
             dynamic,
             inter_face_ident: format_ident!("runtime"),
             file_or_url: FileOrUrl::File(file_path.into()),
+            typegen_settings: subxt_codegen::default_subxt_type_gen_settings(),
         }
     }
 
@@ -21,6 +24,7 @@ impl ExampleContext {
             dynamic,
             inter_face_ident: format_ident!("runtime"),
             file_or_url: FileOrUrl::Url(url.into()),
+            typegen_settings: subxt_codegen::default_subxt_type_gen_settings(),
         }
     }
 }

@@ -54,7 +54,7 @@ export const KeyValueTypesLayout: Component<Props> = (props: Props) => {
 
       {props.valueType && (
         <TypeDisplay
-          title="Value Type"
+          title={props.valueType.title || "Value Type"}
           types={[
             {
               type_description: props.valueType.type_description,
