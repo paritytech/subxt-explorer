@@ -441,7 +441,7 @@ impl<'a> ExampleGenerator<'a> {
                 let variable_name = format!("key_{i}");
                 let type_path = type_gen
                     .resolve_type_path(type_id)
-                    .expect("field not found")
+                    .expect("field should be found if metadata not corrupted; qed")
                     .prune();
                 (variable_name, type_id, type_path)
             });
@@ -653,7 +653,6 @@ pub trait PruneTypePath {
 
 impl<T: ToTokens> PruneTypePath for T {
     fn prune(&self) -> TokenStream {
-
         //
         // WARNING: HACKY CUSTOM LOGIC
         //

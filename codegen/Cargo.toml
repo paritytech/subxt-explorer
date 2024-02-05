@@ -9,7 +9,14 @@ default = ["web"]
 
 native = ["subxt/native"]
 
-web = ["subxt/web", "js-sys", "wasm-bindgen", "wasm-bindgen-futures", "serde-wasm-bindgen", "console_error_panic_hook"]
+web = [
+    "subxt/web", 
+    "js-sys", 
+    "wasm-bindgen", 
+    "wasm-bindgen-futures", 
+    "serde-wasm-bindgen", 
+    "console_error_panic_hook"
+]
 
 [dependencies]
 subxt = { version = "0.34.0", default-features = false, features = ["jsonrpsee", "unstable-light-client"], target_arch = "wasm32" }
