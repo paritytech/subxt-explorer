@@ -434,19 +434,21 @@ impl<'a> ExampleGenerator<'a> {
         pallet: &PalletMetadata,
         entry: &StorageEntryMetadata,
     ) -> anyhow::Result<TokenStream> {
-        let variables_iter = storage_entry_key_ty_ids(type_gen, entry)
+        let mut variables: Vec<(String, u32, TokenStream)> = vec![];
+        for (i, type_id) in storage_entry_key_ty_ids(type_gen, entry)
             .into_iter()
             .enumerate()
-            .map(|(i, type_id)| {
-                let variable_name = format!("key_{i}");
-                let type_path = type_gen
-                    .resolve_type_path(type_id)
-                    .expect("field should be found if metadata not corrupted; qed")
-                    .prune();
-                (variable_name, type_id, type_path)
-            });
+        {
+            let variable_name = format!("key_{i}");
+            let type_path = type_gen
+                .resolve_type_path(type_id)
+                .map_err(|e| anyhow!("{e}"))?
+                .prune();
+            variables.push((variable_name, type_id, type_path));
+        }
+
         let (variable_names, variable_declarations) =
-            variable_names_and_declarations(type_gen, variables_iter, &self.context)?;
+            variable_names_and_declarations(type_gen, variables.into_iter(), &self.context)?;
 
         let query_expr = if self.context.dynamic {
             let pallet_name = pallet.name();
