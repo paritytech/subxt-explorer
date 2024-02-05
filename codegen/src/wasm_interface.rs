@@ -44,14 +44,13 @@ type ConfigUsed = PolkadotConfig;
 
 #[wasm_bindgen]
 pub struct Client {
-    _kind: ClientKind,
     offline_client: Arc<dyn OfflineClientObject<ConfigUsed>>,
     online_client: Option<Arc<dyn OnlineClientObject<ConfigUsed>>>,
     example_gen_dynamic: ExampleGenerator<'static>,
     example_gen_static: ExampleGenerator<'static>,
 }
 
-pub enum ClientKind {
+pub enum ClientConfig {
     Offline {
         metadata_file_name: String,
         client: OfflineClient<ConfigUsed>,
@@ -66,35 +65,35 @@ pub enum ClientKind {
     },
 }
 
-impl ClientKind {
+impl ClientConfig {
     fn example_context(&self, dynamic: bool) -> ExampleContext {
         match &self {
-            ClientKind::Offline {
+            ClientConfig::Offline {
                 metadata_file_name, ..
             } => ExampleContext::from_file(metadata_file_name, dynamic),
-            ClientKind::Online { url, .. } => ExampleContext::from_url(url, dynamic),
-            ClientKind::LightClient { .. } => ExampleContext::from_file("metadata.scale", dynamic),
+            ClientConfig::Online { url, .. } => ExampleContext::from_url(url, dynamic),
+            ClientConfig::LightClient { .. } => {
+                ExampleContext::from_file("metadata.scale", dynamic)
+            }
         }
     }
 }
 
 impl Client {
-    // dynamic lookup of constant value
-
-    fn new(kind: ClientKind) -> Self {
+    fn new(config: ClientConfig) -> Self {
         let offline_client: Arc<dyn OfflineClientObject<ConfigUsed>>;
         let online_client: Option<Arc<dyn OnlineClientObject<ConfigUsed>>>;
 
-        (offline_client, online_client) = match &kind {
-            ClientKind::Offline { client, .. } => (
+        (offline_client, online_client) = match &config {
+            ClientConfig::Offline { client, .. } => (
                 Arc::new(client.clone()) as Arc<dyn OfflineClientObject<ConfigUsed>>,
                 None,
             ),
-            ClientKind::Online { client, .. } => (
+            ClientConfig::Online { client, .. } => (
                 Arc::new(client.clone()) as Arc<dyn OfflineClientObject<ConfigUsed>>,
                 Some(Arc::new(client.clone()) as Arc<dyn OnlineClientObject<ConfigUsed>>),
             ),
-            ClientKind::LightClient { client, .. } => (
+            ClientConfig::LightClient { client, .. } => (
                 Arc::new(client.clone()) as Arc<dyn OfflineClientObject<ConfigUsed>>,
                 Some(Arc::new(client.clone()) as Arc<dyn OnlineClientObject<ConfigUsed>>),
             ),
@@ -102,11 +101,10 @@ impl Client {
 
         let metadata = offline_client.metadata();
         let example_gen_dynamic =
-            ExampleGenerator::new(metadata.clone(), Cow::Owned(kind.example_context(true)));
+            ExampleGenerator::new(metadata.clone(), Cow::Owned(config.example_context(true)));
         let example_gen_static =
-            ExampleGenerator::new(metadata, Cow::Owned(kind.example_context(false)));
+            ExampleGenerator::new(metadata, Cow::Owned(config.example_context(false)));
         Self {
-            _kind: kind,
             offline_client,
             online_client,
             example_gen_dynamic,
@@ -169,7 +167,7 @@ impl Client {
             metadata,
         );
 
-        Ok(Client::new(ClientKind::Offline {
+        Ok(Client::new(ClientConfig::Offline {
             metadata_file_name: metadata_file_name.into(),
             client,
         }))
@@ -183,7 +181,7 @@ impl Client {
         let client = subxt::OnlineClient::<ConfigUsed>::from_url(url)
             .await
             .map_err(|e| e.to_string())?;
-        Ok(Client::new(ClientKind::Online {
+        Ok(Client::new(ClientConfig::Online {
             url: url.into(),
             client,
         }))
@@ -201,7 +199,10 @@ impl Client {
             .await
             .map_err(|e| e.to_string())?;
         console_log!("light client creation successful");
-        Ok(Client::new(ClientKind::LightClient { chain_spec, client }))
+        Ok(Client::new(ClientConfig::LightClient {
+            chain_spec,
+            client,
+        }))
     }
 
     #[wasm_bindgen(js_name = "metadataContent")]
